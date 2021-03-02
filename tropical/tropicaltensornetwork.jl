@@ -14,37 +14,18 @@ macro bind(def, element)
 end
 
 # ╔═╡ c456b902-7959-11eb-03ba-dd14a2cd5758
-using Revise, PlutoUI, TropicalNumbers, LightGraphs, Random, SimpleTensorNetworks
-
-# ╔═╡ 31f6ec44-7878-11eb-3d0e-bb365f592a0e
-using Viznet, Compose
-
-# ╔═╡ ed4600c8-788c-11eb-297c-29316dfcdec1
-using CoordinateTransformations, StaticArrays, Rotations
-
-# ╔═╡ d4f6b054-7ad6-11eb-07d8-57f4b60ed1e7
-let
-	using Pkg;
-	with_terminal() do
-		Pkg.status()
-	end
-end
-
-# ╔═╡ 1749c0f2-7a2a-11eb-1932-07a7f920b0da
-using OMEinsum
-
-# ╔═╡ 326f2b30-787f-11eb-0a63-6b76097d84b6
-struct Cubic{T}
-	grid::NTuple{3,T}
-end
-
-# ╔═╡ b1a751ea-7882-11eb-082a-4d18382cedcc
-function Base.getindex(c, i, j, k)
-	(i,j,k) .* c.grid
-end
-
-# ╔═╡ 2a599048-7ae3-11eb-3f6c-5fa7b9327c43
 begin
+	using Revise, PlutoUI, CoordinateTransformations, StaticArrays, Rotations, Viznet, Compose
+	
+	# cubic geometry
+	struct Cubic{T}
+		grid::NTuple{3,T}
+	end
+	function Base.getindex(c, i, j, k)
+		(i,j,k) .* c.grid
+	end
+	
+	# left right layout
 	function leftright(a, b; width=600)
 		HTML("""
 <style>
@@ -59,6 +40,8 @@ table.nohover tr:hover td {
 </tr></table>
 """)
 	end
+	
+	# up down layout
 	function updown(a, b; width=nothing)
 		HTML("""<table class="nohover" style="border:none" $(width === nothing ? "" : "width=$(width)px")>
 <tr>
@@ -69,72 +52,16 @@ table.nohover tr:hover td {
 </tr></table>
 """)
 	end
-end
-
-# ╔═╡ 0faacc8a-7965-11eb-151c-2909d9c2f00e
-begin
-	Base.show(io::IO, t::Tropical) = Base.print(io, "$(t.n)ₜ")
-	Base.show(io::IO, t::CountingTropical) = Base.print(io, "$((t.n, t.c))ₜ")
-	Base.show(io::IO, ::MIME"text/plain", t::Tropical) = Base.show(io, t)
-	Base.show(io::IO, ::MIME"text/plain", t::CountingTropical) = Base.show(io, t)
-	function ising_bondtensor(::Type{T}, J) where T
-		e = T(J)
-		e_ = T(-J)
-		[e e_; e_ e]
-	end
-	function ising_vertextensor(::Type{T}, n::Int, h) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = T(h)
-		res[end] = T(-h)
-		return res
-	end
-	
-	function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
-		res = [T(1) T(1); T(1) T(1)]
-		res[Int(src)+1, Int(dst)+1] = T(-1)
-		return res
-	end
-	
-	function twosat_vertextensor(::Type{T}, n::Int) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = one(T)
-		res[end] = one(T)
-		return res
-	end
-	
-	function mis_bondtensor(::Type{T}) where T
-		res = ones(T, 2, 2)
-		res[2, 2] = zero(T)
-		return res
-	end
-	
-	function mis_vertextensor(::Type{T}, n::Int) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = one(T)
-		res[end] = T(1)
-		return res
-	end
-	
-	function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
-		angles = cos.(2π .* ((1:q) ./ q))
-		res = zeros(T, q, q)
-		for i=1:q
-			for j=1:q
-				res[i,j] = T(J*angles[mod1(abs(j-i), q)])
-			end
-		end
-		res
-	end
-
-	function δtensor(::Type{T}, q::Int, n::Int) where {T}
-		res = zeros(T, fill(q, n)...)
-		for i=1:q
-			res[fill(i, n)...] = one(T)
-		end
-		res
-	end
-	potts_vertextensor(args...) = δtensor(args...)
 end;
+
+# ╔═╡ 5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
+using TropicalNumbers,  # tropical number type
+		LightGraphs,	# graph operations
+		Random,
+    	SimpleTensorNetworks  # tensor network contraction
+
+# ╔═╡ 1749c0f2-7a2a-11eb-1932-07a7f920b0da
+using OMEinsum
 
 # ╔═╡ 7fa86de2-7ac5-11eb-3d55-c9b6cb57c5d6
 html"""
@@ -188,10 +115,16 @@ html"""<h1> Goal of this notebook</h1>
 <li>introducing tropical tensor networks,</li>
 <li>using related numeric tools for soving issues.</li>
 </ul>
-Table of contents are
+Table of contents
 <ul style="list-style-type: square;">
 <li>What is a tropical tensor network?</li>
-<li>Solving spin glass, 2-satistiability, Potts model, maximum independent set and their counting problems with tropical tensor networks.</li>
+<li>With tropical tensor networks, solving
+<ul>
+	<li>spin glass,</li>
+	<li>2-satistiability,</li>
+	<li>Potts model,</li>
+	<li>maximum independent set</li>
+</ul>and their counting problems .</li>
 </ul>
 """
 
@@ -351,10 +284,6 @@ The tropical $\delta$ tensor of rank $n$ and dimension $q$ is defined as
 where $s_i,s_j,\ldots s_n \in \{1,2,\ldots q\}$.
 """
 
-# ╔═╡ f914a760-7ad2-11eb-17e6-c39cf676196e
-# a `δ` tensor with rank 2 and size 3 × 3
-δtensor(Tropical{Float64}, 3, 2)
-
 # ╔═╡ 86921d00-7a17-11eb-2695-add5f9eeda5b
 md"## Tropical matrix multiplication
 ```math
@@ -454,16 +383,17 @@ end
 md"
 The power of ``-A`` is
 ```math
-((-A)^n)_{iz} := \max_{j,k,l,\ldots y} (-A)_{ij} + (-A)_{jk} +\ldots (-A)_{yz}
+((-A)^m)_{i_1i_m} := \max_{i_1,i_2,\ldots i_m} \left((-A)_{i_1i_2} + (-A)_{i_2i_3} +\ldots (-A)_{i_{m-1}i_m}\right)
 ```
-Then the shortest path between ``i,z`` can be represented as
+Then the shortest path between ``i_1`` and ``i_m`` can be represented as
 ```math
--\max((-A)_{iz}, (-A)^2_{iz}, \ldots (-A)^n_{iz})
+-\max((-A)_{i_1i_m}, (-A)^2_{i_1i_m}, \ldots (-A)^n_{i_1i_m})
 ```
+where ``n`` is the number of vertices. The power stops at order ``n`` because it shortest path contains at most ``n`` edges.
 "
 
 # ╔═╡ 48749c00-7b25-11eb-19f6-41b57a9808ab
-md"The shortest path between `B` and `E` is"
+md"Hence, the shortest path between `B` and `E` is"
 
 # ╔═╡ 8bd6eee8-7b03-11eb-2a79-694e7bc29bd6
 # the `Tropical{Float64}` has only one field `n` of type `Float64`
@@ -687,9 +617,8 @@ md"""This is not a tensor network since indices $s_{1}, s_3$ and $s_{4}$ appears
 # ╔═╡ 5efee244-7a2d-11eb-3782-b9d55086d623
 md"`einsum` is a generalization of tensor networks, it allows a same indices appearing for an arbituary times. Its graphical representation is a hypergraph rather than a simple graph. In the above graph, there are three hyperedges of size 3, one hyperedge of size 2 and one hyperedge of size 1."
 
-# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
-# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
-ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
+# ╔═╡ 023ebf7c-7b36-11eb-1c9f-430773395534
+md"Here, the Einstein summation notation is consistent with [numpy's einsum notation](https://ajcr.net/Basic-guide-to-einsum/)"
 
 # ╔═╡ 96290770-7a20-11eb-0ac8-33a6492c7b12
 md"To map the spin glass problem to a tropical tensor network, we place a tensor $T_v^d$ of rank-d at each vertex, where $d$ is the degree of the vertex."
@@ -752,26 +681,6 @@ end
 # ╔═╡ 37102544-7abf-11eb-3ac4-6702dfc55425
 html"""<p>where the <span style="color:green">green</span> texts are labels for tensor legs. Small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
 
-# ╔═╡ 15cf0c36-7a21-11eb-3e14-63950bcce943
-tnet = let
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	TensorNetwork([
-		# vertex tensors
-		[LabeledTensor(ising_vertextensor(Tropical{Float64}, count(e->i ∈ e, edges), 0.0), [(j, i==e[1]) for (j, e) in enumerate(edges) if i ∈ e]) for i=1:5]...,
-		# bond tensors
-		[LabeledTensor(ising_bondtensor(Tropical{Float64}, J), [(j, true), (j, false)]) for (j, J) in enumerate([J12, J23, J34, J14, J45, J13])]...
-	])
-end;
-
-# ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
-contraction_result = let
-	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
-end
-
-# ╔═╡ 3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
-md"The mininum energy is $(-Int(contraction_result.n))."
-
 # ╔═╡ 695e405c-786d-11eb-0a6e-bb776d9626ad
 md"
 ## Using Tropical numbers for counting
@@ -795,14 +704,6 @@ zero(CountingTropical{Float64})
 
 # ╔═╡ 8388305c-7a23-11eb-1588-79c3c6ce9db9
 one(CountingTropical{Float64})
-
-# ╔═╡ c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
-# we use the `@ein_str` macro from OMEinsum to perform the contraction
-# `CountingTropical{Float64}` has two fields `n` (number) and `c` (counting), both are of type `Float64`.
-ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(CountingTropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
-
-# ╔═╡ 496f1238-7b26-11eb-04aa-c34b2b9c9e26
-md"Here, the Einstein summation notation is consistent with [numpy's einsum notation](https://ajcr.net/Basic-guide-to-einsum/)"
 
 # ╔═╡ 4190393a-7ac4-11eb-3ac6-eb8e3574fdc9
 md"There are 2 degenerate ground states with energy -4, they are"
@@ -966,24 +867,6 @@ T_{v}^n = \delta^{n,q=2}
 ```
 """
 
-# ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
-let
-	T = CountingTropical{Float64}
-	ein"ac,ad,bd,be,ce,af,bf,cf,dg,eg,fg->"(
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, true),
-	)[]
-end
-
 # ╔═╡ 73f517de-7aed-11eb-03d1-db03dfb01a35
 md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16."
 
@@ -1136,24 +1019,6 @@ The vertex tensors are for counting the number of vertices
 ```
 where $s_i,s_j,\ldots s_n \in \{0,1\}$."
 
-# ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
-tensor_network_mis = let
-	T = CountingTropical{Float64}
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	TensorNetwork([
-		# vertex tensors
-		[LabeledTensor(mis_vertextensor(T, count(e->i ∈ e, edges)), [(j, i==e[1]) for (j, e) in enumerate(edges) if i ∈ e]) for i=1:5]...,
-		# bond tensors
-		[LabeledTensor(mis_bondtensor(T), [(j, true), (j, false)]) for j=1:length(edges)]...
-	])
-end;
-
-# ╔═╡ 3a34aaec-7afb-11eb-1fc4-2fbc027753cc
-contraction_result_mis = let
-	tc, sc, trees = trees_greedy(tensor_network_mis; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tensor_network_mis, trees[1]).array[]
-end
-
 # ╔═╡ 5f4e0fec-7afd-11eb-37c7-11b84027136a
 md"There are 4 possible configurations"
 
@@ -1293,80 +1158,25 @@ Z = \sum_{\{s\}}e^{-\sum_{i,j \in E}s_i s_j}
 2. Count the ground state degeneracy.
 """
 
-# ╔═╡ 04e8a7da-7952-11eb-0470-d50d972083eb
-edges = [
-	 	1=>10, 1=>41, 1=>59, 2=>12, 2=>42, 2=>60, 3=>6, 3=>
-        43, 3=>57, 4=>8, 4=>44, 4=>58, 5=>13, 5=>56, 5=>
-        57, 6=>10, 6=>31, 7=>14, 7=>56, 7=>58, 8=>12, 8=>
-        32, 9=>23, 9=>53, 9=>59, 10=>15, 11=>24, 11=>53, 11=>
-        60, 12=>16, 13=>14, 13=>25, 14=>26, 15=>27, 15=>
-        49, 16=>28, 16=>50, 17=>18, 17=>19, 17=>54, 18=>
-        20, 18=>55, 19=>23, 19=>41, 20=>24, 20=>42, 21=>
-        31, 21=>33, 21=>57, 22=>32, 22=>34, 22=>58, 23=>
-        24, 25=>35, 25=>43, 26=>36, 26=>44, 27=>51, 27=>
-        59, 28=>52, 28=>60, 29=>33, 29=>34, 29=>56, 30=>
-        51, 30=>52, 30=>53, 31=>47, 32=>48, 33=>45, 34=>
-        46, 35=>36, 35=>37, 36=>38, 37=>39, 37=>49, 38=>
-        40, 38=>50, 39=>40, 39=>51, 40=>52, 41=>47, 42=>
-        48, 43=>49, 44=>50, 45=>46, 45=>54, 46=>55, 47=>
-        54, 48=>55
-];
+# ╔═╡ b6560404-7b2d-11eb-21d7-a1e55609ebf7
+# the positions of fullerene atoms
+c60_xy = fullerene();
+
+# ╔═╡ 6f649efc-7b2d-11eb-1e80-53d84ef98c13
+# find edges: vertex pairs with distance smaller than 5.
+c60_edges = [(i=>j) for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in enumerate(c60_xy) if i<j && (i2-i1)^2+(j2-j1)^2+(k2-k1)^2 < 5.0];
 
 # ╔═╡ 20125640-79fd-11eb-1715-1d071cc6cf6c
 md"construct tensor network by assigning labels `(edge index, boolean)` to tensors, where the boolean identifies whether this label correspond to the source node or the destination side of the edge. The resulting tensor network contains 90 edge tensors and 60 vertex tensors."
 
-# ╔═╡ c26b5bb6-7984-11eb-18fe-2b6a524f5c85
-tn = TensorNetwork(vcat(
-	[LabeledTensor(ising_vertextensor(CountingTropical{Float64}, 3, 0.0), [(i,j==e.first) for (i,e) in enumerate(edges) if j ∈ e]) for j=1:60],  # vertex
-	[LabeledTensor(ising_bondtensor(CountingTropical{Float64}, -1.0), [(i,true),(i,false)]) for i = 1:length(edges)]
-));
-
 # ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
 md"find a proper contraction order by greedy search"
 
-# ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
-tcs, scs, order = (Random.seed!(2); trees_greedy(tn; strategy="min_reduce"));
+# ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
+md"The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
 
-# ╔═╡ 346599e4-7a3a-11eb-1ef5-2d7473c2390b
-begin
-	function emulate_contracted(tnet, istep::Int)
-		remain_vertices = Viznet.vertices(lt)[remain_mask]
-		contracted_set = ∪(Viznet.vertices(lt)[(!).(remain_mask)], [[remain_vertices[order[i].src], remain_vertices[order[i].dst]] for i=1:contract_step]...)
-		vizcontract(lt, contracted_set)
-	end
-	function contraction_mask!(tnet, tree, results)
-		if tree isa Integer
-			push!(results, results[end][1] + 1, )
-		end
-		contraction_mask!(tnet, tree.left, results)
-		contraction_mask!(tnet, tree.right, results)
-	end
-end
-
-# ╔═╡ 2b899624-798c-11eb-20c4-fd5523f7abff
-md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
-
-# ╔═╡ d2161642-798a-11eb-2dec-cfe6cda6af5c
-SimpleTensorNetworks.contract(tn, order[]).array[]
-
-# ╔═╡ faa0b5bc-794a-11eb-186e-e5cc9e6f4b15
-md"## Partition function
-```math
-Z = \sum\limits_{\boldsymbol{\sigma}} \prod_{i,j \in E} e^{-\beta J_{ij} \sigma_i\sigma_j}\prod_{i\in V}e^{-\beta h_i\sigma_i}
-```
-```math
-\begin{align}
-E^* &= \lim_{\beta \rightarrow \infty}-\frac{1}{\beta}\ln Z \\
-&= \max\limits_{\boldsymbol{\sigma}} \sum_{i,j \in E} J_{ij} \sigma_i\sigma_j + \sum_{i\in V}h_i\sigma_i
-\end{align}
-```
-
-```math
-\begin{align}
-\lim_{\beta\rightarrow \infty}\frac{1}{\beta} \ln (e^{\beta x} + e^{\beta y})&= x \oplus y \\
-\frac{1}{\beta}\ln ( e^{\beta x} \cdot e^{\beta y}) &= x \odot y
-\end{align}
-```
+# ╔═╡ 4c137484-7b30-11eb-2fb1-190d8beebbc3
+md"Finding the optimal contraction order is know as NP-hard, however, there are [some heuristic algorithms](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
 "
 
 # ╔═╡ e302bd1c-7ab5-11eb-03f6-69dcbb817354
@@ -1382,15 +1192,225 @@ md"# Future Directions
     - TropicalGEMM on CPU for CountingTropical numbers,
 "
 
+# ╔═╡ d53a5e5a-7b33-11eb-0a65-4d4844e9cf0a
+md"# Utilities"
+
+# ╔═╡ e51dc3e8-7b33-11eb-12ee-57413f6b8bca
+begin
+	function ising_bondtensor(::Type{T}, J) where T
+		e = T(J)
+		e_ = T(-J)
+		[e e_; e_ e]
+	end
+	function ising_vertextensor(::Type{T}, n::Int, h) where T
+		res = zeros(T, fill(2, n)...)
+		res[1] = T(h)
+		res[end] = T(-h)
+		return res
+	end
+	
+	function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
+		res = [T(1) T(1); T(1) T(1)]
+		res[Int(src)+1, Int(dst)+1] = T(-1)
+		return res
+	end
+	
+	function twosat_vertextensor(::Type{T}, n::Int) where T
+		res = zeros(T, fill(2, n)...)
+		res[1] = one(T)
+		res[end] = one(T)
+		return res
+	end
+	
+	function mis_bondtensor(::Type{T}) where T
+		res = ones(T, 2, 2)
+		res[2, 2] = zero(T)
+		return res
+	end
+	
+	function mis_vertextensor(::Type{T}, n::Int) where T
+		res = zeros(T, fill(2, n)...)
+		res[1] = one(T)
+		res[end] = T(1)
+		return res
+	end
+	
+	function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
+		angles = cos.(2π .* ((1:q) ./ q))
+		res = zeros(T, q, q)
+		for i=1:q
+			for j=1:q
+				res[i,j] = T(J*angles[mod1(abs(j-i), q)])
+			end
+		end
+		res
+	end
+
+	function δtensor(::Type{T}, q::Int, n::Int) where {T}
+		res = zeros(T, fill(q, n)...)
+		for i=1:q
+			res[fill(i, n)...] = one(T)
+		end
+		res
+	end
+	potts_vertextensor(args...) = δtensor(args...)
+	
+	function build_tensornetwork(; vertices, vertex_arrays, edges, edge_arrays)
+		TensorNetwork([
+		# vertex tensors
+		[LabeledTensor(vertex_arrays[i], [(j, v==e[1]) for (j, e) in enumerate(edges) if v ∈ e]) for (i, v) in enumerate(vertices)]...,
+		# bond tensors
+		[LabeledTensor(edge_arrays[j], [(j, true), (j, false)]) for j=1:length(edges)]...
+	])
+	end
+end;
+
+# ╔═╡ f914a760-7ad2-11eb-17e6-c39cf676196e
+# a `δ` tensor with rank 2 and size 3 × 3
+δtensor(Tropical{Float64}, 3, 2)
+
+# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
+# we use the `@ein_str` macro from OMEinsum to perform the contraction
+# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
+ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
+
+# ╔═╡ 15cf0c36-7a21-11eb-3e14-63950bcce943
+tnet = let
+	T = Tropical{Float64}
+	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
+	build_tensornetwork(
+		vertices = 1:5,
+		vertex_arrays = [ising_vertextensor(T, count(e->i ∈ e, edges), 0.0) for i=1:5],
+		edges = edges,
+		edge_arrays = [ising_bondtensor(T, J) for J in [J12, J23, J34, J14, J45, J13]]
+	)
+end;
+
+# ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
+contraction_result = let
+	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
+	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
+end
+
+# ╔═╡ 3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
+md"The mininum energy is $(-Int(contraction_result.n))."
+
+# ╔═╡ c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
+# `CountingTropical{Float64}` has two fields `n` (number) and `c` (counting), both are of type `Float64`.
+ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(CountingTropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
+
+# ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
+let
+	T = CountingTropical{Float64}
+	ein"ac,ad,bd,be,ce,af,bf,cf,dg,eg,fg->"(
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, true),
+	)[]
+end
+
+# ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
+tensor_network_mis = let
+	T = CountingTropical{Float64}
+	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
+	build_tensornetwork(
+		vertices = 1:5,
+		vertex_arrays = [mis_vertextensor(T, count(e->i ∈ e, edges)) for i=1:5],
+		edges = edges,
+		edge_arrays = [mis_bondtensor(T) for i=1:6]
+	)
+end;
+
+# ╔═╡ 3a34aaec-7afb-11eb-1fc4-2fbc027753cc
+contraction_result_mis = let
+	tc, sc, trees = trees_greedy(tensor_network_mis; strategy="min_reduce")
+	SimpleTensorNetworks.contract(tensor_network_mis, trees[1]).array[]
+end
+
+# ╔═╡ c26b5bb6-7984-11eb-18fe-2b6a524f5c85
+c60_tnet = let
+	T = CountingTropical{Float64}
+	build_tensornetwork(
+		vertices=1:60,
+		vertex_arrays = [ising_vertextensor(T, 3, 0.0) for j=1:length(c60_xy)],
+		edges = c60_edges,
+		edge_arrays = [ising_bondtensor(T, -1.0) for i = 1:length(c60_edges)]
+	)
+end;
+
+# ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
+tcs, scs, c60_trees = (Random.seed!(2); trees_greedy(c60_tnet; strategy="min_reduce"));
+
+# ╔═╡ 2b899624-798c-11eb-20c4-fd5523f7abff
+md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
+
+# ╔═╡ d2161642-798a-11eb-2dec-cfe6cda6af5c
+SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
+
+# ╔═╡ 58e38656-7b2e-11eb-3c70-25a919f9926a
+md"contraction step = $(@bind nstep_c60 Slider(0:length(c60_tnet); show_value=true, default=60))"
+
+# ╔═╡ 12740186-7b2f-11eb-35e4-01e6f9ffbb4d
+c60_contraction_masks = let
+	function contraction_mask(tnet, tree)
+		contraction_mask!(tnet, tree, [zeros(Bool, length(tnet))])
+	end
+	function contraction_mask!(tnet, tree, results)
+		if tree isa Integer
+			res = copy(results[end])
+			@assert res[tree] == false
+			res[tree] = true
+			push!(results, res)
+		else
+			contraction_mask!(tnet, tree.left, results)
+			contraction_mask!(tnet, tree.right, results)
+		end
+		return results
+	end
+	contraction_mask(c60_tnet, c60_trees[])
+end;
+
+# ╔═╡ c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
+let
+	mask = c60_contraction_masks[nstep_c60+1]
+	Compose.set_default_graphic_size(12cm, 12cm)
+	cam_position = SVector(0.0, 0.0, 0.5)
+	rot = RotY(θ2)*RotX(ϕ2)
+	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
+	Nx = Ny = Nz = 4
+	tb = textstyle(:default)
+	nb1 = nodestyle(:circle, fill("red"); r=0.01)
+	nb2 = nodestyle(:circle, fill("white"), stroke("black"); r=0.01)
+	eb = bondstyle(:default; r=0.01)
+	x(i,j,k) = cam_transform(SVector(i,j,k) .* 0.03).data
+	
+	fig = canvas() do
+		for (s, (i,j,k)) in enumerate(c60_xy)
+			(mask[s] ? nb1 : nb2) >> x(i,j,k)
+		end
+		for (i, j) in c60_edges
+			eb >> (x(c60_xy[i]...), x(c60_xy[j]...))
+		end
+		nb1 >> (-0.1, 0.45)
+		tb >> ((-0.0, 0.45), "contracted")
+		nb2 >> (-0.1, 0.50)
+		tb >> ((-0.0, 0.50), "remaining")
+	end
+	Compose.compose(context(0.5,0.35, 1.0, 1.0), fig)
+end
+
 # ╔═╡ Cell order:
-# ╠═c456b902-7959-11eb-03ba-dd14a2cd5758
-# ╠═31f6ec44-7878-11eb-3d0e-bb365f592a0e
-# ╠═326f2b30-787f-11eb-0a63-6b76097d84b6
-# ╠═b1a751ea-7882-11eb-082a-4d18382cedcc
-# ╠═ed4600c8-788c-11eb-297c-29316dfcdec1
-# ╠═2a599048-7ae3-11eb-3f6c-5fa7b9327c43
-# ╠═0faacc8a-7965-11eb-151c-2909d9c2f00e
-# ╠═7fa86de2-7ac5-11eb-3d55-c9b6cb57c5d6
+# ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
+# ╟─7fa86de2-7ac5-11eb-3d55-c9b6cb57c5d6
+# ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
 # ╟─121b4926-7aba-11eb-30e1-7b8edd4f0166
 # ╟─265649e4-7abb-11eb-1a02-a3c101cef89d
 # ╟─3205a536-7a17-11eb-3473-b71305c96ca4
@@ -1400,7 +1420,6 @@ md"# Future Directions
 # ╟─3221a326-7a17-11eb-0fe6-f75798a411b9
 # ╟─32277c3a-7a17-11eb-3763-af68dbb81465
 # ╟─322d2958-7a17-11eb-2deb-613b7680a5bb
-# ╟─d4f6b054-7ad6-11eb-07d8-57f4b60ed1e7
 # ╟─3237e33e-7a17-11eb-2869-b92d0801bc6e
 # ╟─ec841be8-7a16-11eb-3337-376e26b7da25
 # ╟─be76e52a-7852-11eb-179b-afbc6efcab55
@@ -1447,6 +1466,7 @@ md"# Future Directions
 # ╟─5efee244-7a2d-11eb-3782-b9d55086d623
 # ╠═1749c0f2-7a2a-11eb-1932-07a7f920b0da
 # ╠═37472f2a-7a2a-11eb-1be3-13513d61fcb2
+# ╟─023ebf7c-7b36-11eb-1c9f-430773395534
 # ╟─96290770-7a20-11eb-0ac8-33a6492c7b12
 # ╟─c1f90d6c-7a1d-11eb-2843-f971b5f6f3b0
 # ╟─64e08a56-7a36-11eb-29fd-03662b4d6612
@@ -1460,7 +1480,6 @@ md"# Future Directions
 # ╠═792df1aa-7a23-11eb-2991-196336246c43
 # ╠═8388305c-7a23-11eb-1588-79c3c6ce9db9
 # ╠═c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
-# ╟─496f1238-7b26-11eb-04aa-c34b2b9c9e26
 # ╟─4190393a-7ac4-11eb-3ac6-eb8e3574fdc9
 # ╟─56fdb22c-7ac4-11eb-2831-a777d9ca89f3
 # ╟─c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
@@ -1500,13 +1519,19 @@ md"# Future Directions
 # ╟─1dbc9afc-78b0-11eb-0940-2dcadf5408bb
 # ╟─9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
 # ╟─88e14ef2-7af1-11eb-23d6-b34b1eff8f87
-# ╟─346599e4-7a3a-11eb-1ef5-2d7473c2390b
-# ╠═04e8a7da-7952-11eb-0470-d50d972083eb
+# ╠═b6560404-7b2d-11eb-21d7-a1e55609ebf7
+# ╠═6f649efc-7b2d-11eb-1e80-53d84ef98c13
 # ╟─20125640-79fd-11eb-1715-1d071cc6cf6c
 # ╠═c26b5bb6-7984-11eb-18fe-2b6a524f5c85
 # ╟─698a6dd0-7a0e-11eb-2766-1f0baa1317d2
 # ╠═ae92d828-7984-11eb-31c8-8b3f9a071c24
 # ╟─2b899624-798c-11eb-20c4-fd5523f7abff
 # ╠═d2161642-798a-11eb-2dec-cfe6cda6af5c
-# ╟─faa0b5bc-794a-11eb-186e-e5cc9e6f4b15
+# ╟─1c4b19d2-7b30-11eb-007b-ab03052b22d2
+# ╟─58e38656-7b2e-11eb-3c70-25a919f9926a
+# ╟─12740186-7b2f-11eb-35e4-01e6f9ffbb4d
+# ╟─c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
+# ╟─4c137484-7b30-11eb-2fb1-190d8beebbc3
 # ╟─e302bd1c-7ab5-11eb-03f6-69dcbb817354
+# ╟─d53a5e5a-7b33-11eb-0a65-4d4844e9cf0a
+# ╠═e51dc3e8-7b33-11eb-12ee-57413f6b8bca
