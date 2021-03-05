@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -52,7 +52,8 @@ table.nohover tr:hover td {
 </tr></table>
 """)
 	end
-end;
+	PlutoUI.TableOfContents()
+end
 
 # ╔═╡ 5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
 using TropicalNumbers,  # tropical number type
@@ -63,38 +64,18 @@ using TropicalNumbers,  # tropical number type
 # ╔═╡ 1749c0f2-7a2a-11eb-1932-07a7f920b0da
 using OMEinsum
 
-# ╔═╡ 7fa86de2-7ac5-11eb-3d55-c9b6cb57c5d6
+# ╔═╡ dfa8834c-e8c6-49b4-8bde-0816b573cbee
 html"""
 <style>
-ul li { margin-bottom: 0.5em; }
-body {font-size: 18pt;}
-</style>
-<script>
-document.body.onkeyup = function(e) {
-if (e.ctrlKey && e.altKey && e.which == 80) {
-    present();
-} else if (e.ctrlKey && e.which == 37) {
-	var prev_button = document.querySelector(".changeslide.prev");
-	prev_button.dispatchEvent(new Event('click'));
-} else if (e.ctrlKey && e.which == 39) {
-	var prev_button = document.querySelector(".changeslide.next");
-	prev_button.dispatchEvent(new Event('click'));
-  }
-};
-document.body.onclick = function(e) {
-	if (e.target.tagName == 'BODY'){
-		e.preventDefault();
-		var prev_button = document.querySelector(".changeslide.next");
-		prev_button.dispatchEvent(new Event('click'));
-} else if (e.target.tagName == 'PLUTO-SHOULDER'){
-	e.preventDefault();
-	var prev_button = document.querySelector(".changeslide.prev");
-	prev_button.dispatchEvent(new Event('click'));
-	}
-};
-</script>
-"""
+body {
+counter-reset: section subsection example}
 
+h2::before {
+counter-reset: subsection;
+  counter-increment: section;
+  content: "Sec. " counter(section) ": ";
+}
+"""
 
 # ╔═╡ 121b4926-7aba-11eb-30e1-7b8edd4f0166
 md"""# Tropical tensor networks for solving combinatoric optimization problems
@@ -108,31 +89,11 @@ $(HTML("<br><p><big><strong>Tropical tensor network for ground states of spin gl
 [arxiv 2008.06888](https://arxiv.org/abs/2008.06888)
 """
 
-# ╔═╡ 265649e4-7abb-11eb-1a02-a3c101cef89d
-html"""<h1> Goal of this notebook</h1>
-<p>This notebook is multi-purposed,</p>
-<ul style="list-style-type: square;">
-<li>introducing tropical tensor networks,</li>
-<li>using related numeric tools for soving issues.</li>
-</ul>
-Table of contents
-<ul style="list-style-type: square;">
-<li>What is a tropical tensor network?</li>
-<li>With tropical tensor networks, solving
-<ul>
-	<li>spin glass,</li>
-	<li>2-satistiability,</li>
-	<li>Potts model,</li>
-	<li>maximum independent set</li>
-</ul>and their counting problems .</li>
-</ul>
-"""
-
 # ╔═╡ 3205a536-7a17-11eb-3473-b71305c96ca4
-md"# A minimum introduction to tensor networks"
+md"## A minimum introduction to tensor networks"
 
 # ╔═╡ 3208fd8a-7a17-11eb-35ce-4d6b141c1aff
-md"## A graphical representation of matrix multiplication
+md"####  A graphical representation of matrix multiplication
 ```math
 Y[i,j] := \sum_k A[i,k] \times B[k,j]
 ```
@@ -171,7 +132,7 @@ md"
 "
 
 # ╔═╡ 3221a326-7a17-11eb-0fe6-f75798a411b9
-md"## A graphical representation of tensor networks
+md"#### A graphical representation of tensor networks
 ```math
 Y[n] := \sum_{i,j,k,l,m} A[i,l] \times B[i,j] \times C[j,k,n] \times D[k,l,m] \times E[m]
 ```
@@ -224,10 +185,10 @@ A Practical Introduction to Tensor Networks: Matrix Product States and Projected
 [arXiv: 1306.2164](https://arxiv.org/abs/1306.2164)"
 
 # ╔═╡ ec841be8-7a16-11eb-3337-376e26b7da25
-md"# Tropical numbers and Tropical Tensor networks"
+md"## Tropical numbers and Tropical Tensor networks"
 
 # ╔═╡ be76e52a-7852-11eb-179b-afbc6efcab55
-md"## Tropical algebra"
+md"#### Tropical algebra"
 
 # ╔═╡ d0b54b76-7852-11eb-2398-0911380fa090
 md"""
@@ -1409,10 +1370,9 @@ end
 
 # ╔═╡ Cell order:
 # ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
-# ╟─7fa86de2-7ac5-11eb-3d55-c9b6cb57c5d6
-# ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
+# ╟─dfa8834c-e8c6-49b4-8bde-0816b573cbee
 # ╟─121b4926-7aba-11eb-30e1-7b8edd4f0166
-# ╟─265649e4-7abb-11eb-1a02-a3c101cef89d
+# ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
 # ╟─3205a536-7a17-11eb-3473-b71305c96ca4
 # ╟─3208fd8a-7a17-11eb-35ce-4d6b141c1aff
 # ╟─32116a92-7a17-11eb-228f-0713510d0348
