@@ -21,7 +21,7 @@ jobs:
             Pkg.PackageSpec(url="https://github.com/fonsp/Pluto.jl", rev="05e5b68"),
             ]);
             import PlutoUtils;
-            PlutoUtils.Export.github_action(; notebook_dir=joinpath(dirname(@__DIR__), "notebooks"), offer_binder=false, export_dir=joinpath(@__DIR__, "build", "notebooks"), generate_default_index=true, project=@__DIR__)
+            PlutoUtils.Export.github_action(; notebook_dir=joinpath(@__DIR__, "notebooks"), offer_binder=false, export_dir=@__DIR__, generate_default_index=true, project=@__DIR__)
             '
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
