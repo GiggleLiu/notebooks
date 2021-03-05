@@ -3,7 +3,7 @@
 *.backup2
 *.jl.mem
 .DS_Store
-/Manifest.toml
+Manifest.toml
 /docs/build/
 /docs/site/
 __pycache__/
