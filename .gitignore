@@ -1,0 +1,9 @@
+*.jl.*.cov
+*.jl.cov
+*.backup2
+*.jl.mem
+.DS_Store
+Manifest.toml
+/docs/build/
+/docs/site/
+__pycache__/
