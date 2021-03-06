@@ -1252,7 +1252,7 @@ end
 md"## The Song Shan Lake Spring School (SSSS) Challenge"
 
 # ╔═╡ 89d737b3-e72e-4d87-9ade-466a84491ac8
-md"In 2019, Lei Wang, Pan Zhang, Roger and me released a chanllenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home. Students submitted more than 10 [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The quiz is"
+md"In 2019, Lei Wang, Pan Zhang, Roger and me released a challenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home ([@LinuxDaFaHao](https://github.com/LinuxDaFaHao)). Some students submitted more than 10 [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The quiz is"
 
 # ╔═╡ 1dbb9e90-78b0-11eb-2014-6dc6cfb35387
 md"``R_x`` = $(@bind θ2 Slider(0:0.01:2π; default=0.5, show_value=true))"
@@ -1403,8 +1403,12 @@ let
 end
 
 # ╔═╡ 4c137484-7b30-11eb-2fb1-190d8beebbc3
-md"Finding the optimal contraction order is know as NP-hard, however, there are [some heuristic algorithms](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
-"
+md"""Since the complexity of tensor contraction is exponential to the number of legs involved, *"what is the optimal contraction order"* becomes one of the most important issues in tensor network contraction. The greedy algorithm we used here is efficient but not optimal. Finding the optimal contraction order itself is NP-hard.
+
+*To know more about contraction orders*
+
+* [Contracting Arbitrary Tensor Networks: General Approximate Algorithm and Applications in Graphical Models and Quantum Circuit Simulations](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
+"""
 
 # ╔═╡ e302bd1c-7ab5-11eb-03f6-69dcbb817354
 md"## Future Directions
