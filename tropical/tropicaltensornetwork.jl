@@ -822,89 +822,6 @@ let
 		(context(.55, 0, .5*7/8, 1), img2))
 end
 
-# ╔═╡ c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
-md"##### Some results in the paper"
-
-# ╔═╡ d531c952-7ad9-11eb-1247-dd1913cc4678
-html"""<div align="center"><a href="https://github.com/TensorBFS/TropicalTensors.jl">code is available on github <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a></div>"""
-
-# ╔═╡ 541f4062-7b22-11eb-2eb8-17585a3de9c3
-md"**Square lattices**"
-
-# ╔═╡ 080bf23c-7ad8-11eb-37ac-01d2b6439f55
-let
-	img1 = viz(SquareLattice(32,32); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent")))
-	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
-	leftright(updown(img1, md"We obtain the exact ground state energy of Ising spin glasses on square lattice up to $32^2$ spins."), updown(HTML("""<img src="https://user-images.githubusercontent.com/6257240/109566189-87bc5980-7ab1-11eb-9d08-99cd573007df.png" width=270px></img>"""), md"""Wall clock time for computing the ground state energy of the (a) Ising spin glass on an open square lattice with
-``L^2`` spins. (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"""))
-end
-
-# ╔═╡ 64f18c2e-7b22-11eb-352f-9d6e228cef49
-md"**Cubic lattices**"
-
-# ╔═╡ 9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
-let
-	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
-	θ = 2.31
-	ϕ = 2.8
-	cam_position = SVector(0.0, 0.0, 0.5)
-	rot = RotY(θ)*RotX(ϕ)
-	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
-	Nx = Ny = Nz = 6
-	nb = nodestyle(:circle; r=0.01)
-	eb = bondstyle(:default; r=0.01)
-	c = Cubic((0.05, 0.05, 0.05))
-	x(i,j,k) = cam_transform(SVector(c[i-Nx/2-0.5,j-Ny/2-0.5,k-Nz/2-0.5])).data
-	fig = canvas() do
-		for i=1:Nx, j=1:Ny, k=1:Nz
-			nb >> x(i,j,k)
-			i!=Nx && eb >> (x(i,j,k), x(i+1,j,k))
-			j!=Ny && eb >> (x(i,j,k), x(i,j+1,k))
-			k!=Nz && eb >> (x(i,j,k), x(i,j,k+1))
-		end
-	end
-	leftright(Compose.compose(context(0.5,0.5, 1.0, 1.0), fig), md"""Ground state and degeneracy on cubic lattice up to $6^3$ spins. 
-""")
-end
-
-# ╔═╡ 72742d66-7b22-11eb-2fac-cb2534558248
-md"**Chimera lattices**"
-
-# ╔═╡ 4f3a12e0-7ad5-11eb-2b37-c95342185c3e
-let
-	Compose.set_default_graphic_size(6cm, 8cm)
-	img = Compose.compose(context(0.0,0,8/6,1), viz(ChimeraLattice(8, 8); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent"), fontsize(2pt))))
-	leftright(updown(img, md"``\pm J`` Ising spin glass on the chimera graph of D-Wave quantum annealer of $512$ qubits in less than $100$ seconds and investigate the exact value of the residual entropy of $\pm J$ spin glasses on the chimera graph."), updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground
-state energy of Ising spin glass on the chimera graph with the
-``L \times L`` unit cell (``8L^2`` spins). (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"))
-end
-
-# ╔═╡ 81e06ac6-7b22-11eb-3042-373a49bbdb49
-md"#### Random 3-regular graphs"
-
-# ╔═╡ e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
-let
-	function rand_3regular_tn(::Type{T}, n; D=2) where T
-		g = LightGraphs.random_regular_graph(n, 3)
-		labels = 1:ne(g)
-		arrays = [rand(T, fill(2, 3)...) for i=1:n]
-		labels = [Int[] for i=1:n]
-		for (k, e) in enumerate(LightGraphs.edges(g))
-			push!(labels[e.src], k)
-			push!(labels[e.dst], k)
-		end
-		tensors = LabeledTensor.(arrays, labels)
-		TensorNetwork(tensors)
-	end
-
-	img = SimpleTensorNetworks.viz_tnet(rand_3regular_tn(Float64, 220), node_facecolor="black", linecolor="black", node_fontsize=0)
-	#leftright(img, updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground state energy of Ising spin glass on the chimera graph with the ``L \times L`` unit cell (``8L^2`` spins)."))
-	Compose.set_default_graphic_size(7cm, 6cm)
-	leftright(Compose.compose(context(0.0, 0.0, 6/7, 1.0), img), md"""
-The spin glass on the random graphs: our method can compute optimal solutions and count the number of solutions for spin glasses and combinatorial optimization problems on on $3$ regular random graphs up to $220$ spins, on a single GPU. This is inaccessible by existing methods.
-""")
-end
-
 # ╔═╡ 06bbead0-793f-11eb-0dec-c549b461b9cf
 md"""
 #### Max 2-satisfiability problem
@@ -1014,26 +931,6 @@ end
 
 # ╔═╡ 50c9910f-6b47-4480-9efd-768dae573b92
 potts_vertextensor(T, q, n) = δtensor(T, q, n)
-
-# ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
-md"##### Some results in the paper"
-
-# ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
-let
-	Compose.set_default_graphic_size(7cm, 7cm)
-	img = viz(SquareLattice(18,18); node_style=nodestyle(:circle; r=0.012), text_style=textstyle(:default, fill("transparent")))
-	leftright(updown(
-		img,
-		md"Ground-state energy, entropy, and computational
-time of ``q = 3`` state Potts spin glass model on square lattices of sizes ``n = 4\sim 18``. Each data point is
-averaged over ``100`` random instances computed on a single
-GPU. As a comparison, the existing branch-and-cut method
-with the Semi-Definition Programming energy lower bounds
-method on the same model works up to ``9 \times 9`` lattices
-(using 10 hours)"
-		; width=300)
-		,html"""<img src="https://user-images.githubusercontent.com/6257240/109578583-6d8c7680-7ac5-11eb-93eb-1b2748f2c90b.png" width=250px/>""")
-end
 
 # ╔═╡ 344042b4-793d-11eb-3d6f-43eb2a4db9f4
 md"""
@@ -1246,6 +1143,112 @@ let
 		T.([0 1; 0 -Inf]),	# (4, 5)
 		T.([0 0; 0 -Inf]),	# (1, 3)
 	)[]
+end
+
+# ╔═╡ c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
+md"## Benchmarks
+
+Note: Most of these benchmarks does not contract directly with `SimpleTensorNetworks`. We mapped the tensor network to circuit simulations to achieve a better speed and smaller memory usage.
+"
+
+# ╔═╡ d531c952-7ad9-11eb-1247-dd1913cc4678
+html"""<div align="center"><a href="https://github.com/TensorBFS/TropicalTensors.jl">code is available on github <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a></div>"""
+
+# ╔═╡ 541f4062-7b22-11eb-2eb8-17585a3de9c3
+md"**Square lattices**"
+
+# ╔═╡ 080bf23c-7ad8-11eb-37ac-01d2b6439f55
+let
+	img1 = viz(SquareLattice(32,32); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent")))
+	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
+	leftright(updown(img1, md"We obtain the exact ground state energy of Ising spin glasses on square lattice up to $32^2$ spins."), updown(HTML("""<img src="https://user-images.githubusercontent.com/6257240/109566189-87bc5980-7ab1-11eb-9d08-99cd573007df.png" width=270px></img>"""), md"""Wall clock time for computing the ground state energy of the (a) Ising spin glass on an open square lattice with
+``L^2`` spins. (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"""))
+end
+
+# ╔═╡ 64f18c2e-7b22-11eb-352f-9d6e228cef49
+md"**Cubic lattices**"
+
+# ╔═╡ 9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
+let
+	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
+	θ = 2.31
+	ϕ = 2.8
+	cam_position = SVector(0.0, 0.0, 0.5)
+	rot = RotY(θ)*RotX(ϕ)
+	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
+	Nx = Ny = Nz = 6
+	nb = nodestyle(:circle; r=0.01)
+	eb = bondstyle(:default; r=0.01)
+	c = Cubic((0.05, 0.05, 0.05))
+	x(i,j,k) = cam_transform(SVector(c[i-Nx/2-0.5,j-Ny/2-0.5,k-Nz/2-0.5])).data
+	fig = canvas() do
+		for i=1:Nx, j=1:Ny, k=1:Nz
+			nb >> x(i,j,k)
+			i!=Nx && eb >> (x(i,j,k), x(i+1,j,k))
+			j!=Ny && eb >> (x(i,j,k), x(i,j+1,k))
+			k!=Nz && eb >> (x(i,j,k), x(i,j,k+1))
+		end
+	end
+	leftright(Compose.compose(context(0.5,0.5, 1.0, 1.0), fig), md"""Ground state and degeneracy on cubic lattice up to $6^3$ spins. 
+""")
+end
+
+# ╔═╡ 72742d66-7b22-11eb-2fac-cb2534558248
+md"**Chimera lattices**"
+
+# ╔═╡ 4f3a12e0-7ad5-11eb-2b37-c95342185c3e
+let
+	Compose.set_default_graphic_size(6cm, 8cm)
+	img = Compose.compose(context(0.0,0,8/6,1), viz(ChimeraLattice(8, 8); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent"), fontsize(2pt))))
+	leftright(updown(img, md"``\pm J`` Ising spin glass on the chimera graph of D-Wave quantum annealer of $512$ qubits in less than $100$ seconds and investigate the exact value of the residual entropy of $\pm J$ spin glasses on the chimera graph."), updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground
+state energy of Ising spin glass on the chimera graph with the
+``L \times L`` unit cell (``8L^2`` spins). (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"))
+end
+
+# ╔═╡ 81e06ac6-7b22-11eb-3042-373a49bbdb49
+md"**Random 3-regular graphs**"
+
+# ╔═╡ e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
+let
+	function rand_3regular_tn(::Type{T}, n; D=2) where T
+		g = LightGraphs.random_regular_graph(n, 3)
+		labels = 1:ne(g)
+		arrays = [rand(T, fill(2, 3)...) for i=1:n]
+		labels = [Int[] for i=1:n]
+		for (k, e) in enumerate(LightGraphs.edges(g))
+			push!(labels[e.src], k)
+			push!(labels[e.dst], k)
+		end
+		tensors = LabeledTensor.(arrays, labels)
+		TensorNetwork(tensors)
+	end
+
+	img = SimpleTensorNetworks.viz_tnet(rand_3regular_tn(Float64, 220), node_facecolor="black", linecolor="black", node_fontsize=0)
+	#leftright(img, updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground state energy of Ising spin glass on the chimera graph with the ``L \times L`` unit cell (``8L^2`` spins)."))
+	Compose.set_default_graphic_size(7cm, 6cm)
+	leftright(Compose.compose(context(0.0, 0.0, 6/7, 1.0), img), md"""
+The spin glass on the random graphs: our method can compute optimal solutions and count the number of solutions for spin glasses and combinatorial optimization problems on on $3$ regular random graphs up to $220$ spins, on a single GPU. This is inaccessible by existing methods.
+""")
+end
+
+# ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
+md"**Potts model**"
+
+# ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
+let
+	Compose.set_default_graphic_size(7cm, 7cm)
+	img = viz(SquareLattice(18,18); node_style=nodestyle(:circle; r=0.012), text_style=textstyle(:default, fill("transparent")))
+	leftright(updown(
+		img,
+		md"Ground-state energy, entropy, and computational
+time of ``q = 3`` state Potts spin glass model on square lattices of sizes ``n = 4\sim 18``. Each data point is
+averaged over ``100`` random instances computed on a single
+GPU. As a comparison, the existing branch-and-cut method
+with the Semi-Definition Programming energy lower bounds
+method on the same model works up to ``9 \times 9`` lattices
+(using 10 hours)"
+		; width=300)
+		,html"""<img src="https://user-images.githubusercontent.com/6257240/109578583-6d8c7680-7ac5-11eb-93eb-1b2748f2c90b.png" width=250px/>""")
 end
 
 # ╔═╡ 7bdf517e-79ff-11eb-38a3-49c02d94d943
@@ -1499,16 +1502,6 @@ md"## Future Directions
 # ╠═c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
 # ╟─4190393a-7ac4-11eb-3ac6-eb8e3574fdc9
 # ╟─56fdb22c-7ac4-11eb-2831-a777d9ca89f3
-# ╟─c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
-# ╟─d531c952-7ad9-11eb-1247-dd1913cc4678
-# ╟─541f4062-7b22-11eb-2eb8-17585a3de9c3
-# ╟─080bf23c-7ad8-11eb-37ac-01d2b6439f55
-# ╟─64f18c2e-7b22-11eb-352f-9d6e228cef49
-# ╟─9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
-# ╟─72742d66-7b22-11eb-2fac-cb2534558248
-# ╟─4f3a12e0-7ad5-11eb-2b37-c95342185c3e
-# ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
-# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 # ╟─06bbead0-793f-11eb-0dec-c549b461b9cf
 # ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
 # ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
@@ -1518,8 +1511,6 @@ md"## Future Directions
 # ╟─5f2243c4-793d-11eb-1add-392387bb559f
 # ╠═d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
 # ╠═50c9910f-6b47-4480-9efd-768dae573b92
-# ╟─e739e74c-7af0-11eb-104f-5f94da1bf0be
-# ╟─80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 # ╟─344042b4-793d-11eb-3d6f-43eb2a4db9f4
 # ╟─80d764a8-7afd-11eb-3fb8-79169ca56c7e
 # ╟─04d11828-7afa-11eb-3e73-1bbecf566f74
@@ -1535,6 +1526,18 @@ md"## Future Directions
 # ╟─891c39b8-7b1b-11eb-2d70-67fd24021027
 # ╟─5caa1b7c-7b21-11eb-394d-379351fe5170
 # ╠═1b08b3ac-7b1e-11eb-2249-ddd787c549d4
+# ╟─c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
+# ╟─d531c952-7ad9-11eb-1247-dd1913cc4678
+# ╟─541f4062-7b22-11eb-2eb8-17585a3de9c3
+# ╟─080bf23c-7ad8-11eb-37ac-01d2b6439f55
+# ╟─64f18c2e-7b22-11eb-352f-9d6e228cef49
+# ╟─9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
+# ╟─72742d66-7b22-11eb-2fac-cb2534558248
+# ╟─4f3a12e0-7ad5-11eb-2b37-c95342185c3e
+# ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
+# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
+# ╟─e739e74c-7af0-11eb-104f-5f94da1bf0be
+# ╟─80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 # ╟─7bdf517e-79ff-11eb-38a3-49c02d94d943
 # ╟─89d737b3-e72e-4d87-9ade-466a84491ac8
 # ╟─1dbb9e90-78b0-11eb-2014-6dc6cfb35387
