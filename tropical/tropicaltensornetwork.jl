@@ -1125,7 +1125,7 @@ let
 end
 
 # ╔═╡ 75c37046-7b1b-11eb-00f5-7fc49f73f4d9
-md"1. We can put a bond matrix at the bond to describe the independence restriction
+md"We can put a bond matrix at the bond to describe the independence restriction
 ```math
 T_{e} = \begin{bmatrix}0 & 0 \\0 & -\infty\end{bmatrix}
 ```
@@ -1221,7 +1221,7 @@ let
 end
 
 # ╔═╡ 891c39b8-7b1b-11eb-2d70-67fd24021027
-md"2. Equivalently, we can transfer the weights on the vertex to bond tensors so that the vertex tensors can become δ tensors.
+md"Or equivalently, we can transfer the weights on the vertex to bond tensors so that the vertex tensors can become δ tensors.
 ```math
 T_{e} = \begin{bmatrix}0 & \frac{1}{w_{j→e}} \\\frac{1}{w_{i→e}} & -\infty\end{bmatrix}
 ```
@@ -1348,7 +1348,7 @@ md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity =
 SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
 
 # ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
-md"The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
+md"If you see 16000, congratuations! The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
 
 # ╔═╡ 58e38656-7b2e-11eb-3c70-25a919f9926a
 md"contraction step = $(@bind nstep_c60 Slider(0:length(c60_tnet); show_value=true, default=60))"
@@ -1504,7 +1504,7 @@ md"## Future Directions
 # ╟─72742d66-7b22-11eb-2fac-cb2534558248
 # ╟─4f3a12e0-7ad5-11eb-2b37-c95342185c3e
 # ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
-# ╠═e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
+# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 # ╟─06bbead0-793f-11eb-0dec-c549b461b9cf
 # ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
 # ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
