@@ -56,13 +56,11 @@ table.nohover tr:hover td {
 end
 
 # ╔═╡ 5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
-using TropicalNumbers,  # tropical number type
-		LightGraphs,	# graph operations
+using TropicalNumbers,  		# tropical number type
+		LightGraphs,			# graph operations
 		Random,
-    	SimpleTensorNetworks  # tensor network contraction
-
-# ╔═╡ 1749c0f2-7a2a-11eb-1932-07a7f920b0da
-using OMEinsum
+		OMEinsum,				# Einstein's summation notation
+    	SimpleTensorNetworks  	# tensor network contraction
 
 # ╔═╡ dfa8834c-e8c6-49b4-8bde-0816b573cbee
 html"""
@@ -247,6 +245,7 @@ where $s_i,s_j,\ldots s_n \in \{1,2,\ldots q\}$.
 """
 
 # ╔═╡ ca9a13b8-0272-4557-97d4-9168923d363f
+# The first parameter is for specifying the element type. It is a common design pattern in Julia, please check https://docs.julialang.org/en/v1/manual/methods/#Extracting-the-type-parameter-from-a-super-type
 function δtensor(::Type{T}, q::Int, n::Int) where {T}
 	res = zeros(T, fill(q, n)...)
 	for i=1:q
@@ -674,7 +673,10 @@ let
 end
 
 # ╔═╡ 37102544-7abf-11eb-3ac4-6702dfc55425
-html"""<p>where the <span style="color:green">green</span> texts are labels for tensor legs. Small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
+html"""<p>Small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
+
+# ╔═╡ 25553aa4-eef8-40d4-bcf6-0a27f50ab1da
+md"""Then we construct tensor network by assigning labels `(edge index, boolean)` ($(HTML("<span style='color:green'>green</span>")) texts in the graph) to tensors, where the boolean identifies whether this label correspond to the source node or the destination side of the edge. """
 
 # ╔═╡ 75764e5b-d2f2-4178-a00f-8f362b59a0b8
 function build_tensornetwork(; vertices, vertex_arrays, edges, edge_arrays)
@@ -698,8 +700,12 @@ tnet = let
 	)
 end;
 
+# ╔═╡ a4bf7de3-7794-4609-88e7-9092f496a7bb
+md"The tensor network is then contracted with the greedy algorithm."
+
 # ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
 contraction_result = let
+	# trees_greedy returns a tuple of (time complexity, space complexity, contraction tree)
 	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
 	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
 end
@@ -872,6 +878,9 @@ function twosat_vertextensor(::Type{T}, n::Int) where T
 	return res
 end
 
+# ╔═╡ 268959f8-4162-4372-95b4-6f9fc47c23a6
+md"The degeneracy can be obtained easily with `einsum`"
+
 # ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
 let
 	T = CountingTropical{Float64}
@@ -891,7 +900,7 @@ let
 end
 
 # ╔═╡ 73f517de-7aed-11eb-03d1-db03dfb01a35
-md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16."
+md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16. (Note: this contraction is not computational efficient, for large problem, one should definitely switch to .)"
 
 # ╔═╡ 5f2243c4-793d-11eb-1add-392387bb559f
 md"""
@@ -1052,6 +1061,9 @@ function mis_vertextensor(::Type{T}, n::Int) where T
 	return res
 end
 
+# ╔═╡ 6800e29e-bee3-4670-b5b5-aaeee9e25046
+md"We can build a tensor tensor network for solving this issue. The tensor network is contracted with a greedy order."
+
 # ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
 tensor_network_mis = let
 	T = CountingTropical{Float64}
@@ -1148,7 +1160,7 @@ end
 # ╔═╡ c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
 md"## Benchmarks
 
-Note: Most of these benchmarks does not contract directly with `SimpleTensorNetworks`. We mapped the tensor network to circuit simulations to achieve a better speed and smaller memory usage.
+Note: Most of these benchmarks does not contract directly with `SimpleTensorNetworks` or `OMEinsum`. We mapped the tensor network to circuit simulations to achieve a better speed and smaller memory usage, see the last section or the following github repository.
 "
 
 # ╔═╡ d531c952-7ad9-11eb-1247-dd1913cc4678
@@ -1325,7 +1337,7 @@ c60_xy = fullerene();
 c60_edges = [(i=>j) for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in enumerate(c60_xy) if i<j && (i2-i1)^2+(j2-j1)^2+(k2-k1)^2 < 5.0];
 
 # ╔═╡ 20125640-79fd-11eb-1715-1d071cc6cf6c
-md"construct tensor network by assigning labels `(edge index, boolean)` to tensors, where the boolean identifies whether this label correspond to the source node or the destination side of the edge. The resulting tensor network contains 90 edge tensors and 60 vertex tensors."
+md"The resulting tensor network contains 90 edge tensors and 60 vertex tensors."
 
 # ╔═╡ c26b5bb6-7984-11eb-18fe-2b6a524f5c85
 c60_tnet = let
@@ -1407,21 +1419,22 @@ end
 
 # ╔═╡ 4c137484-7b30-11eb-2fb1-190d8beebbc3
 md"""Since the complexity of tensor contraction is exponential to the number of legs involved, *"what is the optimal contraction order"* becomes one of the most important issues in tensor network contraction. The greedy algorithm we used here is efficient but not optimal. Finding the optimal contraction order itself is NP-hard.
-
-*To know more about contraction orders*
-
-* [Contracting Arbitrary Tensor Networks: General Approximate Algorithm and Applications in Graphical Models and Quantum Circuit Simulations](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
 """
 
 # ╔═╡ e302bd1c-7ab5-11eb-03f6-69dcbb817354
-md"## Future Directions
+md"## Towards productivity
 
-* Finding the optimal contracting order for `einsum`,
-    - einsum has less redundancy, with less effort in mapping, and potentially faster in contraction,
-* TropicalBLAS,
-    - TropicalGEMM on CPU for Tropical numbers ([DONE](https://github.com/chriselrod/LoopVectorization.jl/issues/201)),
-    - TropicalGEMM on GPU (WIP),
-    - TropicalGEMM for CountingTropical numbers,
+To solve large scale problems. You also need a good contraction order algorithm, e.g.
+* Finding the optimal contracting order for `einsum`, [Classical Simulation of Quantum Supremacy Circuits](https://arxiv.org/abs/2005.06787).
+* A heuristic algorithm for contraction order [Contracting Arbitrary Tensor Networks: General Approximate Algorithm and Applications in Graphical Models and Quantum Circuit Simulations](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503)
+
+* For simple lattices, you can also map the problem to [Yao.jl](https://github.com/QuantumBFS/Yao.jl) for fast contraction.
+
+The Tropical BLAS project is under the progress,
+
+- TropicalGEMM on CPU for Tropical numbers ([nearly done](https://github.com/chriselrod/LoopVectorization.jl/issues/201)),
+- TropicalGEMM on GPU (WIP),
+- TropicalGEMM for CountingTropical numbers,
 "
 
 # ╔═╡ Cell order:
@@ -1479,7 +1492,6 @@ md"## Future Directions
 # ╟─d0ecd3f2-7a2d-11eb-126d-7dab740d8e1f
 # ╟─9c860e2a-7a2e-11eb-231f-63e9aca1daa0
 # ╟─5efee244-7a2d-11eb-3782-b9d55086d623
-# ╠═1749c0f2-7a2a-11eb-1932-07a7f920b0da
 # ╠═37472f2a-7a2a-11eb-1be3-13513d61fcb2
 # ╟─023ebf7c-7b36-11eb-1c9f-430773395534
 # ╟─96290770-7a20-11eb-0ac8-33a6492c7b12
@@ -1488,8 +1500,10 @@ md"## Future Directions
 # ╠═b975680f-0b78-4178-861f-5da6d10327e4
 # ╟─f54119ca-7a1e-11eb-1bec-bf855e34658d
 # ╟─37102544-7abf-11eb-3ac4-6702dfc55425
+# ╟─25553aa4-eef8-40d4-bcf6-0a27f50ab1da
 # ╠═75764e5b-d2f2-4178-a00f-8f362b59a0b8
 # ╠═15cf0c36-7a21-11eb-3e14-63950bcce943
+# ╟─a4bf7de3-7794-4609-88e7-9092f496a7bb
 # ╠═a9544e66-7a27-11eb-2b27-1d2124988fb2
 # ╟─3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
 # ╟─695e405c-786d-11eb-0a6e-bb776d9626ad
@@ -1506,8 +1520,9 @@ md"## Future Directions
 # ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
 # ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
 # ╠═58f6f6eb-d722-4144-b091-5b6bd7f3e97c
+# ╟─268959f8-4162-4372-95b4-6f9fc47c23a6
 # ╠═b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
-# ╟─73f517de-7aed-11eb-03d1-db03dfb01a35
+# ╠═73f517de-7aed-11eb-03d1-db03dfb01a35
 # ╟─5f2243c4-793d-11eb-1add-392387bb559f
 # ╠═d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
 # ╠═50c9910f-6b47-4480-9efd-768dae573b92
@@ -1519,6 +1534,7 @@ md"## Future Directions
 # ╟─75c37046-7b1b-11eb-00f5-7fc49f73f4d9
 # ╠═64eb9dab-21bd-4412-8004-f82d7659ca2a
 # ╠═0630d232-2791-4834-8076-3aba6c1deaee
+# ╟─6800e29e-bee3-4670-b5b5-aaeee9e25046
 # ╠═0405f4d8-7afb-11eb-2163-597b2edcf17e
 # ╠═3a34aaec-7afb-11eb-1fc4-2fbc027753cc
 # ╟─5f4e0fec-7afd-11eb-37c7-11b84027136a
