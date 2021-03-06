@@ -19,6 +19,9 @@ using Revise, SimpleTensorNetworks, TropicalNumbers, Random
 # ╔═╡ 4dac28aa-c273-454f-981e-0087e3dbd939
 using LightGraphs, Viznet, Compose, PlutoUI
 
+# ╔═╡ a2edc836-42fd-4723-822b-540019980726
+using ForwardDiff
+
 # ╔═╡ 939d981f-5364-46e5-90a6-cb23d7cf8f7f
 using Rotations
 
@@ -91,6 +94,22 @@ md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity =
 
 # ╔═╡ 99303312-7a00-11eb-2d20-57acdf9ad2a8
 SimpleTensorNetworks.contract(tn, order[]).array[]
+
+# ╔═╡ b65e6868-efdc-4b34-938a-6d5fbbad1e16
+function solve(edges, hs::AbstractVector{T}) where T
+	tn = TensorNetwork(vcat(
+		[LabeledTensor(ising_vertextensor(Tropical{T}, 3, hs[j]), [(i,j==e.first) for (i,e) in enumerate(edges) if j ∈ e]) for j=1:60],  # vertex
+		[LabeledTensor(ising_bondtensor(Tropical{T}, T(-1.0)), [(i,true),(i,false)]) for i = 1:length(edges)]
+	))
+	tcs, scs, order = trees_greedy(tn; strategy="min_reduce")
+	SimpleTensorNetworks.contract(tn, order[]).array[]
+end
+
+# ╔═╡ 94ee248b-453f-48fc-94d6-94464a4b7e91
+solve(edges, zeros(60))
+
+# ╔═╡ 27915ffd-7fd0-44aa-9d70-5f804d7db428
+ForwardDiff.gradient(x->solve(edges, x).n, zeros(60))
 
 # ╔═╡ a29ef69c-70d0-42e5-ae81-244b4294b097
 @bind seed Slider(0:10000)
@@ -229,24 +248,40 @@ function viz_config(g, config; r=0.3/sqrt(nv(g)+1), show_edgeindex=false,
 end
 
 # ╔═╡ 4f36b93d-9e38-4ac5-b713-4efd6c788e6f
-let
+img = let
 	Random.seed!(seed)
 	n = 60
-	config = rand(0:1, n)
 	locs = fullerene()
 	locs = map(l->Matrix(RotX(1/3*π)*RotY(1/2*π)) * [l...], locs)
 	sort!(locs, by=x->x[3])
-	edges = [LightGraphs.SimpleEdge(i, j) for i in 1:n, j in 1:n if normt(locs[i], locs[j]) < 2.5]
+	edges = [LightGraphs.SimpleEdge(i, j) for i in 1:n, j in 1:n if (i<j) && normt(locs[i], locs[j]) < 2.5]
+	config = ForwardDiff.gradient(x->solve(map(e->(e.src=>e.dst), edges), x).n, zeros(60))
+	#config = rand(0:1,60)
 	scales = map(l->-l[3]*0.05+0.95, locs)
 	xs = getindex.(locs, 1)
 	ys = getindex.(locs, 2)
 	g = SimpleGraph(edges)
-	img = viz_config(g, config; node_facecolor1="#FF8852", linecolor="#646455", node_fontsize=0, node_facecolor2="#55BE9C", node_edgecolor="transparent",
-	locs=(xs, ys), scales=scales, shade_color="#988888",
-		shade_offset=(0.005, 0.005)
+	CS = ("#FF8852", "#55BE9C")
+	CS = ("#FFCC52", "#55BE9C")
+	CS = ("#FFCC52", "#55BEFC")
+	CS = ("#00CC82", "#CC6E9C")
+	CS = ("#FFECEC", "#336E8C")
+	CS = ("#2C4C62", "#8C2E3C")
+	LC = "#646455"
+	LC = "#111111"
+	img = viz_config(g, config; node_facecolor1=CS[1], linecolor=LC, node_fontsize=0, node_facecolor2=CS[2], node_edgecolor="black",
+	locs=(xs, ys), scales=scales, shade_color="transparent",
+		shade_offset=(0.0075, 0.0075)
 	)
 	Compose.set_default_graphic_size(12cm, 12cm)
 	Compose.compose(context(0, 0, 0.99, 0.99), img)
+end
+
+# ╔═╡ 8ae20b2a-2527-4016-8461-ef0cb9f09443
+let
+	fname = "fullerene"
+	img |> SVG(fname * ".svg")
+	run(`rsvg-convert -f pdf -o $fname.pdf $fname.svg`)
 end
 
 # ╔═╡ d24a0ec0-44ec-4f49-86be-3e5bfdcf47fe
@@ -274,11 +309,16 @@ end
 # ╟─a2baab12-7a00-11eb-1d12-65de2c78cca3
 # ╠═99303312-7a00-11eb-2d20-57acdf9ad2a8
 # ╠═4dac28aa-c273-454f-981e-0087e3dbd939
+# ╠═b65e6868-efdc-4b34-938a-6d5fbbad1e16
+# ╠═a2edc836-42fd-4723-822b-540019980726
+# ╠═94ee248b-453f-48fc-94d6-94464a4b7e91
+# ╠═27915ffd-7fd0-44aa-9d70-5f804d7db428
 # ╟─a29ef69c-70d0-42e5-ae81-244b4294b097
 # ╠═b1b8f0bb-6d5e-406d-bab7-ec60c449a65a
 # ╠═939d981f-5364-46e5-90a6-cb23d7cf8f7f
 # ╠═3c025ce2-7322-4ff1-97c2-d6aa9d3f8077
 # ╠═4f36b93d-9e38-4ac5-b713-4efd6c788e6f
+# ╠═8ae20b2a-2527-4016-8461-ef0cb9f09443
 # ╠═e4ff4e4e-6584-4a7b-839c-892647365201
 # ╠═6c416c44-caa6-4da3-b7e5-b790372a2b2d
 # ╠═d24a0ec0-44ec-4f49-86be-3e5bfdcf47fe
