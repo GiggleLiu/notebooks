@@ -468,7 +468,7 @@ html"""
 """
 
 # ╔═╡ f7208b6e-793c-11eb-0dfa-0d63752ba53e
-md"""#### Ising Spin glass
+md"""### Ising Spin glass
 * decision: NP-Complete
 * counting: #P-complete
 
@@ -830,7 +830,7 @@ end
 
 # ╔═╡ 06bbead0-793f-11eb-0dec-c549b461b9cf
 md"""
-#### Max 2-satisfiability problem
+### Max 2-satisfiability problem
 * decision: Polynomial
 * counting: #P-complete
 
@@ -904,7 +904,7 @@ md"Since the resulting (counting) tropical number 11 is equal to the number of c
 
 # ╔═╡ 5f2243c4-793d-11eb-1add-392387bb559f
 md"""
-#### Potts model
+### Potts model
 
 * decision: NP-Complete
 * counting: #P-complete
@@ -943,7 +943,7 @@ potts_vertextensor(T, q, n) = δtensor(T, q, n)
 
 # ╔═╡ 344042b4-793d-11eb-3d6f-43eb2a4db9f4
 md"""
-#### Maximum independent set
+### Maximum independent set
 * hardness: NP-Complete
 * counting: #P-complete
 """
@@ -1267,13 +1267,7 @@ end
 md"## The Song Shan Lake Spring School (SSSS) Challenge"
 
 # ╔═╡ 89d737b3-e72e-4d87-9ade-466a84491ac8
-md"In 2019, Lei Wang, Pan Zhang, Roger and me released a challenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home ([@LinuxDaFaHao](https://github.com/LinuxDaFaHao)). Some students submitted more than 10 [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The quiz is"
-
-# ╔═╡ 1dbb9e90-78b0-11eb-2014-6dc6cfb35387
-md"``R_x`` = $(@bind θ2 Slider(0:0.01:2π; default=0.5, show_value=true))"
-
-# ╔═╡ 1dbc9afc-78b0-11eb-0940-2dcadf5408bb
-md"``R_y`` = $(@bind ϕ2 Slider(0:0.01:2π; default=2.8, show_value=true))"
+md"In 2019, Lei Wang, Pan Zhang, Roger and me released a challenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home ([@LinuxDaFaHao](https://github.com/LinuxDaFaHao)). Students submitted more than 10 [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The quiz is"
 
 # ╔═╡ 88e14ef2-7af1-11eb-23d6-b34b1eff8f87
 md"""
@@ -1291,6 +1285,7 @@ Z = \sum_{\{s\}}e^{-\sum_{i,j \in E}s_i s_j}
 md"Now we are proud to announce a new solution to this quiz"
 
 # ╔═╡ 5a5d4de6-7895-11eb-15c6-bda7a4342002
+# returns atom locations
 function fullerene()
 	φ = (1+√5)/2
 	res = NTuple{3,Float64}[]
@@ -1308,6 +1303,8 @@ end;
 
 # ╔═╡ 9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
 let
+	θ2 = 0.5
+	ϕ2 = 0.8
 	Compose.set_default_graphic_size(12cm, 12cm)
 	cam_position = SVector(0.0, 0.0, 0.5)
 	rot = RotY(θ2)*RotX(ϕ2)
@@ -1333,7 +1330,7 @@ end
 c60_xy = fullerene();
 
 # ╔═╡ 6f649efc-7b2d-11eb-1e80-53d84ef98c13
-# find edges: vertex pairs with distance smaller than 5.
+# find edges: vertex pairs with square distance smaller than 5.
 c60_edges = [(i=>j) for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in enumerate(c60_xy) if i<j && (i2-i1)^2+(j2-j1)^2+(k2-k1)^2 < 5.0];
 
 # ╔═╡ 20125640-79fd-11eb-1715-1d071cc6cf6c
@@ -1351,19 +1348,19 @@ c60_tnet = let
 end;
 
 # ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
-md"find a proper contraction order by greedy search"
+md"Then we find a proper contraction order by greedy search"
 
 # ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
 tcs, scs, c60_trees = (Random.seed!(2); trees_greedy(c60_tnet; strategy="min_reduce"));
 
 # ╔═╡ 2b899624-798c-11eb-20c4-fd5523f7abff
-md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
+md"The resulting contraction order produces time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
 
 # ╔═╡ d2161642-798a-11eb-2dec-cfe6cda6af5c
 SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
 
 # ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
-md"If you see 16000, congratuations! The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
+md"If you see a 16000 in the counting field, congratuations! The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
 
 # ╔═╡ 58e38656-7b2e-11eb-3c70-25a919f9926a
 md"contraction step = $(@bind nstep_c60 Slider(0:length(c60_tnet); show_value=true, default=60))"
@@ -1390,6 +1387,8 @@ end;
 
 # ╔═╡ c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
 let
+	θ2 = 0.5
+	ϕ2 = 0.8
 	mask = c60_contraction_masks[nstep_c60+1]
 	Compose.set_default_graphic_size(12cm, 12cm)
 	cam_position = SVector(0.0, 0.0, 0.5)
@@ -1556,8 +1555,6 @@ The Tropical BLAS project is under the progress,
 # ╟─80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 # ╟─7bdf517e-79ff-11eb-38a3-49c02d94d943
 # ╟─89d737b3-e72e-4d87-9ade-466a84491ac8
-# ╟─1dbb9e90-78b0-11eb-2014-6dc6cfb35387
-# ╟─1dbc9afc-78b0-11eb-0940-2dcadf5408bb
 # ╟─9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
 # ╟─88e14ef2-7af1-11eb-23d6-b34b1eff8f87
 # ╟─f867e24a-bbfa-44e7-819e-1051114f53f9
