@@ -73,27 +73,36 @@ counter-reset: section subsection example}
 h2::before {
 counter-reset: subsection;
   counter-increment: section;
-  content: "Sec. " counter(section) ": ";
+  content: counter(section) ". ";
 }
+</style>
+<div align="center">
+<a class="Header-link " href="https://github.com/TensorBFS/TropicalTensors.jl" data-hotkey="g d" aria-label="Homepage " data-ga-click="Header, go to dashboard, icon:logo">
+  <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+</a>
+<br>
+<a href="https://raw.githubusercontent.com/GiggleLiu/notebooks/master/notebooks/tropical/tropicaltensornetwork.jl" target="_blank"> download this notebook </a></div>
 """
 
 # ╔═╡ 121b4926-7aba-11eb-30e1-7b8edd4f0166
-md"""# Tropical tensor networks for solving combinatoric optimization problems
+html"""<h1>Tropical tensor networks</h1>
+<p><big>for solving combinatoric optimization problems efficiently</big></p>
 
-
-$(HTML("<br><p><big><strong>Tropical tensor network for ground states of spin glasses</strong></big></p>
-<p>Phys. Rev. Lett. (26 January 2021)</p>
-<p>Jin-Guo Liu, Lei Wang, and Pan Zhang</p>"))
-
-
-[arxiv 2008.06888](https://arxiv.org/abs/2008.06888)
+<a href='https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.090506'>Phys. Rev. Lett. 126, 090506 (2021)</a></p>
+<p>Jin-Guo Liu, Lei Wang, and Pan Zhang</p>
 """
 
 # ╔═╡ 3205a536-7a17-11eb-3473-b71305c96ca4
-md"## A minimum introduction to tensor networks"
+md"## What is a tropical tensor network?"
+
+# ╔═╡ 592825a5-890a-4de8-984f-3d4ca48daca4
+md"A Tropical tensor network is a tensor network with Tropical numbers inside."
+
+# ╔═╡ 5066553a-9b22-4f3b-b8ba-13a88291d9b9
+md"**What is a tensor network?**"
 
 # ╔═╡ 3208fd8a-7a17-11eb-35ce-4d6b141c1aff
-md"####  A graphical representation of matrix multiplication
+md"Tensor network is a generalization of matrix multiplication to multiple tensors. The graphical representation of matrix multiplication is
 ```math
 Y[i,j] := \sum_k A[i,k] \times B[k,j]
 ```
@@ -127,12 +136,12 @@ end
 
 # ╔═╡ 3217d1ca-7a17-11eb-14eb-a77ccfd983a0
 md"
-* a matrix is a tensor of rank-2, it is represented as a vertex with two labeled legs,
+* a matrix is a tensor of rank-2, it is represented as a vertex with two labeled edges (or legs),
 * the **contraction** (a generalization of matrix multiplication to tensors) is represented by connecting legs with same labels, where connecting a pair of legs means **sum-product** over a specific degree of freedom corresponding to the leg label,
 "
 
 # ╔═╡ 3221a326-7a17-11eb-0fe6-f75798a411b9
-md"#### A graphical representation of tensor networks
+md"We replace matrices with tensors, matrix multiplication with tensor contraction and allow more than two nodes in the graph, and we will get a tensor network. The following is an example of graphical representation of a tensor network
 ```math
 Y[n] := \sum_{i,j,k,l,m} A[i,l] \times B[i,j] \times C[j,k,n] \times D[k,l,m] \times E[m]
 ```
@@ -179,20 +188,16 @@ md"""
 
 # ╔═╡ 3237e33e-7a17-11eb-2869-b92d0801bc6e
 md"
-#### Reference
-A Practical Introduction to Tensor Networks: Matrix Product States and Projected Entangled Pair States
+*To know more about tensor networks:*
 
-[arXiv: 1306.2164](https://arxiv.org/abs/1306.2164)"
+* A Practical Introduction to Tensor Networks: Matrix Product States and Projected Entangled Pair States, [arXiv: 1306.2164](https://arxiv.org/abs/1306.2164)"
 
 # ╔═╡ ec841be8-7a16-11eb-3337-376e26b7da25
-md"## Tropical numbers and Tropical Tensor networks"
-
-# ╔═╡ be76e52a-7852-11eb-179b-afbc6efcab55
-md"#### Tropical algebra"
+md"**What are tropical numbers?**"
 
 # ╔═╡ d0b54b76-7852-11eb-2398-0911380fa090
 md"""
-Tropical algebra is defined by replacing the usual sum and product operators for ordinary real numbers with the max and sum operators respectively 
+Tropical numbers are numbers with tropical algebra. Tropical algebra is defined by replacing the usual sum and product operators for ordinary real numbers with the max and sum operators respectively 
 
 ```math
 \begin{align}
@@ -210,13 +215,10 @@ Tropical(3.0) + Tropical(2.0)
 
 # ╔═╡ 5d16a472-785b-11eb-1b94-dd6d8f860c24
 md"""
-#### It is a semi-ring!
+**Tropical algebra is a semi-ring!**
 
 The $\oplus$ and $\odot$ operators still have commutative, associative, and distributive properties. However, since there is no additive inverse, the $\oplus$ and $\odot$ and operations define a semiring over ``\mathbb R \cup \{-\infty\}``. 
 """
-
-# ╔═╡ 7da42d08-7ad2-11eb-095a-87aedba91b35
-md"## Zeros and ones"
 
 # ╔═╡ 3372871c-785b-11eb-3092-4bbc419cb788
 md"One sees that $-\infty$ acts as zero element for the tropical number since  $-\infty \oplus x = x  $ and $-\infty \odot x = -\infty$. "
@@ -234,8 +236,7 @@ one(Tropical{Float64})
 
 # ╔═╡ 98ae0960-797d-11eb-3646-c5b7e05d3f7c
 md"""
-### Example: Tropical δ tensor
-The tropical $\delta$ tensor of rank $n$ and dimension $q$ is defined as
+The tropical $\delta$ tensor (the generalization of identity matrix to tensors) of rank $n$ and dimension $q$ is defined as
 ```math
 δ_{s_i s_j\ldots s_n}^{n,q} = \begin{cases}
  0, & s_i = s_j =\ldots s_n\\
@@ -245,8 +246,23 @@ The tropical $\delta$ tensor of rank $n$ and dimension $q$ is defined as
 where $s_i,s_j,\ldots s_n \in \{1,2,\ldots q\}$.
 """
 
+# ╔═╡ ca9a13b8-0272-4557-97d4-9168923d363f
+function δtensor(::Type{T}, q::Int, n::Int) where {T}
+	res = zeros(T, fill(q, n)...)
+	for i=1:q
+		res[fill(i, n)...] = one(T)
+	end
+	res
+end
+
+# ╔═╡ f914a760-7ad2-11eb-17e6-c39cf676196e
+# a `δ` tensor with rank 2 and size 3 × 3
+δtensor(Tropical{Float64}, 3, 2)
+
 # ╔═╡ 86921d00-7a17-11eb-2695-add5f9eeda5b
-md"## Tropical matrix multiplication
+md"**Tropical matrix multiplication**
+
+By putting tropical numbers inside matrices, we get tropical matrix multiplication.
 ```math
 \begin{align}
 \cancel{Y[i,j] := \sum_k A[i,k] \times B[k,j]}\\
@@ -289,7 +305,7 @@ md"
 "
 
 # ╔═╡ 3d7ca08c-7b01-11eb-1d78-af35dc7e577c
-md"## Example: Tropical matrix multiplication to find the shortest path"
+md"Tropical matrix multiplication is directly related to finding the shortest path. Consider the following graph"
 
 # ╔═╡ 25d64fd4-7b04-11eb-105a-71f98c236ec6
 md"What is the shorted parth from `B` to `E`?"
@@ -363,14 +379,17 @@ md"Hence, the shortest path between `B` and `E` is"
 
 # ╔═╡ 5da00572-7b04-11eb-01f1-cd94579b478e
 md"
-### References
+*To know more about applications of tropical matrices*
 
 * [Tropical Arithmetic and Shortest Paths](https://personalpages.manchester.ac.uk/staff/mark.muldoon/Teaching/DiscreteMaths/LectureNotes/TropicalShortestPaths.pdf)
 
 * [Methods and Applications of (max,+) Linear Algebra](https://link.springer.com/chapter/10.1007/BFb0023465)"
 
 # ╔═╡ 211911da-7a18-11eb-12d4-65b0dec4b8dc
-md"## Tropical tensor networks
+md"
+**Tropical tensor networks**
+
+By putting Tropical numbers inside tensor networks, we get
 ```math
 \begin{align}
 \cancel{Y[n] := \sum_{i,j,k,l,m} A[i,l] \times B[i,j] \times C[j,k,n] \times D[k,l,m] \times E[m]}\\
@@ -421,7 +440,7 @@ md"""
 
 # ╔═╡ 442bcb3c-7940-11eb-18e5-d3158b74b1dc
 html"""
-<h1>Mapping hard problems to Tropical Tensor networks</h1>
+<h2>Mapping hard problems to Tropical Tensor networks</h2>
 <p>The following book covers all problems mentioned in this notebook.</p>
 <table style="border:none">
 <tr>
@@ -450,20 +469,21 @@ html"""
 """
 
 # ╔═╡ f7208b6e-793c-11eb-0dfa-0d63752ba53e
-md"""## Ising Spin glass
+md"""#### Ising Spin glass
 * decision: NP-Complete
 * counting: #P-complete
 
-Ising spin glass is an energy model defined on a graph
-
+Ising spin glass is an energy model defined on a graph. It is about finding the maximum of the following energy function
 ```math
 -E = \sum\limits_{i,j\in E} J_{ij} s_i s_j + \sum\limits_{i\in V} h_{i} s_i
 ```
-where $s_i,s_j,\ldots s_n \in \{-1,1\}$.
-"""
+where $s_i,s_j,\ldots s_n \in \{-1,1\}$, this problem is hard because there are $2^n$ possible configurations of $\{s_1,s_2\ldots s_n\}$. We define ``-E`` rather than ``E`` directly because people are more interested to know the ground state (state with the lowest energy) rather than the highest energy.
+The decision version of Ising spin glass is NP-complete, which mean it is unlikely to find a solution to the problem *"what is the lowest possible energy?"* in polynomial time on a classical computer. Its counting version asks *"what is the number of possible configurations that gives the lowest energy"*. It is #P-complete, which is at least as difficult as its dicision version.
 
-# ╔═╡ d3b4f162-7ad4-11eb-271c-677cb307c447
-md"## Example"
+
+
+
+"""
 
 # ╔═╡ 22118a36-7a36-11eb-18c3-dd2adac6118b
 md"Let's take $h_i=0$ from now on, it will not change the complexity of the problem."
@@ -506,13 +526,7 @@ let
 end
 
 # ╔═╡ b5cd769e-7a1e-11eb-1d82-e1c265dfdd52
-md"The goal is to find an optimal assignment of $s_1, s_2,\ldots s_n$ that minimizes the energy."
-
-# ╔═╡ 00ed185e-7a2d-11eb-1b27-cb834e75e916
-md"### Mapping the problem to Einsum is straight-forward"
-
-# ╔═╡ 9e6fbf32-7a2f-11eb-17cb-9167d6a34281
-md"We can rewrite the energy definition in tropical contraction format"
+md"The goal is to find an optimal assignment of $s_1, s_2,\ldots s_n$ that minimizes the energy. Mapping the problem to Einsum is straight-forward. We can rewrite the energy definition in tropical contraction format"
 
 # ╔═╡ 6e1c507e-7a1a-11eb-05bc-dbccc3aebdf9
 md"""
@@ -538,8 +552,15 @@ T_{e}(J_{ij})_{s_i s_j} = \begin{bmatrix}J_{ij} & -J_{ij} \\-J_{ij} & J_{ij}\end
 ```
 """
 
+# ╔═╡ 624f57db-7f07-4281-a547-d229b9a8413a
+function ising_bondtensor(::Type{T}, J) where T
+	e = T(J)
+	e_ = T(-J)
+	[e e_; e_ e]
+end
+
 # ╔═╡ 05109d30-7a29-11eb-320a-fb0b0d8e2632
-md"where a spin $s_i = 1$ (or $s_i=-1$) is equivalent to $1$ (or $2$) when used in matrix indexing."
+md"where a spin $s_i = 1$ (or $s_i=-1$) is equivalent to $1$ (or $2$) when used in matrix indexing. One can easily check it is the same as the previous negative energy function. The graphical representation is"
 
 # ╔═╡ d0ecd3f2-7a2d-11eb-126d-7dab740d8e1f
 let
@@ -578,6 +599,11 @@ md"""This is not a tensor network since indices $s_{1}, s_3$ and $s_{4}$ appears
 # ╔═╡ 5efee244-7a2d-11eb-3782-b9d55086d623
 md"`einsum` is a generalization of tensor networks, it allows a same indices appearing for an arbituary times. Its graphical representation is a hypergraph rather than a simple graph. In the above graph, there are three hyperedges of size 3, one hyperedge of size 2 and one hyperedge of size 1."
 
+# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
+# we use the `@ein_str` macro from OMEinsum to perform the contraction
+# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
+ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
+
 # ╔═╡ 023ebf7c-7b36-11eb-1c9f-430773395534
 md"Here, the Einstein summation notation is consistent with [numpy's einsum notation](https://ajcr.net/Basic-guide-to-einsum/)"
 
@@ -597,6 +623,14 @@ T_{v}^{n} = \begin{cases}
 
 # ╔═╡ 64e08a56-7a36-11eb-29fd-03662b4d6612
 md"for $h=0$, this is equivalent to the δ tensor."
+
+# ╔═╡ b975680f-0b78-4178-861f-5da6d10327e4
+function ising_vertextensor(::Type{T}, n::Int, h) where T
+	res = zeros(T, fill(2, n)...)
+	res[1] = T(h)
+	res[end] = T(-h)
+	return res
+end
 
 # ╔═╡ f54119ca-7a1e-11eb-1bec-bf855e34658d
 let
@@ -642,20 +676,91 @@ end
 # ╔═╡ 37102544-7abf-11eb-3ac4-6702dfc55425
 html"""<p>where the <span style="color:green">green</span> texts are labels for tensor legs. Small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
 
+# ╔═╡ 75764e5b-d2f2-4178-a00f-8f362b59a0b8
+function build_tensornetwork(; vertices, vertex_arrays, edges, edge_arrays)
+	TensorNetwork([
+	# vertex tensors
+	[LabeledTensor(vertex_arrays[i], [(j, v==e[1]) for (j, e) in enumerate(edges) if v ∈ e]) for (i, v) in enumerate(vertices)]...,
+	# bond tensors
+	[LabeledTensor(edge_arrays[j], [(j, true), (j, false)]) for j=1:length(edges)]...
+])
+end
+
+# ╔═╡ 15cf0c36-7a21-11eb-3e14-63950bcce943
+tnet = let
+	T = Tropical{Float64}
+	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
+	build_tensornetwork(
+		vertices = 1:5,
+		vertex_arrays = [ising_vertextensor(T, count(e->i ∈ e, edges), 0.0) for i=1:5],
+		edges = edges,
+		edge_arrays = [ising_bondtensor(T, J) for J in [J12, J23, J34, J14, J45, J13]]
+	)
+end;
+
+# ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
+contraction_result = let
+	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
+	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
+end
+
+# ╔═╡ 3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
+md"The mininum energy is $(-Int(contraction_result.n))."
+
 # ╔═╡ 695e405c-786d-11eb-0a6e-bb776d9626ad
 md"
-## Using Tropical numbers for counting
-Moreover, one can also employ the present approach to count the number of ground states at the same computational complexity of computing the ground state energy. To implement this, we further generalize the tensor element to be a tuple $(x, n)$ composed by a tropical number $x$ and an ordinary number $n$. The tropical number records the negative energy, while the ordinary number counts the number of minimal energy configurations. For tensor network contraction, we need the multiplication and addition of the tuple: $(x_1, n_1) \odot (x_2,n_2) = (x_1 + x_2, n_1\cdot n_2)$ and 
+##### Using Tropical numbers for counting
+Moreover, one can also employ the present approach to count the number of ground states at the same computational complexity of computing the ground state energy. To implement this, we further generalize the tensor element to be a tuple $(n, c)$ composed by a tropical number $x$ and an ordinary number $n$. The tropical number records the negative energy, while the ordinary number counts the number of minimal energy configurations. For tensor network contraction, we need the multiplication and addition of the tuple: $(n_1, c_1) \odot (n_2,c_2) = (n_1 + n_2, c_1\cdot c_2)$ and 
 ```math
 \begin{equation}
-    (x_1, n_1)\oplus (x_2, n_2) = \begin{cases}
- (x_1\oplus x_2, \, n_1 + n_2 ) & \text{if $x_1 = x_2$} \\
- (x_1\oplus x_2,\, n_1 ) & \text{if $x_1>x_2$} \\
- (x_1\oplus x_2,\, n_2 )& \text{if $x_1 < x_2$}
+    (n_1, c_1)\oplus (n_2, c_2) = \begin{cases}
+ (n_1\oplus n_2, \, c_1 + c_2 ) & \text{if $n_1 = n_2$} \\
+ (n_1\oplus n_2,\, c_1 ) & \text{if $n_1>n_2$} \\
+ (n_1\oplus n_2,\, c_2 )& \text{if $n_1 < n_2$}
  \end{cases}.
 \end{equation}
 ```
 "
+
+# ╔═╡ 1bb36c52-a171-4993-ac86-2250e1e87a01
+md"It corresponds to the following four processes of concatenating and comparing configrations on graphs (or tensor networks)."
+
+# ╔═╡ ade34905-5a61-4f71-b347-e02fab120b5d
+let
+	Compose.set_default_graphic_size(15cm, 10cm)
+	a = 0.1
+	b = 0.05
+	nodes = [(-a, -b), (a, -b), (a, b), (-a, b)]
+	nb = Compose.compose(context(), polygon(nodes), stroke("black"), fill("white"))
+	tb = textstyle(:default)
+	tt = Compose.compose(context(), text(0.0, 0.0, ""))
+	x_title = 0.1
+	canvas() do
+		for (y_1, op, title) in zip(
+				[0.2, 0.4, 0.6, 0.8],
+				["⊙", "⊕", "⊕", "⊕"],
+				[
+				("concatenate best configurations of two subgraphs", "value = n₁\ndegeneracy = c₁", "value = n₂\ndegeneracy = c₂", "value = n₁ + n₂\ndegeneracy = c₁ * c₂"),
+				("compare two configurations: case n₁ == n₂", "value = n\ndegeneracy = c₁", "value = n\ndegeneracy = c₂", "value = n\ndegeneracy = c₁ + c₂"),
+				("compare two configurations: case n₁ > n₂", "value = n₁\ndegeneracy = c₁", "value = n₂\ndegeneracy = c₂", "value = n₁ \ndegeneracy = c₁"),
+				("compare two configurations: case n₁ < n₂", "value = n₁\ndegeneracy = c₁", "value = n₂\ndegeneracy = c₂", "value = n₂\ndegeneracy = c₂")
+				]
+			)
+			x = (0.2, y_1)
+			y = (0.5, y_1)
+			z = (0.8, y_1)
+			nb >> x
+			nb >> y
+			nb >> z
+			tt >> ((x_title, y_1-0.08), title[1])
+			tb >> (x, title[2])
+			tb >> (y, title[3])
+			tb >> ((x .+ y) ./ 2, op)
+			tb >> ((z .+ y) ./ 2, "=")
+			tb >> (z, title[4])
+		end
+	end
+end
 
 # ╔═╡ 43101224-7ac5-11eb-104c-0323cf1813c5
 md"The zero and one elements are defined as"
@@ -665,6 +770,13 @@ zero(CountingTropical{Float64})
 
 # ╔═╡ 8388305c-7a23-11eb-1588-79c3c6ce9db9
 one(CountingTropical{Float64})
+
+# ╔═╡ 6faf5bf0-a8f5-4db0-839a-9389d541a690
+md"By replacing the tropical numbers with the counting tropical numbers in our privious program, we get"
+
+# ╔═╡ c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
+# `CountingTropical{Float64}` has two fields `n` (number) and `c` (counting), both are of type `Float64`.
+ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(CountingTropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
 
 # ╔═╡ 4190393a-7ac4-11eb-3ac6-eb8e3574fdc9
 md"There are 2 degenerate ground states with energy -4, they are"
@@ -711,13 +823,13 @@ let
 end
 
 # ╔═╡ c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
-md"## In our paper"
+md"##### Some results in the paper"
 
 # ╔═╡ d531c952-7ad9-11eb-1247-dd1913cc4678
 html"""<div align="center"><a href="https://github.com/TensorBFS/TropicalTensors.jl">code is available on github <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a></div>"""
 
 # ╔═╡ 541f4062-7b22-11eb-2eb8-17585a3de9c3
-md"#### Square lattices"
+md"**Square lattices**"
 
 # ╔═╡ 080bf23c-7ad8-11eb-37ac-01d2b6439f55
 let
@@ -728,7 +840,7 @@ let
 end
 
 # ╔═╡ 64f18c2e-7b22-11eb-352f-9d6e228cef49
-md"#### Cubic lattices"
+md"**Cubic lattices**"
 
 # ╔═╡ 9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
 let
@@ -756,7 +868,7 @@ let
 end
 
 # ╔═╡ 72742d66-7b22-11eb-2fac-cb2534558248
-md"#### Chimera lattices"
+md"**Chimera lattices**"
 
 # ╔═╡ 4f3a12e0-7ad5-11eb-2b37-c95342185c3e
 let
@@ -795,7 +907,7 @@ end
 
 # ╔═╡ 06bbead0-793f-11eb-0dec-c549b461b9cf
 md"""
-## Max 2-satisfiability problem
+#### Max 2-satisfiability problem
 * decision: Polynomial
 * counting: #P-complete
 
@@ -828,12 +940,45 @@ T_{v}^n = \delta^{n,q=2}
 ```
 """
 
+# ╔═╡ fe9e0d86-ddab-4f39-a36f-5f42887780f6
+function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
+	res = [T(1) T(1); T(1) T(1)]
+	res[Int(src)+1, Int(dst)+1] = T(-1)
+	return res
+end
+
+# ╔═╡ 58f6f6eb-d722-4144-b091-5b6bd7f3e97c
+function twosat_vertextensor(::Type{T}, n::Int) where T
+	res = zeros(T, fill(2, n)...)
+	res[1] = one(T)
+	res[end] = one(T)
+	return res
+end
+
+# ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
+let
+	T = CountingTropical{Float64}
+	ein"ac,ad,bd,be,ce,af,bf,cf,dg,eg,fg->"(
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, false),
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, true),
+		twosat_bondtensor(T, true, true),
+	)[]
+end
+
 # ╔═╡ 73f517de-7aed-11eb-03d1-db03dfb01a35
 md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16."
 
 # ╔═╡ 5f2243c4-793d-11eb-1add-392387bb559f
 md"""
-## Potts model
+#### Potts model
 
 * decision: NP-Complete
 * counting: #P-complete
@@ -855,8 +1000,23 @@ and the vertex tensor
 $$T_v^n=\delta^{n,q=3}$$
 """
 
+# ╔═╡ d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
+function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
+	angles = cos.(2π .* ((1:q) ./ q))
+	res = zeros(T, q, q)
+	for i=1:q
+		for j=1:q
+			res[i,j] = T(J*angles[mod1(abs(j-i), q)])
+		end
+	end
+	res
+end
+
+# ╔═╡ 50c9910f-6b47-4480-9efd-768dae573b92
+potts_vertextensor(T, q, n) = δtensor(T, q, n)
+
 # ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
-md"## In our paper"
+md"##### Some results in the paper"
 
 # ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 let
@@ -877,7 +1037,7 @@ end
 
 # ╔═╡ 344042b4-793d-11eb-3d6f-43eb2a4db9f4
 md"""
-## Maximum independent set
+#### Maximum independent set
 * hardness: NP-Complete
 * counting: #P-complete
 """
@@ -980,6 +1140,39 @@ The vertex tensors are for counting the number of vertices
 ```
 where $s_i,s_j,\ldots s_n \in \{0,1\}$."
 
+# ╔═╡ 64eb9dab-21bd-4412-8004-f82d7659ca2a
+function mis_bondtensor(::Type{T}) where T
+	res = ones(T, 2, 2)
+	res[2, 2] = zero(T)
+	return res
+end
+
+# ╔═╡ 0630d232-2791-4834-8076-3aba6c1deaee
+function mis_vertextensor(::Type{T}, n::Int) where T
+	res = zeros(T, fill(2, n)...)
+	res[1] = one(T)
+	res[end] = T(1)
+	return res
+end
+
+# ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
+tensor_network_mis = let
+	T = CountingTropical{Float64}
+	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
+	build_tensornetwork(
+		vertices = 1:5,
+		vertex_arrays = [mis_vertextensor(T, count(e->i ∈ e, edges)) for i=1:5],
+		edges = edges,
+		edge_arrays = [mis_bondtensor(T) for i=1:6]
+	)
+end;
+
+# ╔═╡ 3a34aaec-7afb-11eb-1fc4-2fbc027753cc
+contraction_result_mis = let
+	tc, sc, trees = trees_greedy(tensor_network_mis; strategy="min_reduce")
+	SimpleTensorNetworks.contract(tensor_network_mis, trees[1]).array[]
+end
+
 # ╔═╡ 5f4e0fec-7afd-11eb-37c7-11b84027136a
 md"There are 4 possible configurations"
 
@@ -1056,12 +1249,31 @@ let
 end
 
 # ╔═╡ 7bdf517e-79ff-11eb-38a3-49c02d94d943
-md"## The Song Shan Lake Spring School (SSSS) Challendge"
+md"## The Song Shan Lake Spring School (SSSS) Challenge"
 
-# ╔═╡ a387b018-79ff-11eb-0383-1fcf82853afc
+# ╔═╡ 89d737b3-e72e-4d87-9ade-466a84491ac8
+md"In 2019, Lei Wang, Pan Zhang, Roger and me released a chanllenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home. Students submitted more than 10 [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The quiz is"
+
+# ╔═╡ 1dbb9e90-78b0-11eb-2014-6dc6cfb35387
+md"``R_x`` = $(@bind θ2 Slider(0:0.01:2π; default=0.5, show_value=true))"
+
+# ╔═╡ 1dbc9afc-78b0-11eb-0940-2dcadf5408bb
+md"``R_y`` = $(@bind ϕ2 Slider(0:0.01:2π; default=2.8, show_value=true))"
+
+# ╔═╡ 88e14ef2-7af1-11eb-23d6-b34b1eff8f87
 md"""
-[You may find more than 10 solutions in our github repo](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md)
+In the Buckyball structure as shown in the figure, we attach an ising spin ``s_i=\pm 1`` on each vertex. The neighboring spins interact with an anti-ferromagnetic coupling of unit strength.
+
+1. Get ``\ln Z/N``, where ``N`` is the number of vertices, and
+```math
+Z = \sum_{\{s\}}e^{-\sum_{i,j \in E}s_i s_j}
+```
+
+2. Count the ground state degeneracy.
 """
+
+# ╔═╡ f867e24a-bbfa-44e7-819e-1051114f53f9
+md"Now we are proud to announce a new solution to this quiz"
 
 # ╔═╡ 5a5d4de6-7895-11eb-15c6-bda7a4342002
 function fullerene()
@@ -1078,12 +1290,6 @@ function fullerene()
 	end
 	return res
 end;
-
-# ╔═╡ 1dbb9e90-78b0-11eb-2014-6dc6cfb35387
-md"``R_x`` = $(@bind θ2 Slider(0:0.01:2π; default=0.5, show_value=true))"
-
-# ╔═╡ 1dbc9afc-78b0-11eb-0940-2dcadf5408bb
-md"``R_y`` = $(@bind ϕ2 Slider(0:0.01:2π; default=2.8, show_value=true))"
 
 # ╔═╡ 9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
 let
@@ -1107,18 +1313,6 @@ let
 	Compose.compose(context(0.5,0.5, 1.0, 1.0), fig)
 end
 
-# ╔═╡ 88e14ef2-7af1-11eb-23d6-b34b1eff8f87
-md"""
-In the Buckyball structure as shown in the figure, we attach an ising spin ``s_i=\pm 1`` on each vertex. The neighboring spins interact with an anti-ferromagnetic coupling of unit strength.
-
-1. Get ``\ln Z/N``, where ``N`` is the number of vertices, and
-```math
-Z = \sum_{\{s\}}e^{-\sum_{i,j \in E}s_i s_j}
-```
-
-2. Count the ground state degeneracy.
-"""
-
 # ╔═╡ b6560404-7b2d-11eb-21d7-a1e55609ebf7
 # the positions of fullerene atoms
 c60_xy = fullerene();
@@ -1129,172 +1323,6 @@ c60_edges = [(i=>j) for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in e
 
 # ╔═╡ 20125640-79fd-11eb-1715-1d071cc6cf6c
 md"construct tensor network by assigning labels `(edge index, boolean)` to tensors, where the boolean identifies whether this label correspond to the source node or the destination side of the edge. The resulting tensor network contains 90 edge tensors and 60 vertex tensors."
-
-# ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
-md"find a proper contraction order by greedy search"
-
-# ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
-md"The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
-
-# ╔═╡ 4c137484-7b30-11eb-2fb1-190d8beebbc3
-md"Finding the optimal contraction order is know as NP-hard, however, there are [some heuristic algorithms](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
-"
-
-# ╔═╡ e302bd1c-7ab5-11eb-03f6-69dcbb817354
-md"# Future Directions
-
-* Finding the optimal contracting order of `einsum`,
-    - einsum has less redundancy, with less effort in mapping, and potentially faster in contraction,
-    - tensor network can utilize BLAS easily,
-    - the contraction order for tensor networks are more studies.
-* TropicalBLAS,
-    - TropicalGEMM on CPU for Tropical numbers (DONE),
-    - TropicalGEMM on GPU (WIP),
-    - TropicalGEMM on CPU for CountingTropical numbers,
-"
-
-# ╔═╡ d53a5e5a-7b33-11eb-0a65-4d4844e9cf0a
-md"# Utilities"
-
-# ╔═╡ e51dc3e8-7b33-11eb-12ee-57413f6b8bca
-begin
-	function ising_bondtensor(::Type{T}, J) where T
-		e = T(J)
-		e_ = T(-J)
-		[e e_; e_ e]
-	end
-	function ising_vertextensor(::Type{T}, n::Int, h) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = T(h)
-		res[end] = T(-h)
-		return res
-	end
-	
-	function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
-		res = [T(1) T(1); T(1) T(1)]
-		res[Int(src)+1, Int(dst)+1] = T(-1)
-		return res
-	end
-	
-	function twosat_vertextensor(::Type{T}, n::Int) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = one(T)
-		res[end] = one(T)
-		return res
-	end
-	
-	function mis_bondtensor(::Type{T}) where T
-		res = ones(T, 2, 2)
-		res[2, 2] = zero(T)
-		return res
-	end
-	
-	function mis_vertextensor(::Type{T}, n::Int) where T
-		res = zeros(T, fill(2, n)...)
-		res[1] = one(T)
-		res[end] = T(1)
-		return res
-	end
-	
-	function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
-		angles = cos.(2π .* ((1:q) ./ q))
-		res = zeros(T, q, q)
-		for i=1:q
-			for j=1:q
-				res[i,j] = T(J*angles[mod1(abs(j-i), q)])
-			end
-		end
-		res
-	end
-
-	function δtensor(::Type{T}, q::Int, n::Int) where {T}
-		res = zeros(T, fill(q, n)...)
-		for i=1:q
-			res[fill(i, n)...] = one(T)
-		end
-		res
-	end
-	potts_vertextensor(args...) = δtensor(args...)
-	
-	function build_tensornetwork(; vertices, vertex_arrays, edges, edge_arrays)
-		TensorNetwork([
-		# vertex tensors
-		[LabeledTensor(vertex_arrays[i], [(j, v==e[1]) for (j, e) in enumerate(edges) if v ∈ e]) for (i, v) in enumerate(vertices)]...,
-		# bond tensors
-		[LabeledTensor(edge_arrays[j], [(j, true), (j, false)]) for j=1:length(edges)]...
-	])
-	end
-end;
-
-# ╔═╡ f914a760-7ad2-11eb-17e6-c39cf676196e
-# a `δ` tensor with rank 2 and size 3 × 3
-δtensor(Tropical{Float64}, 3, 2)
-
-# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
-# we use the `@ein_str` macro from OMEinsum to perform the contraction
-# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
-ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
-
-# ╔═╡ 15cf0c36-7a21-11eb-3e14-63950bcce943
-tnet = let
-	T = Tropical{Float64}
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	build_tensornetwork(
-		vertices = 1:5,
-		vertex_arrays = [ising_vertextensor(T, count(e->i ∈ e, edges), 0.0) for i=1:5],
-		edges = edges,
-		edge_arrays = [ising_bondtensor(T, J) for J in [J12, J23, J34, J14, J45, J13]]
-	)
-end;
-
-# ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
-contraction_result = let
-	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
-end
-
-# ╔═╡ 3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
-md"The mininum energy is $(-Int(contraction_result.n))."
-
-# ╔═╡ c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
-# `CountingTropical{Float64}` has two fields `n` (number) and `c` (counting), both are of type `Float64`.
-ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(CountingTropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
-
-# ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
-let
-	T = CountingTropical{Float64}
-	ein"ac,ad,bd,be,ce,af,bf,cf,dg,eg,fg->"(
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, false),
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, true),
-		twosat_bondtensor(T, true, true),
-	)[]
-end
-
-# ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
-tensor_network_mis = let
-	T = CountingTropical{Float64}
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	build_tensornetwork(
-		vertices = 1:5,
-		vertex_arrays = [mis_vertextensor(T, count(e->i ∈ e, edges)) for i=1:5],
-		edges = edges,
-		edge_arrays = [mis_bondtensor(T) for i=1:6]
-	)
-end;
-
-# ╔═╡ 3a34aaec-7afb-11eb-1fc4-2fbc027753cc
-contraction_result_mis = let
-	tc, sc, trees = trees_greedy(tensor_network_mis; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tensor_network_mis, trees[1]).array[]
-end
 
 # ╔═╡ c26b5bb6-7984-11eb-18fe-2b6a524f5c85
 c60_tnet = let
@@ -1307,6 +1335,9 @@ c60_tnet = let
 	)
 end;
 
+# ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
+md"find a proper contraction order by greedy search"
+
 # ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
 tcs, scs, c60_trees = (Random.seed!(2); trees_greedy(c60_tnet; strategy="min_reduce"));
 
@@ -1315,6 +1346,9 @@ md"time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity =
 
 # ╔═╡ d2161642-798a-11eb-2dec-cfe6cda6af5c
 SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
+
+# ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
+md"The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
 
 # ╔═╡ 58e38656-7b2e-11eb-3c70-25a919f9926a
 md"contraction step = $(@bind nstep_c60 Slider(0:length(c60_tnet); show_value=true, default=60))"
@@ -1368,12 +1402,29 @@ let
 	Compose.compose(context(0.5,0.35, 1.0, 1.0), fig)
 end
 
+# ╔═╡ 4c137484-7b30-11eb-2fb1-190d8beebbc3
+md"Finding the optimal contraction order is know as NP-hard, however, there are [some heuristic algorithms](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.060503) can find good contraction path in limited time.
+"
+
+# ╔═╡ e302bd1c-7ab5-11eb-03f6-69dcbb817354
+md"## Future Directions
+
+* Finding the optimal contracting order for `einsum`,
+    - einsum has less redundancy, with less effort in mapping, and potentially faster in contraction,
+* TropicalBLAS,
+    - TropicalGEMM on CPU for Tropical numbers ([DONE](https://github.com/chriselrod/LoopVectorization.jl/issues/201)),
+    - TropicalGEMM on GPU (WIP),
+    - TropicalGEMM for CountingTropical numbers,
+"
+
 # ╔═╡ Cell order:
 # ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
 # ╟─dfa8834c-e8c6-49b4-8bde-0816b573cbee
 # ╟─121b4926-7aba-11eb-30e1-7b8edd4f0166
 # ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
 # ╟─3205a536-7a17-11eb-3473-b71305c96ca4
+# ╟─592825a5-890a-4de8-984f-3d4ca48daca4
+# ╟─5066553a-9b22-4f3b-b8ba-13a88291d9b9
 # ╟─3208fd8a-7a17-11eb-35ce-4d6b141c1aff
 # ╟─32116a92-7a17-11eb-228f-0713510d0348
 # ╟─3217d1ca-7a17-11eb-14eb-a77ccfd983a0
@@ -1382,17 +1433,16 @@ end
 # ╟─322d2958-7a17-11eb-2deb-613b7680a5bb
 # ╟─3237e33e-7a17-11eb-2869-b92d0801bc6e
 # ╟─ec841be8-7a16-11eb-3337-376e26b7da25
-# ╟─be76e52a-7852-11eb-179b-afbc6efcab55
 # ╟─d0b54b76-7852-11eb-2398-0911380fa090
 # ╠═af13e090-7852-11eb-21ae-8b94f25f1a4f
 # ╠═d770f232-7864-11eb-0e9a-81528e359d39
 # ╟─5d16a472-785b-11eb-1b94-dd6d8f860c24
-# ╟─7da42d08-7ad2-11eb-095a-87aedba91b35
 # ╟─3372871c-785b-11eb-3092-4bbc419cb788
 # ╠═2173a6cc-785b-11eb-1ab6-7fb875224dd9
 # ╟─518b7d4e-785b-11eb-3b7c-1389065b9cbd
 # ╠═2868b292-785b-11eb-015e-6b5613bd9e39
 # ╟─98ae0960-797d-11eb-3646-c5b7e05d3f7c
+# ╠═ca9a13b8-0272-4557-97d4-9168923d363f
 # ╠═f914a760-7ad2-11eb-17e6-c39cf676196e
 # ╟─86921d00-7a17-11eb-2695-add5f9eeda5b
 # ╟─915e8096-7a17-11eb-177d-a39ffed7ca91
@@ -1411,15 +1461,13 @@ end
 # ╟─2c47b692-7a18-11eb-2878-2976435507f5
 # ╟─442bcb3c-7940-11eb-18e5-d3158b74b1dc
 # ╟─f7208b6e-793c-11eb-0dfa-0d63752ba53e
-# ╟─d3b4f162-7ad4-11eb-271c-677cb307c447
 # ╟─22118a36-7a36-11eb-18c3-dd2adac6118b
 # ╠═c85217b6-7a23-11eb-04c5-fb4dc9c02ef1
 # ╟─b3b986aa-7a1d-11eb-17d4-e5675015b221
 # ╟─b5cd769e-7a1e-11eb-1d82-e1c265dfdd52
-# ╟─00ed185e-7a2d-11eb-1b27-cb834e75e916
-# ╟─9e6fbf32-7a2f-11eb-17cb-9167d6a34281
 # ╟─6e1c507e-7a1a-11eb-05bc-dbccc3aebdf9
 # ╟─b52ead96-7a2a-11eb-334f-e5e5ff5867e3
+# ╠═624f57db-7f07-4281-a547-d229b9a8413a
 # ╟─05109d30-7a29-11eb-320a-fb0b0d8e2632
 # ╟─d0ecd3f2-7a2d-11eb-126d-7dab740d8e1f
 # ╟─9c860e2a-7a2e-11eb-231f-63e9aca1daa0
@@ -1430,15 +1478,20 @@ end
 # ╟─96290770-7a20-11eb-0ac8-33a6492c7b12
 # ╟─c1f90d6c-7a1d-11eb-2843-f971b5f6f3b0
 # ╟─64e08a56-7a36-11eb-29fd-03662b4d6612
+# ╠═b975680f-0b78-4178-861f-5da6d10327e4
 # ╟─f54119ca-7a1e-11eb-1bec-bf855e34658d
 # ╟─37102544-7abf-11eb-3ac4-6702dfc55425
+# ╠═75764e5b-d2f2-4178-a00f-8f362b59a0b8
 # ╠═15cf0c36-7a21-11eb-3e14-63950bcce943
 # ╠═a9544e66-7a27-11eb-2b27-1d2124988fb2
 # ╟─3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
 # ╟─695e405c-786d-11eb-0a6e-bb776d9626ad
+# ╟─1bb36c52-a171-4993-ac86-2250e1e87a01
+# ╟─ade34905-5a61-4f71-b347-e02fab120b5d
 # ╟─43101224-7ac5-11eb-104c-0323cf1813c5
 # ╠═792df1aa-7a23-11eb-2991-196336246c43
 # ╠═8388305c-7a23-11eb-1588-79c3c6ce9db9
+# ╟─6faf5bf0-a8f5-4db0-839a-9389d541a690
 # ╠═c1a7bd4a-7a36-11eb-176a-f399eb6b5f49
 # ╟─4190393a-7ac4-11eb-3ac6-eb8e3574fdc9
 # ╟─56fdb22c-7ac4-11eb-2831-a777d9ca89f3
@@ -1451,12 +1504,16 @@ end
 # ╟─72742d66-7b22-11eb-2fac-cb2534558248
 # ╟─4f3a12e0-7ad5-11eb-2b37-c95342185c3e
 # ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
-# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
+# ╠═e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 # ╟─06bbead0-793f-11eb-0dec-c549b461b9cf
 # ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
+# ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
+# ╠═58f6f6eb-d722-4144-b091-5b6bd7f3e97c
 # ╠═b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
 # ╟─73f517de-7aed-11eb-03d1-db03dfb01a35
 # ╟─5f2243c4-793d-11eb-1add-392387bb559f
+# ╠═d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
+# ╠═50c9910f-6b47-4480-9efd-768dae573b92
 # ╟─e739e74c-7af0-11eb-104f-5f94da1bf0be
 # ╟─80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 # ╟─344042b4-793d-11eb-3d6f-43eb2a4db9f4
@@ -1465,6 +1522,8 @@ end
 # ╟─5d95a598-7afa-11eb-10eb-db79fa44dd2a
 # ╟─d29470d4-7afa-11eb-0afc-a34e39d49aa5
 # ╟─75c37046-7b1b-11eb-00f5-7fc49f73f4d9
+# ╠═64eb9dab-21bd-4412-8004-f82d7659ca2a
+# ╠═0630d232-2791-4834-8076-3aba6c1deaee
 # ╠═0405f4d8-7afb-11eb-2163-597b2edcf17e
 # ╠═3a34aaec-7afb-11eb-1fc4-2fbc027753cc
 # ╟─5f4e0fec-7afd-11eb-37c7-11b84027136a
@@ -1473,12 +1532,13 @@ end
 # ╟─5caa1b7c-7b21-11eb-394d-379351fe5170
 # ╠═1b08b3ac-7b1e-11eb-2249-ddd787c549d4
 # ╟─7bdf517e-79ff-11eb-38a3-49c02d94d943
-# ╟─a387b018-79ff-11eb-0383-1fcf82853afc
-# ╟─5a5d4de6-7895-11eb-15c6-bda7a4342002
+# ╟─89d737b3-e72e-4d87-9ade-466a84491ac8
 # ╟─1dbb9e90-78b0-11eb-2014-6dc6cfb35387
 # ╟─1dbc9afc-78b0-11eb-0940-2dcadf5408bb
 # ╟─9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
 # ╟─88e14ef2-7af1-11eb-23d6-b34b1eff8f87
+# ╟─f867e24a-bbfa-44e7-819e-1051114f53f9
+# ╠═5a5d4de6-7895-11eb-15c6-bda7a4342002
 # ╠═b6560404-7b2d-11eb-21d7-a1e55609ebf7
 # ╠═6f649efc-7b2d-11eb-1e80-53d84ef98c13
 # ╟─20125640-79fd-11eb-1715-1d071cc6cf6c
@@ -1493,5 +1553,3 @@ end
 # ╟─c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
 # ╟─4c137484-7b30-11eb-2fb1-190d8beebbc3
 # ╟─e302bd1c-7ab5-11eb-03f6-69dcbb817354
-# ╟─d53a5e5a-7b33-11eb-0a65-4d4844e9cf0a
-# ╠═e51dc3e8-7b33-11eb-12ee-57413f6b8bca
