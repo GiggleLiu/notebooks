@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.18
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -16,6 +16,30 @@ end
 # ╔═╡ c456b902-7959-11eb-03ba-dd14a2cd5758
 begin
 	using Revise, PlutoUI, CoordinateTransformations, StaticArrays, Rotations, Viznet, Compose
+	
+	function viz_lattice(lt::Viznet.AbstractSites; ncolor, r)
+		line_style=bondstyle(:default, stroke("black"), linewidth(3*unit(lt)*mm))
+		colors = if ncolor==1
+			["#333333"]
+		elseif ncolor==2
+			["#EC9923", "#5599DD"]
+		elseif ncolor==3
+			["#EC9923", "#5599DD", "#BC6153"]
+		else
+			error("!!")
+		end
+		node_styles = [nodestyle(:circle, fill(color), r=r) for color in colors]
+		#text_style=textstyle(:default, fontsize(unit(lt)*100pt)), labels=vertices(lt)
+		canvas() do
+			for (i,node) in enumerate(Viznet.vertices(lt))
+				rand(node_styles) >> lt[node]
+				#text_style >> (lt[node], "$(labels[i])")
+			end
+			for bond in Viznet.bonds(lt)
+				line_style >> lt[bond[1]; bond[2]]
+			end
+		end
+	end
 	
 	# cubic geometry
 	struct Cubic{T}
@@ -61,6 +85,12 @@ using TropicalNumbers,  		# tropical number type
 		Random,
 		OMEinsum,				# Einstein's summation notation
     	SimpleTensorNetworks  	# tensor network contraction
+
+# ╔═╡ 3674a622-823b-11eb-3991-d5771010237b
+using Pkg; Pkg.status()
+
+# ╔═╡ 94b870d2-8235-11eb-33e7-35bf5132efd6
+using Profile
 
 # ╔═╡ dfa8834c-e8c6-49b4-8bde-0816b573cbee
 html"""
@@ -1171,7 +1201,7 @@ md"**Square lattices**"
 
 # ╔═╡ 080bf23c-7ad8-11eb-37ac-01d2b6439f55
 let
-	img1 = viz(SquareLattice(32,32); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent")))
+	img1 = viz_lattice(SquareLattice(32,32); r=0.008, ncolor=2)
 	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
 	leftright(updown(img1, md"We obtain the exact ground state energy of Ising spin glasses on square lattice up to $32^2$ spins."), updown(HTML("""<img src="https://user-images.githubusercontent.com/6257240/109566189-87bc5980-7ab1-11eb-9d08-99cd573007df.png" width=270px></img>"""), md"""Wall clock time for computing the ground state energy of the (a) Ising spin glass on an open square lattice with
 ``L^2`` spins. (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"""))
@@ -1189,13 +1219,13 @@ let
 	rot = RotY(θ)*RotX(ϕ)
 	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
 	Nx = Ny = Nz = 6
-	nb = nodestyle(:circle; r=0.01)
-	eb = bondstyle(:default; r=0.01)
+	nb = [nodestyle(:circle, fill(color); r=0.01) for color in ["#EC9923", "#5599DD"]]
+	eb = bondstyle(:default, stroke("#333333"), linewidth(0.15mm); r=0.01)
 	c = Cubic((0.05, 0.05, 0.05))
 	x(i,j,k) = cam_transform(SVector(c[i-Nx/2-0.5,j-Ny/2-0.5,k-Nz/2-0.5])).data
 	fig = canvas() do
 		for i=1:Nx, j=1:Ny, k=1:Nz
-			nb >> x(i,j,k)
+			rand(nb) >> x(i,j,k)
 			i!=Nx && eb >> (x(i,j,k), x(i+1,j,k))
 			j!=Ny && eb >> (x(i,j,k), x(i,j+1,k))
 			k!=Nz && eb >> (x(i,j,k), x(i,j,k+1))
@@ -1211,10 +1241,30 @@ md"**Chimera lattices**"
 # ╔═╡ 4f3a12e0-7ad5-11eb-2b37-c95342185c3e
 let
 	Compose.set_default_graphic_size(6cm, 8cm)
-	img = Compose.compose(context(0.0,0,8/6,1), viz(ChimeraLattice(8, 8); node_style=nodestyle(:circle; r=0.008), text_style=textstyle(:default, fill("transparent"), fontsize(2pt))))
+	img = Compose.compose(context(0.0,0,8/6,1), viz_lattice(ChimeraLattice(8, 8); r=0.008, ncolor=2))
 	leftright(updown(img, md"``\pm J`` Ising spin glass on the chimera graph of D-Wave quantum annealer of $512$ qubits in less than $100$ seconds and investigate the exact value of the residual entropy of $\pm J$ spin glasses on the chimera graph."), updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground
 state energy of Ising spin glass on the chimera graph with the
 ``L \times L`` unit cell (``8L^2`` spins). (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"))
+end
+
+# ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
+md"**Potts model**"
+
+# ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
+let
+	Compose.set_default_graphic_size(5cm, 5cm)
+	img = viz_lattice(SquareLattice(18,18); r=0.015, ncolor=3)
+	leftright(updown(
+		img,
+		md"Ground-state energy, entropy, and computational
+time of ``q = 3`` state Potts spin glass model on square lattices of sizes ``n = 4\sim 18``. Each data point is
+averaged over ``100`` random instances computed on a single
+GPU. As a comparison, the existing branch-and-cut method
+with the Semi-Definite Programming energy lower bounds
+method on the same model works up to ``9 \times 9`` lattices
+(using 10 hours)"
+		; width=300)
+		,html"""<img src="https://user-images.githubusercontent.com/6257240/109578583-6d8c7680-7ac5-11eb-93eb-1b2748f2c90b.png" width=250px/>""")
 end
 
 # ╔═╡ 81e06ac6-7b22-11eb-3042-373a49bbdb49
@@ -1241,26 +1291,6 @@ let
 	leftright(Compose.compose(context(0.0, 0.0, 6/7, 1.0), img), md"""
 The spin glass on the random graphs: our method can compute optimal solutions and count the number of solutions for spin glasses and combinatorial optimization problems on on $3$ regular random graphs up to $220$ spins, on a single GPU. This is inaccessible by existing methods.
 """)
-end
-
-# ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
-md"**Potts model**"
-
-# ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
-let
-	Compose.set_default_graphic_size(7cm, 7cm)
-	img = viz(SquareLattice(18,18); node_style=nodestyle(:circle; r=0.012), text_style=textstyle(:default, fill("transparent")))
-	leftright(updown(
-		img,
-		md"Ground-state energy, entropy, and computational
-time of ``q = 3`` state Potts spin glass model on square lattices of sizes ``n = 4\sim 18``. Each data point is
-averaged over ``100`` random instances computed on a single
-GPU. As a comparison, the existing branch-and-cut method
-with the Semi-Definition Programming energy lower bounds
-method on the same model works up to ``9 \times 9`` lattices
-(using 10 hours)"
-		; width=300)
-		,html"""<img src="https://user-images.githubusercontent.com/6257240/109578583-6d8c7680-7ac5-11eb-93eb-1b2748f2c90b.png" width=250px/>""")
 end
 
 # ╔═╡ 7bdf517e-79ff-11eb-38a3-49c02d94d943
@@ -1350,13 +1380,16 @@ end;
 # ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
 md"Then we find a proper contraction order by greedy search"
 
+# ╔═╡ 020cfb20-8228-11eb-2ee9-6de0fc7700b1
+md"Seed for greedy search = $(@bind seed Slider(1:10000; show_value=true, default=42))"
+
 # ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
-tcs, scs, c60_trees = (Random.seed!(2); trees_greedy(c60_tnet; strategy="min_reduce"));
+tcs, scs, c60_trees = (Random.seed!(seed); trees_greedy(c60_tnet; strategy="min_reduce"));
 
 # ╔═╡ 2b899624-798c-11eb-20c4-fd5523f7abff
 md"The resulting contraction order produces time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
 
-# ╔═╡ d2161642-798a-11eb-2dec-cfe6cda6af5c
+# ╔═╡ 8522456a-823c-11eb-3cc1-fb720f1cc470
 SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
 
 # ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
@@ -1437,7 +1470,7 @@ The Tropical BLAS project is under the progress,
 "
 
 # ╔═╡ Cell order:
-# ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
+# ╠═c456b902-7959-11eb-03ba-dd14a2cd5758
 # ╟─dfa8834c-e8c6-49b4-8bde-0816b573cbee
 # ╟─121b4926-7aba-11eb-30e1-7b8edd4f0166
 # ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
@@ -1549,10 +1582,10 @@ The Tropical BLAS project is under the progress,
 # ╟─9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
 # ╟─72742d66-7b22-11eb-2fac-cb2534558248
 # ╟─4f3a12e0-7ad5-11eb-2b37-c95342185c3e
-# ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
-# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 # ╟─e739e74c-7af0-11eb-104f-5f94da1bf0be
 # ╟─80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
+# ╟─81e06ac6-7b22-11eb-3042-373a49bbdb49
+# ╟─e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 # ╟─7bdf517e-79ff-11eb-38a3-49c02d94d943
 # ╟─89d737b3-e72e-4d87-9ade-466a84491ac8
 # ╟─9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
@@ -1564,9 +1597,12 @@ The Tropical BLAS project is under the progress,
 # ╟─20125640-79fd-11eb-1715-1d071cc6cf6c
 # ╠═c26b5bb6-7984-11eb-18fe-2b6a524f5c85
 # ╟─698a6dd0-7a0e-11eb-2766-1f0baa1317d2
+# ╟─020cfb20-8228-11eb-2ee9-6de0fc7700b1
 # ╠═ae92d828-7984-11eb-31c8-8b3f9a071c24
 # ╟─2b899624-798c-11eb-20c4-fd5523f7abff
-# ╠═d2161642-798a-11eb-2dec-cfe6cda6af5c
+# ╠═3674a622-823b-11eb-3991-d5771010237b
+# ╠═94b870d2-8235-11eb-33e7-35bf5132efd6
+# ╠═8522456a-823c-11eb-3cc1-fb720f1cc470
 # ╟─1c4b19d2-7b30-11eb-007b-ab03052b22d2
 # ╟─58e38656-7b2e-11eb-3c70-25a919f9926a
 # ╟─12740186-7b2f-11eb-35e4-01e6f9ffbb4d
