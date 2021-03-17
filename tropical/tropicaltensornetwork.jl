@@ -18,13 +18,13 @@ begin
 	using Revise, PlutoUI, CoordinateTransformations, StaticArrays, Rotations, Viznet, Compose
 	
 	function viz_lattice(lt::Viznet.AbstractSites; ncolor, r)
-		line_style=bondstyle(:default, stroke("black"), linewidth(3*unit(lt)*mm))
+		line_style=bondstyle(:default, stroke("#333333"), linewidth(4*unit(lt)*mm))
 		colors = if ncolor==1
 			["#333333"]
 		elseif ncolor==2
-			["#EC9923", "#5599DD"]
+			["#CC4040", "#4040CC"]
 		elseif ncolor==3
-			["#EC9923", "#5599DD", "#BC6153"]
+			["#CC4040", "#40CC40", "#4040CC"]
 		else
 			error("!!")
 		end
@@ -41,6 +41,100 @@ begin
 		end
 	end
 	
+	
+	function _spring_layout(adj_matrix::AbstractMatrix,
+						   locs_x=2*rand(size(adj_matrix, 1)).-1.0,
+						   locs_y=2*rand(size(adj_matrix, 1)).-1.0;
+						   C=2.0,
+						   MAXITER=100,
+						   INITTEMP=2.0)
+
+		nvg = size(adj_matrix, 1)
+
+		# The optimal distance bewteen vertices
+		k = C * sqrt(4.0 / nvg)
+		k² = k * k
+
+		# Store forces and apply at end of iteration all at once
+		force_x = zeros(nvg)
+		force_y = zeros(nvg)
+
+		# Iterate MAXITER times
+		@inbounds for iter = 1:MAXITER
+			# Calculate forces
+			for i = 1:nvg
+				force_vec_x = 0.0
+				force_vec_y = 0.0
+				for j = 1:nvg
+					i == j && continue
+					d_x = locs_x[j] - locs_x[i]
+					d_y = locs_y[j] - locs_y[i]
+					dist²  = (d_x * d_x) + (d_y * d_y)
+					dist = sqrt(dist²)
+
+					if !( iszero(adj_matrix[i,j]) && iszero(adj_matrix[j,i]) )
+						# Attractive + repulsive force
+						# F_d = dist² / k - k² / dist # original FR algorithm
+						F_d = dist / k - k² / dist²
+					else
+						# Just repulsive
+						# F_d = -k² / dist  # original FR algorithm
+						F_d = -k² / dist²
+					end
+					force_vec_x += F_d*d_x
+					force_vec_y += F_d*d_y
+				end
+				force_x[i] = force_vec_x
+				force_y[i] = force_vec_y
+			end
+			# Cool down
+			temp = INITTEMP / iter
+			# Now apply them, but limit to temperature
+			for i = 1:nvg
+				fx = force_x[i]
+				fy = force_y[i]
+				force_mag  = sqrt((fx * fx) + (fy * fy))
+				scale      = min(force_mag, temp) / force_mag
+				locs_x[i] += force_x[i] * scale
+				locs_y[i] += force_y[i] * scale
+			end
+		end
+
+		# Scale to unit square
+		min_x, max_x = minimum(locs_x), maximum(locs_x)
+		min_y, max_y = minimum(locs_y), maximum(locs_y)
+		function scaler(z, a, b)
+			2.0*((z - a)/(b - a)) - 1.0
+		end
+		map!(z -> scaler(z, min_x, max_x), locs_x, locs_x)
+		map!(z -> scaler(z, min_y, max_y), locs_y, locs_y)
+
+		return [((x+1)/2, (y+1)/2) for (x, y) in zip(locs_x, locs_y)]
+	end
+
+	function viz_graph(graph; r=0.25/sqrt(nv(graph)+1), show_edgeindex=false,
+        node_fontsize=100pt/sqrt(nv(graph)+1),
+        edge_fontsize=200pt/sqrt(nv(graph)+1),
+        labels=1:nv(graph),
+        locs=_spring_layout(adjacency_matrix(graph)),
+        linecolor="#333333",
+        node_edgecolor="transparent",
+        node_facecolors=["#CC4040", "#4040CC"]
+    )
+		nt = nv(graph)
+		nbs = [nodestyle(:default, fill(c), stroke(node_edgecolor), linewidth(2mm/sqrt(nv(graph)+1)); r=r) for c in node_facecolors]
+		eb = bondstyle(:default, linewidth(3mm/sqrt(nv(graph)+1)), stroke(linecolor))
+		Compose.compose(Compose.context(r, r, 1-2r, 1-2r), canvas() do
+			for (loc, label) in zip(locs, labels)
+				rand(nbs) >> loc
+			end
+			for edge in edges(graph)
+				eb >> (locs[edge.src], locs[edge.dst])
+			end
+		end)
+	end
+
+
 	# cubic geometry
 	struct Cubic{T}
 		grid::NTuple{3,T}
@@ -1197,18 +1291,18 @@ Note: Most of these benchmarks does not contract directly with `SimpleTensorNetw
 html"""<div align="center"><a href="https://github.com/TensorBFS/TropicalTensors.jl">code is available on github <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a></div>"""
 
 # ╔═╡ 541f4062-7b22-11eb-2eb8-17585a3de9c3
-md"**Square lattices**"
+md"**Ising spin glass on square lattices**"
 
 # ╔═╡ 080bf23c-7ad8-11eb-37ac-01d2b6439f55
 let
-	img1 = viz_lattice(SquareLattice(32,32); r=0.008, ncolor=2)
+	img1 = viz_lattice(SquareLattice(32,32); r=0.01, ncolor=2)
 	Compose.set_default_graphic_size(14cm*0.4, 7cm*0.8)
 	leftright(updown(img1, md"We obtain the exact ground state energy of Ising spin glasses on square lattice up to $32^2$ spins."), updown(HTML("""<img src="https://user-images.githubusercontent.com/6257240/109566189-87bc5980-7ab1-11eb-9d08-99cd573007df.png" width=270px></img>"""), md"""Wall clock time for computing the ground state energy of the (a) Ising spin glass on an open square lattice with
 ``L^2`` spins. (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"""))
 end
 
 # ╔═╡ 64f18c2e-7b22-11eb-352f-9d6e228cef49
-md"**Cubic lattices**"
+md"**Ising spin glass on cubic lattices**"
 
 # ╔═╡ 9deb5b9a-7adf-11eb-3ba0-0d3716d7d603
 let
@@ -1219,8 +1313,8 @@ let
 	rot = RotY(θ)*RotX(ϕ)
 	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
 	Nx = Ny = Nz = 6
-	nb = [nodestyle(:circle, fill(color); r=0.01) for color in ["#EC9923", "#5599DD"]]
-	eb = bondstyle(:default, stroke("#333333"), linewidth(0.15mm); r=0.01)
+	nb = [nodestyle(:circle, fill(color); r=0.015) for color in ["#CC4040", "#4040CC"]]
+	eb = bondstyle(:default, stroke("#333333"), linewidth(0.2mm); r=0.01)
 	c = Cubic((0.05, 0.05, 0.05))
 	x(i,j,k) = cam_transform(SVector(c[i-Nx/2-0.5,j-Ny/2-0.5,k-Nz/2-0.5])).data
 	fig = canvas() do
@@ -1236,19 +1330,19 @@ let
 end
 
 # ╔═╡ 72742d66-7b22-11eb-2fac-cb2534558248
-md"**Chimera lattices**"
+md"**Ising spin glass on Chimera lattices**"
 
 # ╔═╡ 4f3a12e0-7ad5-11eb-2b37-c95342185c3e
 let
 	Compose.set_default_graphic_size(6cm, 8cm)
-	img = Compose.compose(context(0.0,0,8/6,1), viz_lattice(ChimeraLattice(8, 8); r=0.008, ncolor=2))
+	img = Compose.compose(context(0.0,0,8/6,1), viz_lattice(ChimeraLattice(8, 8); r=0.01, ncolor=2))
 	leftright(updown(img, md"``\pm J`` Ising spin glass on the chimera graph of D-Wave quantum annealer of $512$ qubits in less than $100$ seconds and investigate the exact value of the residual entropy of $\pm J$ spin glasses on the chimera graph."), updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground
 state energy of Ising spin glass on the chimera graph with the
 ``L \times L`` unit cell (``8L^2`` spins). (tensor networks are contracted with [Yao.jl](https://github.com/QuantumBFS/Yao.jl))"))
 end
 
 # ╔═╡ e739e74c-7af0-11eb-104f-5f94da1bf0be
-md"**Potts model**"
+md"**3-state Potts model on square lattice**"
 
 # ╔═╡ 80d6c2b6-7aef-11eb-1bf5-5d4f266dfa73
 let
@@ -1268,7 +1362,7 @@ method on the same model works up to ``9 \times 9`` lattices
 end
 
 # ╔═╡ 81e06ac6-7b22-11eb-3042-373a49bbdb49
-md"**Random 3-regular graphs**"
+md"**Ising spin glass and Max-2-SAT on random 3-regular graphs**"
 
 # ╔═╡ e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 let
@@ -1285,7 +1379,7 @@ let
 		TensorNetwork(tensors)
 	end
 
-	img = SimpleTensorNetworks.viz_tnet(rand_3regular_tn(Float64, 220), node_facecolor="black", linecolor="black", node_fontsize=0)
+	img = viz_graph(random_regular_graph(220, 3), linecolor="black", node_fontsize=0)
 	#leftright(img, updown(html"""<img src="https://user-images.githubusercontent.com/6257240/109566350-bb977f00-7ab1-11eb-953f-127d7919e3e6.png" width=270px/>""", md"Wall clock time for computing the ground state energy of Ising spin glass on the chimera graph with the ``L \times L`` unit cell (``8L^2`` spins)."))
 	Compose.set_default_graphic_size(7cm, 6cm)
 	leftright(Compose.compose(context(0.0, 0.0, 6/7, 1.0), img), md"""
@@ -1470,7 +1564,7 @@ The Tropical BLAS project is under the progress,
 "
 
 # ╔═╡ Cell order:
-# ╠═c456b902-7959-11eb-03ba-dd14a2cd5758
+# ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
 # ╟─dfa8834c-e8c6-49b4-8bde-0816b573cbee
 # ╟─121b4926-7aba-11eb-30e1-7b8edd4f0166
 # ╠═5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
