@@ -972,27 +972,16 @@ A 2-satisfiability problem may be described using a Boolean expression with a sp
 
 # ╔═╡ ef2d2446-793f-11eb-223a-c5fe0ed5e367
 md"""
-We define an energy function as
+We define an energy function
 ```math
 E = \sum\limits_{k=1}^{|C|} C_k(s_{i_k}, s_{j_k})
 ```
-where ``C_k(s_{i_k}, s_{j_k})`` is ``+1`` if the ``k``th clause on $i$th and $j$th boolean variable is satisfied, otherwise, it is ``-1``.
+where ``C_k(s_{i_k}, s_{j_k})`` is ``+1`` if the ``k``th clause on $i$th and $j$th boolean variable is satisfied, otherwise, it is ``-1``. In the tensor network representation, we use a vertex tensor to represent a boolean variable
 
 ```math
-(T_{e})_{s_i s_j} = C_e(s_i,s_j)
-```
-
-```math
-T_{v}^n = \delta^{n,q=2}
+T_{v}^n = \delta^{n,q=2}.
 ```
 """
-
-# ╔═╡ fe9e0d86-ddab-4f39-a36f-5f42887780f6
-function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
-	res = [T(1) T(1); T(1) T(1)]
-	res[Int(src)+1, Int(dst)+1] = T(-1)
-	return res
-end
 
 # ╔═╡ 58f6f6eb-d722-4144-b091-5b6bd7f3e97c
 function twosat_vertextensor(::Type{T}, n::Int) where T
@@ -1002,8 +991,23 @@ function twosat_vertextensor(::Type{T}, n::Int) where T
 	return res
 end
 
+# ╔═╡ 528b4ef8-872a-11eb-14da-918dfd3110aa
+md"If two vertices are related by a clause $C_k$, we add an bond tensor $T_k$ to connect two vertices.
+
+```math
+(T_{k})_{s_i s_j} = C_k(s_i,s_j)
+```
+"
+
+# ╔═╡ fe9e0d86-ddab-4f39-a36f-5f42887780f6
+function twosat_bondtensor(::Type{T}, src::Bool, dst::Bool) where T
+	res = [T(1) T(1); T(1) T(1)]
+	res[Int(src)+1, Int(dst)+1] = T(-1)
+	return res
+end
+
 # ╔═╡ 268959f8-4162-4372-95b4-6f9fc47c23a6
-md"The degeneracy can be obtained easily with `einsum`"
+md"The degeneracy can also be obtained easily with `einsum` (without using vertex tensors)"
 
 # ╔═╡ b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
 let
@@ -1024,7 +1028,7 @@ let
 end
 
 # ╔═╡ 73f517de-7aed-11eb-03d1-db03dfb01a35
-md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16. (Note: this contraction is not computational efficient, for large problem, one should definitely switch to .)"
+md"Since the resulting (counting) tropical number 11 is equal to the number of clauses, all clauses are satisfied, and the degeneracy is 16. (Note: this contraction is not computational efficient, for large scale problem, one should use the contraction order algorithms listed in Sec. 5.)"
 
 # ╔═╡ 5f2243c4-793d-11eb-1add-392387bb559f
 md"""
@@ -1045,9 +1049,6 @@ For $q=3$, we have the edge tensor
 ```math
 T_e = J\left(\begin{matrix}1 & -1/2 & -1/2 \\ -1/2 & 1 & -1/2 \\ -1/2 & -1/2 & 1\end{matrix}\right)
 ```
-and the vertex tensor
-
-$$T_v^n=\delta^{n,q=3}$$
 """
 
 # ╔═╡ d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
@@ -1061,6 +1062,12 @@ function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
 	end
 	res
 end
+
+# ╔═╡ c4c9caa6-872a-11eb-3c90-3b18e9762253
+md"""and the vertex tensor
+
+$$T_v^n=\delta^{n,q=3}$$
+"""
 
 # ╔═╡ 50c9910f-6b47-4480-9efd-768dae573b92
 potts_vertextensor(T, q, n) = δtensor(T, q, n)
@@ -1158,8 +1165,17 @@ end
 md"We can put a bond matrix at the bond to describe the independence restriction
 ```math
 T_{e} = \begin{bmatrix}0 & 0 \\0 & -\infty\end{bmatrix}
-```
+```"
 
+# ╔═╡ 64eb9dab-21bd-4412-8004-f82d7659ca2a
+function mis_bondtensor(::Type{T}) where T
+	res = ones(T, 2, 2)
+	res[2, 2] = zero(T)
+	return res
+end
+
+# ╔═╡ 06ebea54-872b-11eb-2903-157e0fc88de1
+md"""
 The vertex tensors are for counting the number of vertices
 ```math
 (T_{v}^{n})_{s_i s_j} = \begin{cases}
@@ -1168,14 +1184,8 @@ The vertex tensors are for counting the number of vertices
  -\infty, &otherwise
 \end{cases}
 ```
-where $s_i,s_j,\ldots s_n \in \{0,1\}$."
-
-# ╔═╡ 64eb9dab-21bd-4412-8004-f82d7659ca2a
-function mis_bondtensor(::Type{T}) where T
-	res = ones(T, 2, 2)
-	res[2, 2] = zero(T)
-	return res
-end
+where $s_i,s_j,\ldots s_n \in \{0,1\}$.
+"""
 
 # ╔═╡ 0630d232-2791-4834-8076-3aba6c1deaee
 function mis_vertextensor(::Type{T}, n::Int) where T
@@ -1644,13 +1654,15 @@ The Tropical BLAS project is under the progress,
 # ╟─56fdb22c-7ac4-11eb-2831-a777d9ca89f3
 # ╟─06bbead0-793f-11eb-0dec-c549b461b9cf
 # ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
-# ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
 # ╠═58f6f6eb-d722-4144-b091-5b6bd7f3e97c
+# ╟─528b4ef8-872a-11eb-14da-918dfd3110aa
+# ╠═fe9e0d86-ddab-4f39-a36f-5f42887780f6
 # ╟─268959f8-4162-4372-95b4-6f9fc47c23a6
 # ╠═b8c8999a-7aec-11eb-3ccd-69b48fcb93c2
 # ╟─73f517de-7aed-11eb-03d1-db03dfb01a35
 # ╟─5f2243c4-793d-11eb-1add-392387bb559f
 # ╠═d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
+# ╟─c4c9caa6-872a-11eb-3c90-3b18e9762253
 # ╠═50c9910f-6b47-4480-9efd-768dae573b92
 # ╟─344042b4-793d-11eb-3d6f-43eb2a4db9f4
 # ╟─80d764a8-7afd-11eb-3fb8-79169ca56c7e
@@ -1659,6 +1671,7 @@ The Tropical BLAS project is under the progress,
 # ╟─d29470d4-7afa-11eb-0afc-a34e39d49aa5
 # ╟─75c37046-7b1b-11eb-00f5-7fc49f73f4d9
 # ╠═64eb9dab-21bd-4412-8004-f82d7659ca2a
+# ╟─06ebea54-872b-11eb-2903-157e0fc88de1
 # ╠═0630d232-2791-4834-8076-3aba6c1deaee
 # ╟─6800e29e-bee3-4670-b5b5-aaeee9e25046
 # ╠═0405f4d8-7afb-11eb-2163-597b2edcf17e
