@@ -955,7 +955,7 @@ end
 # ╔═╡ 06bbead0-793f-11eb-0dec-c549b461b9cf
 md"""
 ### Max 2-satisfiability problem
-* decision: Polynomial
+* decision: NP-complete
 * counting: #P-complete
 
 A 2-satisfiability problem may be described using a Boolean expression with a special restricted form. It is a conjunction (a Boolean and operation) of clauses, where each clause is a disjunction (a Boolean or operation) of two variables or negated variables. The following is an example of 2-SAT problem of size ``6``
@@ -1038,7 +1038,6 @@ md"""
 * counting: #P-complete
 
 The Potts model is generalization of Ising model, where a spin takes one of ``q`` possible values, distributed uniformly about the circle, at angles
-
 ``\theta _{n}={\frac  {2\pi n}{q}}``,
 where ``n = 0, 1, ..., q-1`` and that the interaction Hamiltonian be given by
 
