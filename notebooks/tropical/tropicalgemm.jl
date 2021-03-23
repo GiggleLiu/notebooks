@@ -4,15 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
-    end
-end
-
 # ╔═╡ c456b902-7959-11eb-03ba-dd14a2cd5758
 using PlutoUI, TropicalNumbers
 
@@ -36,12 +27,6 @@ end
 
 # ╔═╡ fa139cd8-7964-11eb-1c36-eb91c2f7f23c
 using .SymTropical: Basic
-
-# ╔═╡ 31f6ec44-7878-11eb-3d0e-bb365f592a0e
-using Viznet, Compose
-
-# ╔═╡ ed4600c8-788c-11eb-297c-29316dfcdec1
-using CoordinateTransformations, StaticArrays, Rotations
 
 # ╔═╡ 5143e258-7852-11eb-05fa-9df9234c5619
 begin
@@ -86,6 +71,9 @@ end
 		vstore!(convert(Ptr{T}, ptr), content(v), m, a, s, nt, si)
 	end
 end
+
+# ╔═╡ f0b07c72-8999-11eb-316a-293e6cee3c88
+using Plots
 
 # ╔═╡ 0faacc8a-7965-11eb-151c-2909d9c2f00e
 begin
@@ -133,11 +121,6 @@ begin
 		end
 		res
 	end
-
-
-	#for F in [:ising_bondtensor, :]
-	#	@eval $F(t) = 
-	#end
 end
 
 # ╔═╡ 1ba138d2-7963-11eb-1622-49c797062a8e
@@ -146,343 +129,156 @@ ising_bondtensor(Tropical{Basic}, Basic(:J))
 # ╔═╡ 460adcbe-7964-11eb-261c-bdb704a573f3
 ising_vertextensor(Tropical{Basic}, 2, Basic(:h))
 
-# ╔═╡ be76e52a-7852-11eb-179b-afbc6efcab55
-md"## Tropical algebra"
+# ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
+md"# Tropical GEMM"
 
-# ╔═╡ d0b54b76-7852-11eb-2398-0911380fa090
-md"""
-Tropical algebra is defined by replacing the usual sum and product operators for ordinary real numbers with the max and sum operators respectively~\cite{maclagan2015introduction} 
-
-```math
-\begin{align}
-&a ⊕ b = \max(a, b)\\
-&a ⊙ b = a + b
-\end{align}
-```
-"""
-
-# ╔═╡ af13e090-7852-11eb-21ae-8b94f25f1a4f
-Tropical(3.0) * Tropical(2.0)
-
-# ╔═╡ d770f232-7864-11eb-0e9a-81528e359d39
-Tropical(3.0) + Tropical(2.0)
-
-# ╔═╡ 3372871c-785b-11eb-3092-4bbc419cb788
-md"One sees that $-\infty$ acts as zero element for the tropical number since  $-\infty \oplus x = x  $ and $-\infty \odot x = -\infty$. "
-
-# ╔═╡ 2173a6cc-785b-11eb-1ab6-7fb875224dd9
-zero(Tropical{Float64})
-
-# ╔═╡ 518b7d4e-785b-11eb-3b7c-1389065b9cbd
-md"
-On the other hand, $0$ acts as the multiplicative identity since $0 \odot x = x$."
-
-# ╔═╡ 2868b292-785b-11eb-015e-6b5613bd9e39
-one(Tropical{Float64})
-
-# ╔═╡ 5d16a472-785b-11eb-1b94-dd6d8f860c24
-md"""
-The $\oplus$ and $\odot$ operators still have commutative, associative, and distributive properties. However, since there is no additive inverse, the $\oplus$ and $\odot$ and operations define a semiring over ``\mathbb R \cup \{-\infty\}``. 
-"""
-
-# ╔═╡ 98ae0960-797d-11eb-3646-c5b7e05d3f7c
-md"""The tropical $\delta$ tensor of rank $n$ and dimension $q$ is defined as
-```math
-δ_{s_i s_j\ldots s_n}^{n,q} = \begin{cases}
- 0, & s_i = s_j =\ldots s_n\\
- -\infty, &otherwise
-\end{cases}
-```
-where $s_i,s_j,\ldots s_n \in \{1,2,\ldots q\}$.
-"""
-
-# ╔═╡ 442bcb3c-7940-11eb-18e5-d3158b74b1dc
-html"""
-<h2>Mapping hard problems to Tropical Tensor networks</h2>
-<table style="border:none">
-<tr>
-	<td rowspan=4>
-	<img src="https://images-na.ssl-images-amazon.com/images/I/51QttTd6JLL._SX351_BO1,204,203,200_.jpg" width=200px/>
-	</td>
-	<td rowspan=1 align="center">
-	<big>The Nature of Computation</big><br><br>
-	By <strong>Cristopher Moore</strong>
-	</td>
-</tr>
-<tr>
-	<td align="center">
-	<strong>Section 5</strong>
-	<br><br>Who is the hardest one of All?
-	<br>NP-Completeness
-	</td>
-</tr>
-<tr>
-	<td align="center">
-	<strong>Section 13</strong>
-	<br><br>Counting, sampling and statistical physics
-	</td>
-</tr>
-</table>
-"""
-
-# ╔═╡ f7208b6e-793c-11eb-0dfa-0d63752ba53e
-md"""## Ising Spin glass
-* hardness: NP-Complete
-* counting: #P
-
-```math
--E = \sum\limits_{i,j\in E} J_{ij} s_i s_j + \sum\limits_{i\in V} h_{i} s_i
-```
-```math
-T_{e} = \mathcal{T}\begin{bmatrix}J & -J \\-J & J\end{bmatrix}
-```
-
-```math
-T_{v}^{n} = \begin{cases}
- h, & s_i = s_j =\ldots s_n = 0\\
- -h, & s_i = s_j =\ldots s_n = 1\\
- -\infty, &otherwise
-\end{cases}
-```
-where $s_i,s_j,\ldots s_n \in \{1,2\}$.
-"""
-
-# ╔═╡ ff77ceea-785a-11eb-2e71-6f4bc8c10881
-md"""
-* the exact ground state energy of Ising spin glasses on square lattice up to $32^2$ spins, on cubic lattice up to $6^3$ spins
-
-* We obtain exact ground state energy of $\pm J$ Ising spin glass on the chimera graph of D-Wave quantum annealer of $512$ qubits in less than $100$ seconds and investigate the exact value of the residual entropy of $\pm J$ spin glasses on the chimera graph;
-
-
-* The spin glass on the random graphs: our method can compute optimal solutions and count the number of solutions for spin glasses and combinatorial optimization problems on on $3$ regular random graphs up to $220$ spins, on a single GPU. This is inaccessible by existing methods.
-"""
-
-# ╔═╡ 06bbead0-793f-11eb-0dec-c549b461b9cf
-md"""
-## Max 2-satisfiability problem
-* hardness: Polynomial
-* counting: #P
-
-A 2-satisfiability problem may be described using a Boolean expression with a special restricted form. It is a conjunction (a Boolean and operation) of clauses, where each clause is a disjunction (a Boolean or operation) of two variables or negated variables. The variables or their negations appearing in this formula are known as literals.
-
-```math
-\begin{align}
-& (x_{0}\lor x_{2})\land (x_{0}\lor \lnot x_{3})\land (x_{1}\lor \lnot x_{3})\land (x_{1}\lor \lnot x_{4})\land \\
-& (x_{2}\lor \lnot x_{4})\land {}(x_{0}\lor \lnot x_{5})\land (x_{1}\lor \lnot x_{5})\land (x_{2}\lor \lnot x_{5})\land \\
-&(x_{3}\lor x_{6})\land (x_{4}\lor x_{6})\land (x_{5}\lor x_{6}).
-\end{align}
-```
-
-The spin glass and Max $2$-SAT problem on the random graphs: our method can compute optimal solutions and count the number of solutions for spin glasses and combinatorial optimization problems on on $3$ regular random graphs up to $220$ spins, on a single GPU. This is inaccessible by existing methods.
-"""
-
-# ╔═╡ ef2d2446-793f-11eb-223a-c5fe0ed5e367
-md"""
-```math
-E = \sum\limits_{i =1}^{|C|} C_i(\mathbf{s})
-```
-
-```math
-(T_{e})_{s_i s_j} = \begin{cases}
-	1,  & clause(e,s_i,s_j) ~\text{is true}\\
-	-1, &otherwise
-\end{cases}
-```
-
-```math
-T_{v}^n = \delta^{n,q=2}
-```
-"""
-
-# ╔═╡ 5f2243c4-793d-11eb-1add-392387bb559f
-md"""
-## Potts model
-The Potts model consists of spins that are placed on a lattice; the lattice is usually taken to be a two-dimensional rectangular Euclidean lattice, but is often generalized to other dimensions or other lattices. Domb originally suggested that the spin takes one of q possible values, distributed uniformly about the circle, at angles
-
-``\theta _{n}={\frac  {2\pi n}{q}}``,
-where ``n = 0, 1, ..., q-1`` and that the interaction Hamiltonian be given by
-
-```math
-H=J\sum _{{i,j \in E}}\cos \left(\theta _{{s_{i}}}-\theta _{{s_{j}}}\right)
-```
-For $q=3$,
-```math
-T_e = J\left(\begin{matrix}1 & -1/2 & -1/2 \\ -1/2 & 1 & -1/2 \\ -1/2 & -1/2 & 1\end{matrix}\right)
-```
-and 
-
-$$T_v^n=\delta^{n,q=3}$$
-
-
-
-* we investigate ground-state energy and entropy of $3$-state Potts glasses on square lattices up to size $18\times 18$.
-"""
-
-# ╔═╡ b3d665e2-7967-11eb-13ce-f9ab0c0fd4b7
-potts_vertextensor(Tropical{Basic}, Val(3), 2)
-
-# ╔═╡ 344042b4-793d-11eb-3d6f-43eb2a4db9f4
-md"""
-#### Maximum independent set
-```math
-T_{b} = \mathcal{T}\begin{bmatrix}0 & 0 \\0 & -\infty\end{bmatrix}
-```
-
-```math
-T_{v}^{n} = \begin{cases}
- 0, & s_i = s_j =\ldots s_n = 0\\
- 1, & s_i = s_j =\ldots s_n = 1\\
- -\infty, &otherwise
-\end{cases}
-```
-where $s_i,s_j,\ldots s_n \in \{1,2\}$.
-"""
-
-# ╔═╡ 326f2b30-787f-11eb-0a63-6b76097d84b6
-struct Cubic{T}
-	grid::NTuple{3,T}
-end
-
-# ╔═╡ b1a751ea-7882-11eb-082a-4d18382cedcc
-function Base.getindex(c, i, j, k)
-	(i,j,k) .* c.grid
-end
-
-# ╔═╡ 9f082bce-788d-11eb-1555-fb602a81dfee
-md"``R_x`` = $(@bind θ Slider(0:0.01:2π; default=0.5))"
-
-# ╔═╡ 87531a00-7891-11eb-0072-5b9aebb4625a
-md"``R_y`` = $(@bind ϕ Slider(0:0.01:2π; default=2.8))"
-
-# ╔═╡ a5e2efee-7883-11eb-16d7-9d2769c08435
-let
-	Compose.set_default_graphic_size(12cm, 12cm)
-	cam_position = SVector(0.0, 0.0, 0.5)
-	rot = RotY(θ)*RotX(ϕ)
-	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
-	Nx = Ny = Nz = 4
-	nb = nodestyle(:circle; r=0.01)
-	eb = bondstyle(:default; r=0.01)
-	c = Cubic((0.05, 0.05, 0.05))
-	x(i,j,k) = cam_transform(SVector(c[i-Nx/2-0.5,j-Ny/2-0.5,k-Nz/2-0.5])).data
-	fig = canvas() do
-		for i=1:Nx, j=1:Ny, k=1:Nz
-			nb >> x(i,j,k)
-			i!=Nx && eb >> (x(i,j,k), x(i+1,j,k))
-			j!=Ny && eb >> (x(i,j,k), x(i,j+1,k))
-			k!=Nz && eb >> (x(i,j,k), x(i,j,k+1))
-		end
-	end
-	Compose.compose(context(0.5,0.5, 1.0, 1.0), fig)
-end
-
-# ╔═╡ 5a5d4de6-7895-11eb-15c6-bda7a4342002
-function fullerene()
-	φ = (1+√5)/2
-	res = NTuple{3,Float64}[]
-	for (x, y, z) in ((0.0, 1.0, 3φ), (1.0, 2 + φ, 2φ), (φ, 2.0, 2φ + 1.0))
-		for (α, β, γ) in ((x,y,z), (y,z,x), (z,x,y))
-			for loc in ((α,β,γ), (α,β,-γ), (α,-β,γ), (α,-β,-γ), (-α,β,γ), (-α,β,-γ), (-α,-β,γ), (-α,-β,-γ))
-				if loc ∉ res
-					push!(res, loc)
-				end
-			end
-		end
-	end
-	return res
-end
-
-# ╔═╡ 1dbb9e90-78b0-11eb-2014-6dc6cfb35387
-md"``R_x`` = $(@bind θ2 Slider(0:0.01:2π; default=0.5))"
-
-# ╔═╡ 1dbc9afc-78b0-11eb-0940-2dcadf5408bb
-md"``R_y`` = $(@bind ϕ2 Slider(0:0.01:2π; default=2.8))"
-
-# ╔═╡ 9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
-let
-	Compose.set_default_graphic_size(12cm, 12cm)
-	cam_position = SVector(0.0, 0.0, 0.5)
-	rot = RotY(θ2)*RotX(ϕ2)
-	cam_transform = PerspectiveMap() ∘ inv(AffineMap(rot, rot*cam_position))
-	Nx = Ny = Nz = 4
-	nb = nodestyle(:circle; r=0.01)
-	eb = bondstyle(:default; r=0.01)
-	x(i,j,k) = cam_transform(SVector(i,j,k) .* 0.03).data
-	fl = fullerene()
-	fig = canvas() do
-		for (i,j,k) in fl
-			nb >> x(i,j,k)
-			for (i2,j2,k2) in fl
-				(i2-i)^2+(j2-j)^2+(k2-k)^2 < 5.0 && eb >> (x(i,j,k), x(i2,j2,k2))
-			end
-		end
-	end
-	Compose.compose(context(0.5,0.5, 1.0, 1.0), fig)
-end
-
-# ╔═╡ 04e8a7da-7952-11eb-0470-d50d972083eb
-log(1+0.01)
-
-# ╔═╡ faa0b5bc-794a-11eb-186e-e5cc9e6f4b15
-md"## Partition function
-```math
-Z = \sum\limits_{\boldsymbol{\sigma}} \prod_{i,j \in E} e^{-\beta J_{ij} \sigma_i\sigma_j}\prod_{i\in V}e^{-\beta h_i\sigma_i}
-```
-```math
-\begin{align}
-E^* &= \lim_{\beta \rightarrow \infty}-\frac{1}{\beta}\ln Z \\
-&= \max\limits_{\boldsymbol{\sigma}} \sum_{i,j \in E} J_{ij} \sigma_i\sigma_j + \sum_{i\in V}h_i\sigma_i
-\end{align}
-```
-
-```math
-\begin{align}
-\lim_{\beta\rightarrow \infty}\frac{1}{\beta} \ln (e^{\beta x} + e^{\beta y})&= x \oplus y \\
-\frac{1}{\beta}\ln ( e^{\beta x} \cdot e^{\beta y}) &= x \odot y
-\end{align}
-```
+# ╔═╡ 56082ee0-898f-11eb-13fc-ab4eb456e479
+md"This blog is about how to make a GEMM extension for Tropical numbers, with a close to theoretical optimal performance. It is based on
+* `LoopVectorization`, for vectorizing loops (i.e. utilizing SIMD),
+* and `Octavian`, a native Julia GEMM library with similar to MKL performance.
 "
 
-# ╔═╡ 2dc7a6d4-7870-11eb-2361-4d11a77da7b4
-md"""
-However, this motivate use to develop a reliable BLAS for tropical numbers to speed up these applications!
+# ╔═╡ 31501e08-899d-11eb-0f3c-d95f668c0990
+md"To appreciate the tropical GEMM better, we highly recommend readers to read this pluto notebook about [Tropical tensor networks](https://giggleliu.github.io/notebooks/tropical/tropicaltensornetwork.html)."
+
+# ╔═╡ def82aee-898e-11eb-3b8d-2325f3709f73
+md"""## Warnings before reading
+
+The method introduced to make a BLAS extension is not garanteed to work for other user defined types. The types would have to map 1-1 to native numbers for it to work well, because LoopVectorization assumes that is the case in a way critical to it's ability to optimize code. So this works for `Tropical` numbers, but it wouldn't (for example) `Complex` or `ForwardDiff.Dual` numbers, `quarternions`, or `RGB` colors. (Chris Elrod: I'll probably get around to making things like these work eventually using the AbstractInterpreter interface, but the "todo" list before I get there is still quite long.)
 """
 
-# ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
-md"## Tropical GEMM"
+# ╔═╡ dba0b4f6-8993-11eb-1822-c993a037dc6b
+md"## What is the goal?"
+
+# ╔═╡ 9bbaefa0-8993-11eb-37a9-854dea2f12dd
+md"""
+The CPU we used for testing is `Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz`. We want to sqeeze every drop of its computing power. Its theoretical serial computing power for computing a Float64 matrix multiplier is
+
+	Serial CPU power = 2.9 GHz (CPU clock speed, we use the maximum Turbo frequency)
+				  * 2 (multiplication and add can happen at the same CPU clock)
+				  * 2 (number of instructions per cycle) Q: what is this?
+			      * 4 (avx instruction set has a 256 with register, it can
+                       crunch 4 vectorized double precision floating point
+					   operations at one CPU cycle)
+				= 68.8 GFLOPS
+
+The easist way to determine a CPU's computing power is by running a matrix multiplication of size 1000 x 1000,
+
+```julia
+julia> using LinearAlgebra
+
+julia> BLAS.vendor()  # super important to use MKL for Intel CPUs
+:mkl
+
+julia> BLAS.set_num_threads(1)
+
+julia> @btime Octavian.matmul_serial!($(zero(A)), $A, $A);
+  37.352 ms (0 allocations: 0 bytes)
+
+julia> GFLOPS_OCT = 2 / 37.352e-3  # there are 2^9 floating point operations in total
+53.54465624330691
+
+julia> @btime LinearAlgebra.mul!($(zero(A)), $A, $A);
+  33.627 ms (0 allocations: 0 bytes)
+
+julia> GFLOPS_MKL = 2 / 33.627e-3  # there are 2^9 floating point operations in total
+59.47601629642847
+```
+"""
 
 # ╔═╡ bd1fb060-786b-11eb-076a-998aee8fa485
-md"A short introduction (or link) to SIMD, multi-threading and tiling. The theoretical lower bound of tropical GEMM computing time is `2 x (the corresponding regular GEMM)` because the max `avx` instruction is two times slower."
+md"The theoretical computing power for tropical matrix multplication is smaller than regular floating point matrix multplication by a factor of 2, because it does not have `fma` like shortcut to do `*` and `+` in a same CPU cycle. So the best we can expect is
+
+```julia
+julia> 2/34.4
+0.05813953488372093   # 58.1ms
+```
+
+Let's see how much we can approach this limit with `Octavian`.
+"
 
 # ╔═╡ 76227a6c-7870-11eb-32b3-8392e158059b
 md"""
-#### Why LoopVectorization and Octavian?
+## Implementations
+### Why LoopVectorization and Octavian?
 
-Because it is fast, we do not need to care about technical details of tiling et. al.
+It is fast and extensible. It has devided the problems into small pieces, and handled technical details of tiling et al. What people need to do is determining how to load and store data, how to do elementary arithmetic operations.
+"""
+
+# ╔═╡ ca278bd6-89a3-11eb-2388-1d50ae560b7c
+md"""### Concepts
+##### 1. The number types you need to handle
+* `Tropical{VectorizationBase.NativeTypes}`
+* `Tropical{<:VectorizationBase.Vec}`, a vector of Tropical numbers
+* `Tropical{<:VectorizationBase.VecUnroll}`, a bundle of `Vec`s
+
+Here, `NativeTypes` incldues common floating point numbers, integers, and bit types. Here we use `Tropical{<:Vec}` to present a vector (that can fit into an SIMD register) of Tropical numbers rather than something like `Vec{N, <:Tropical}` because `Vec` is finally processed by SIMD instructions, it can only contain certain `NativeTypes`.
+"""
+
+# ╔═╡ c1cc1e72-89a6-11eb-3c1d-8ba9aa0b5bb4
+vec = Vec(1.0, 2.0, 3.0, 4.0)
+
+# ╔═╡ cbb85948-89a6-11eb-092e-f1194a9774d9
+vec_unroll = VecUnroll((vec, vec))
+
+# ╔═╡ f0141896-89a6-11eb-05fe-9d140d242105
+md"The reason why we need `VecUnroll` is because it is often faster to unroll a small bundle of vectorized instructions in a loop."
+
+# ╔═╡ 64af7e68-89b1-11eb-3d43-c1a80cb69dcd
+md"""
+##### 2. Masks
+A mask is mainly used to avoid loading/storing elements out of bounds (Q: it is correct to say out of bounds?).
+When overload an interface, we often implement both the masked and the non-masked versions.
+"""
+
+# ╔═╡ 6cf7c3e6-89b1-11eb-3374-83471f184496
+m = VectorizationBase.Mask{4}(0xe)
+
+# ╔═╡ 8d9f1b94-89b1-11eb-12c2-991d640e839b
+VectorizationBase.vload(pointer([1,2,3,4,5]), 2)
+
+# ╔═╡ e84b96f2-89a3-11eb-3f92-4d4b2849b2e0
+md"""
+##### The interfaces that you need to implement
+
+* vectorized data loading and storing
+    * `VectorizationBase.stridedpointer`
+    * `VectorizationBase.gep`, for get element pointer
+    * `VectorizationBase.VectorizationBase.__vload`
+    * `VectorizationBase._vstore!` and `VectorizationBase.__vstore!`
+
+* vectorized operations
+    * `VectorizationBase._vzero`
+    * `VectorizationBase.zero_vecunroll`
+    * `Base.fma`
+    * `VectorizationBase._vbroadcast`
+    * `VectorizationBase.vsum`
+    * `VectorizationBase.ifelse`
+    * `VectorizationBase.reduce_add`
+    * `VectorizationBase.contract_add`
+    * `VectorizationBase.similar_no_offset`
+    * `Base.FastMath.add_fast`
+    * `Base.FastMath.mul_fast`
+
 * tell `@avx` macro this type is compatible SIMD,
     * `LoopVectorization.check_args`
     * `LoopVectorization.check_type`
 
-* vectorized data loading and storing
-    * `VectorizationBase.stridedpointer`
-    * `VectorizationBase.vload`
-    * `VectorizationBase.vstore!`
+* other interfaces
+    * `Base.promote_rule`
+    * `VectorizationBase.vecmemaybe`  Q: what is this for
 
-* vectorized operations
-    * `VectorizationBase._vzero`
-    * `VectorizationBase.fma`
-    * `VectorizationBase.vbroadcast`
-    * `VectorizationBase.similar_no_offset`
-
-* some ugly patches
-    * `Base.promote`
+Since these functions are very restrictve on types, it is easy to figure out the interfaces one needs to overwrite by try-and-error.
 """
 
 # ╔═╡ 82af0af2-786b-11eb-3a49-97519a15a851
-md"#### Tell `@avx` this type is compatible SIMD"
+md"#### Step 1: Tell `@avx` Tropical numbers are is compatible with SIMD"
 
 # ╔═╡ 8167bf86-7852-11eb-0201-1996d24d3015
 md"""
+The first thing is telling `@avx` macro that the `Tropical` type can utilize SIMD to avoid running into the fallback implementations.
+`@avx` is a macro in `LoopVectorization` that designed to vectorize a loop automatically, it is the corner stone of `Octavian`.
+
 The `@avx` macro also checks the array arguments using `LoopVectorization.check_args` to try and determine
 if they are compatible with the macro. If `check_args` returns false, a fall back loop annotated with `@inbounds`
 and `@fastmath` is generated. Note that `VectorizationBase` provides functions such as `vadd` and `vmul` that will
@@ -587,6 +383,24 @@ end
 # ╔═╡ 94bf6aba-7871-11eb-1431-697b41de04a3
 md"## Benchmarks"
 
+# ╔═╡ e39c24c8-8999-11eb-0def-7be2b449dd4f
+md"""
+```julia
+julia> @benchmark Octavian.matmul_serial!($(zero(a)), $a, $a)
+BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     63.465 ms (0.00% GC)
+  median time:      63.739 ms (0.00% GC)
+  mean time:        63.900 ms (0.00% GC)
+  maximum time:     65.141 ms (0.00% GC)
+  --------------
+  samples:          79
+  evals/sample:     1
+```
+"""
+
 # ╔═╡ 93abda52-786d-11eb-2b2e-0787a202c609
 md"## Limitations"
 
@@ -610,46 +424,27 @@ Moreover, one can also employ the present approach to count the number of ground
 
 # ╔═╡ Cell order:
 # ╠═c456b902-7959-11eb-03ba-dd14a2cd5758
-# ╠═0faacc8a-7965-11eb-151c-2909d9c2f00e
-# ╠═5e3666e2-7961-11eb-2b2b-47737752159c
+# ╟─0faacc8a-7965-11eb-151c-2909d9c2f00e
+# ╟─5e3666e2-7961-11eb-2b2b-47737752159c
 # ╠═fa139cd8-7964-11eb-1c36-eb91c2f7f23c
 # ╠═1ba138d2-7963-11eb-1622-49c797062a8e
 # ╠═460adcbe-7964-11eb-261c-bdb704a573f3
-# ╟─be76e52a-7852-11eb-179b-afbc6efcab55
-# ╟─d0b54b76-7852-11eb-2398-0911380fa090
-# ╠═af13e090-7852-11eb-21ae-8b94f25f1a4f
-# ╠═d770f232-7864-11eb-0e9a-81528e359d39
-# ╟─3372871c-785b-11eb-3092-4bbc419cb788
-# ╠═2173a6cc-785b-11eb-1ab6-7fb875224dd9
-# ╟─518b7d4e-785b-11eb-3b7c-1389065b9cbd
-# ╠═2868b292-785b-11eb-015e-6b5613bd9e39
-# ╟─5d16a472-785b-11eb-1b94-dd6d8f860c24
-# ╟─98ae0960-797d-11eb-3646-c5b7e05d3f7c
-# ╟─442bcb3c-7940-11eb-18e5-d3158b74b1dc
-# ╟─f7208b6e-793c-11eb-0dfa-0d63752ba53e
-# ╟─ff77ceea-785a-11eb-2e71-6f4bc8c10881
-# ╟─06bbead0-793f-11eb-0dec-c549b461b9cf
-# ╟─ef2d2446-793f-11eb-223a-c5fe0ed5e367
-# ╟─5f2243c4-793d-11eb-1add-392387bb559f
-# ╠═b3d665e2-7967-11eb-13ce-f9ab0c0fd4b7
-# ╟─344042b4-793d-11eb-3d6f-43eb2a4db9f4
-# ╠═31f6ec44-7878-11eb-3d0e-bb365f592a0e
-# ╠═326f2b30-787f-11eb-0a63-6b76097d84b6
-# ╠═b1a751ea-7882-11eb-082a-4d18382cedcc
-# ╠═ed4600c8-788c-11eb-297c-29316dfcdec1
-# ╟─9f082bce-788d-11eb-1555-fb602a81dfee
-# ╟─87531a00-7891-11eb-0072-5b9aebb4625a
-# ╟─a5e2efee-7883-11eb-16d7-9d2769c08435
-# ╟─5a5d4de6-7895-11eb-15c6-bda7a4342002
-# ╟─1dbb9e90-78b0-11eb-2014-6dc6cfb35387
-# ╟─1dbc9afc-78b0-11eb-0940-2dcadf5408bb
-# ╟─9b1dc21a-7896-11eb-21f6-bfe9b4dc9ccf
-# ╠═04e8a7da-7952-11eb-0470-d50d972083eb
-# ╠═faa0b5bc-794a-11eb-186e-e5cc9e6f4b15
-# ╟─2dc7a6d4-7870-11eb-2361-4d11a77da7b4
 # ╟─8d24b3aa-7853-11eb-0be4-23088fd5e70a
+# ╟─56082ee0-898f-11eb-13fc-ab4eb456e479
+# ╟─31501e08-899d-11eb-0f3c-d95f668c0990
+# ╟─def82aee-898e-11eb-3b8d-2325f3709f73
+# ╟─dba0b4f6-8993-11eb-1822-c993a037dc6b
+# ╟─9bbaefa0-8993-11eb-37a9-854dea2f12dd
 # ╟─bd1fb060-786b-11eb-076a-998aee8fa485
-# ╠═76227a6c-7870-11eb-32b3-8392e158059b
+# ╟─76227a6c-7870-11eb-32b3-8392e158059b
+# ╟─ca278bd6-89a3-11eb-2388-1d50ae560b7c
+# ╠═c1cc1e72-89a6-11eb-3c1d-8ba9aa0b5bb4
+# ╠═cbb85948-89a6-11eb-092e-f1194a9774d9
+# ╟─f0141896-89a6-11eb-05fe-9d140d242105
+# ╟─64af7e68-89b1-11eb-3d43-c1a80cb69dcd
+# ╠═6cf7c3e6-89b1-11eb-3374-83471f184496
+# ╠═8d9f1b94-89b1-11eb-12c2-991d640e839b
+# ╟─e84b96f2-89a3-11eb-3f92-4d4b2849b2e0
 # ╟─82af0af2-786b-11eb-3a49-97519a15a851
 # ╟─8167bf86-7852-11eb-0201-1996d24d3015
 # ╠═5143e258-7852-11eb-05fa-9df9234c5619
@@ -661,6 +456,8 @@ Moreover, one can also employ the present approach to count the number of ground
 # ╠═490487e2-78b2-11eb-3e0c-f9461bc1739c
 # ╠═6856bd10-7859-11eb-0d4f-4f3342310ddb
 # ╟─94bf6aba-7871-11eb-1431-697b41de04a3
+# ╠═f0b07c72-8999-11eb-316a-293e6cee3c88
+# ╟─e39c24c8-8999-11eb-0def-7be2b449dd4f
 # ╟─93abda52-786d-11eb-2b2e-0787a202c609
-# ╟─b37ec12a-786d-11eb-286c-01ba8c3546c8
+# ╠═b37ec12a-786d-11eb-286c-01ba8c3546c8
 # ╟─695e405c-786d-11eb-0a6e-bb776d9626ad
