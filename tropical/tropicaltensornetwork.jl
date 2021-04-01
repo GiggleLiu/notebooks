@@ -208,7 +208,7 @@ counter-reset: subsection;
 
 # ╔═╡ 121b4926-7aba-11eb-30e1-7b8edd4f0166
 html"""<h1>Tropical tensor networks</h1>
-<p><big>for solving combinatoric optimization problems efficiently</big></p>
+<p><big>for solving combinatoric optimization problems</big></p>
 
 <a href='https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.090506'>Phys. Rev. Lett. 126, 090506 (2021)</a></p>
 <p>Jin-Guo Liu, Lei Wang, and Pan Zhang</p>
@@ -311,6 +311,8 @@ md"""
 # ╔═╡ 3237e33e-7a17-11eb-2869-b92d0801bc6e
 md"
 *To know more about tensor networks:*
+
+* [Tensor network website](https://tensornetwork.org/)
 
 * A Practical Introduction to Tensor Networks: Matrix Product States and Projected Entangled Pair States, [arXiv: 1306.2164](https://arxiv.org/abs/1306.2164)"
 
