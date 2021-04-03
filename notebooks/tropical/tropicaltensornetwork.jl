@@ -1569,9 +1569,9 @@ To solve large scale problems. You also need a good contraction order algorithm,
 
 The Tropical BLAS project is under the progress,
 
-- TropicalGEMM on CPU for Tropical numbers ([nearly done](https://github.com/chriselrod/LoopVectorization.jl/issues/201)),
-- TropicalGEMM on GPU (WIP),
-- TropicalGEMM for CountingTropical numbers,
+- Tropical GEMM on CPU for Tropical numbers ([DONE](https://github.com/TensorBFS/TropicalGEMM.jl)),
+- Tropical GEMM on GPU (WIP),
+- Tropical GEMM for CountingTropical numbers,
 "
 
 # ╔═╡ Cell order:
