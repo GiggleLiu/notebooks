@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.14.2
 
 using Markdown
 using InteractiveUtils
@@ -7,73 +7,11 @@ using InteractiveUtils
 # ╔═╡ c456b902-7959-11eb-03ba-dd14a2cd5758
 using PlutoUI, TropicalNumbers
 
-# ╔═╡ 5e3666e2-7961-11eb-2b2b-47737752159c
-module SymTropical
-	using Latexify, Markdown
-	using TropicalNumbers
-	using SymEngine
-	function Latexify.latexraw(x::Tropical{Basic})
-		return string(TropicalNumbers.content(x))
-	end
-	function Base.show(io::IO, mime::MIME"text/html", arr::AbstractArray{<:Tropical{Basic}})
-		Base.show(io, mime, Markdown.parse("""
-```math
-$(latexify(arr))
-```
-"""))
-	end
-	Base.zero(::Type{Tropical{Basic}}) = Tropical(-Basic(:∞))
-end
+# ╔═╡ d3d8702e-8cf8-405a-9b56-45e4153ee265
+using LoopVectorization, VectorizationBase
 
-# ╔═╡ fa139cd8-7964-11eb-1c36-eb91c2f7f23c
-using .SymTropical: Basic
-
-# ╔═╡ 5143e258-7852-11eb-05fa-9df9234c5619
-begin
-	using LoopVectorization
-	LoopVectorization.check_args(::Type{T}, ::Type{T}) where T<:Tropical = true
-	LoopVectorization.check_type(::Type{Tropical{T}}) where {T} = LoopVectorization.check_type(T)
-end
-
-# ╔═╡ e45289b2-786d-11eb-3ed0-f1034789f9f2
-begin
-	using VectorizationBase
-	using VectorizationBase: OffsetPrecalc, StaticBool, Bit, static, NativeTypes, Index, gep_quote, VectorIndex, AbstractSIMDVector, StridedPointer
-
-	@inline function VectorizationBase.stridedpointer(A::AbstractArray{T}) where {T <: Tropical}
-    stridedpointer(VectorizationBase.memory_reference(A), VectorizationBase.contiguous_axis(A),
-        VectorizationBase.contiguous_batch_size(A), VectorizationBase.val_stride_rank(A),
-        VectorizationBase.bytestrides(A), VectorizationBase.offsets(A))
-end
-
-	@inline function VectorizationBase.stridedpointer(
-		ptr::Ptr{T}, ::StaticInt{C}, ::StaticInt{B}, ::Val{R}, strd::X, offsets::O
-	) where {T<:Tropical,C,B,R,N,X<:Tuple{Vararg{Integer,N}},O<:Tuple{Vararg{Integer,N}}}
-		VectorizationBase.StridedPointer{T,N,C,B,R,X,O}(ptr, strd, offsets)
-	end
-	
-	# `vload` interfaces
-	@inline function VectorizationBase.vload(ptr::Ptr{Tropical{T}}, i::I, m::Mask, a::A, si::StaticInt{RS}) where {A <: StaticBool, T <: NativeTypes, I <: Index, RS}
-		Tropical(vload(Ptr{T}(ptr), i, m, a, si))
-	end
-	@inline function VectorizationBase.vload(ptr::Ptr{Tropical{T}}, i::I, a::A, si::StaticInt{RS}) where {A <: StaticBool, T <: NativeTypes, I <: Index, RS}
-		Tropical(vload(Ptr{T}(ptr), i, a, si))
-	end
-
-	# `vstore!` interfaces
-	@inline VectorizationBase.vstore!(ptr::StridedPointer{T}, v::T) where {T<:Tropical} = vstore!(ptr, content(v))
-	@inline function VectorizationBase.vstore!(
-		ptr::Ptr{Tropical{T}}, v::Tropical{Vec{N,T}}, i::VectorIndex{W}, m::AbstractSIMDVector{W}, a::A, s::S, nt::NT, si::StaticInt{RS}) where {T,W,S<:StaticBool,A<:StaticBool,NT<:StaticBool,RS,N}
-		vstore!(convert(Ptr{T}, ptr), content(v), i, m, a, s, nt, si)
-	end
-	@inline function VectorizationBase.vstore!(
-		ptr::Ptr{Tropical{T}}, v::Tropical{Vec{N,T}}, m::AbstractSIMDVector{W}, a::A, s::S, nt::NT, si::StaticInt{RS}) where {T,W,S<:StaticBool,A<:StaticBool,NT<:StaticBool,RS,N}
-		vstore!(convert(Ptr{T}, ptr), content(v), m, a, s, nt, si)
-	end
-end
-
-# ╔═╡ f0b07c72-8999-11eb-316a-293e6cee3c88
-using Plots
+# ╔═╡ 81d4b4a4-c53a-4c29-9021-07eda458ec54
+using TropicalGEMM
 
 # ╔═╡ 0faacc8a-7965-11eb-151c-2909d9c2f00e
 begin
@@ -123,12 +61,6 @@ begin
 	end
 end
 
-# ╔═╡ 1ba138d2-7963-11eb-1622-49c797062a8e
-ising_bondtensor(Tropical{Basic}, Basic(:J))
-
-# ╔═╡ 460adcbe-7964-11eb-261c-bdb704a573f3
-ising_vertextensor(Tropical{Basic}, 2, Basic(:h))
-
 # ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
 md"# Tropical GEMM"
 
@@ -139,7 +71,7 @@ md"This blog is about how to make a GEMM extension for Tropical numbers, with a 
 "
 
 # ╔═╡ 31501e08-899d-11eb-0f3c-d95f668c0990
-md"To appreciate the tropical GEMM better, we highly recommend readers to read this pluto notebook about [Tropical tensor networks](https://giggleliu.github.io/notebooks/tropical/tropicaltensornetwork.html)."
+md"To know more about how tropical GEMM can be useful, we highly recommend readers to read this pluto notebook about [Tropical tensor networks](https://giggleliu.github.io/notebooks/tropical/tropicaltensornetwork.html)."
 
 # ╔═╡ def82aee-898e-11eb-3b8d-2325f3709f73
 md"""## Warnings before reading
@@ -156,7 +88,7 @@ The CPU we used for testing is `Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz`. We wa
 
 	Serial CPU power = 2.9 GHz (CPU clock speed, we use the maximum Turbo frequency)
 				  * 2 (multiplication and add can happen at the same CPU clock)
-				  * 2 (number of instructions per cycle) Q: what is this?
+				  * 2 (number of instructions per cycle)
 			      * 4 (avx instruction set has a 256 with register, it can
                        crunch 4 vectorized double precision floating point
 					   operations at one CPU cycle)
@@ -197,6 +129,13 @@ julia> 2/34.4
 Let's see how much we can approach this limit with `Octavian`.
 "
 
+# ╔═╡ 28f83f37-200b-4bc1-9cdb-2a461e4262c9
+md"""## Benchmarks
+Matrix size `n x n`, CPU Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz. Check the the benchmarks folder of TropicalGEMM for more benchmarks of different types.
+
+![](https://github.com/TensorBFS/TropicalGEMM.jl/raw/master/benchmarks/benchmark-float64.png)
+"""
+
 # ╔═╡ 76227a6c-7870-11eb-32b3-8392e158059b
 md"""
 ## Implementations
@@ -207,7 +146,7 @@ It is fast and extensible. It has devided the problems into small pieces, and ha
 
 # ╔═╡ ca278bd6-89a3-11eb-2388-1d50ae560b7c
 md"""### Concepts
-##### 1. The number types you need to handle
+##### 1. Element types
 * `Tropical{VectorizationBase.NativeTypes}`
 * `Tropical{<:VectorizationBase.Vec}`, a vector of Tropical numbers
 * `Tropical{<:VectorizationBase.VecUnroll}`, a bundle of `Vec`s
@@ -234,40 +173,17 @@ When overload an interface, we often implement both the masked and the non-maske
 # ╔═╡ 6cf7c3e6-89b1-11eb-3374-83471f184496
 m = VectorizationBase.Mask{4}(0xe)
 
-# ╔═╡ 8d9f1b94-89b1-11eb-12c2-991d640e839b
-VectorizationBase.vload(pointer([1,2,3,4,5]), 2)
+# ╔═╡ ae998b13-b18f-4ef6-ac1b-61cbde6ac008
+md"##### 3. Indices"
+
+# ╔═╡ 1afbd730-9742-485e-87d4-bfab8882010e
+md"An index that continuously loading 4 double precision floating point number (8 bytes) from position 0."
+
+# ╔═╡ d0667419-7f6a-4b37-89a4-3b7302e14cec
+vec_index = MM(StaticInt(4), StaticInt(0), StaticInt(8))
 
 # ╔═╡ e84b96f2-89a3-11eb-3f92-4d4b2849b2e0
 md"""
-##### The interfaces that you need to implement
-
-* vectorized data loading and storing
-    * `VectorizationBase.stridedpointer`
-    * `VectorizationBase.gep`, for get element pointer
-    * `VectorizationBase.VectorizationBase.__vload`
-    * `VectorizationBase._vstore!` and `VectorizationBase.__vstore!`
-
-* vectorized operations
-    * `VectorizationBase._vzero`
-    * `VectorizationBase.zero_vecunroll`
-    * `Base.fma`
-    * `VectorizationBase._vbroadcast`
-    * `VectorizationBase.vsum`
-    * `VectorizationBase.ifelse`
-    * `VectorizationBase.reduce_add`
-    * `VectorizationBase.contract_add`
-    * `VectorizationBase.similar_no_offset`
-    * `Base.FastMath.add_fast`
-    * `Base.FastMath.mul_fast`
-
-* tell `@avx` macro this type is compatible SIMD,
-    * `LoopVectorization.check_args`
-    * `LoopVectorization.check_type`
-
-* other interfaces
-    * `Base.promote_rule`
-    * `VectorizationBase.vecmemaybe`  Q: what is this for
-
 Since these functions are very restrictve on types, it is easy to figure out the interfaces one needs to overwrite by try-and-error.
 """
 
@@ -293,112 +209,128 @@ To provide support for a custom array type, ensure that `check_args` returns tru
 Additionally, define `pointer` and `stride` methods.
 """
 
-# ╔═╡ c9effb62-786e-11eb-076c-6375642a6398
+# ╔═╡ af79e3c7-b5e5-4187-b99b-f009d7b945d2
+LoopVectorization.check_args(TropicalF64, TropicalF64)
+
+# ╔═╡ a824f58c-6c77-4a63-8e9a-3bf1e9f4c519
+LoopVectorization.check_type(TropicalF64)
+
+# ╔═╡ d18a1a44-d3d8-429c-80a5-c4ed352bfb0d
+md"## Store and load data
+"
+
+# ╔═╡ ae06057b-061c-42f3-8c0f-1b62b25d1b45
+md"`stridedpointer` and `gep`"
+
+# ╔═╡ 2b016b0b-5f22-4347-8c03-fe2c217f73af
+v = Tropical.(randn(10))
+
+# ╔═╡ 7bc5bea3-8ec7-458e-89c5-08ad5e9353eb
+md"create a strided pointer and load the 3rd value"
+
+# ╔═╡ f4f9167b-8b3d-4afe-bb78-475dea40f38c
+ptr = VectorizationBase.stridedpointer(v)
+
+# ╔═╡ 2afc083b-2db0-4401-a3d6-e259e5dee09d
+md"???"
+
+# ╔═╡ b16fa1f0-466d-4ab1-aa3e-aaa98ec93e86
+VectorizationBase.gep(ptr.p, 1)
+
+# ╔═╡ 2f0e159a-6b66-47c4-ac21-350ceeb3a5be
 md"""
-There are 4 interfaces of `vload`,
-```julia
-vload(p::AbstractStridedPointer, i::Tuple)
-vload(p::AbstractStridedPointer, i::Tuple, m::Mask)
-vload(p::AbstractStridedPointer, i::Unroll)
-vload(p::AbstractStridedPointer, i::Unroll, m::Mask)
-
-```
-where `i` is the index and `m` is an optional mask to avoid loading where the mask is off.
-
-`MM`s represent a vector of indices. Passing them as arguments basically means to take a slice. Adding a mask lets you avoid reading out of bounds.
-
-The `Unroll` indices are for if we want to load multiple vectors at one time. 
+`_vload` and `__vload`
 """
+
+# ╔═╡ 9a7b58c9-cc12-4292-adb9-5538af4aa3a8
+VectorizationBase.vload(ptr, (3,))
+
+# ╔═╡ 9eebd69a-df78-47c2-827b-42691a1d7025
+md"load data into a 32*8 bit long register, and the offsets are (0, 8, 16, 24) bits, and mask out the first value."
+
+# ╔═╡ 7a80faf5-4fd5-4235-a14e-3e6482b57dfb
+vi = MM(StaticInt(4), StaticInt(0), StaticInt(8))
+
+# ╔═╡ 2479b188-b242-487a-b08c-cde2d0d0468a
+VectorizationBase.__vload(ptr.p, vi, m, VectorizationBase.StaticBool(false), StaticInt(32))
+
+# ╔═╡ 5a9a6418-2aa7-4b3c-929f-41ee1cb24e09
+md"If you want to create some zeros"
+
+# ╔═╡ 49d630cf-3d84-4c0f-a275-40ea04f0fe7c
+md"`_zero` and `zero_vecunroll`"
+
+# ╔═╡ 7f7e5472-cb7e-47f8-86e2-1f70e848beb0
+VectorizationBase._vzero(StaticInt(4), TropicalF64, StaticInt(32))
+
+# ╔═╡ 085f476f-7273-4b3a-af7f-2dd39ae4f803
+ VectorizationBase.zero_vecunroll(StaticInt(2), StaticInt(4), TropicalF64, StaticInt(32))
+
+# ╔═╡ 97e1b1e2-11b4-4181-a8c2-2322490675d4
+md"`_vbroadcast`"
+
+# ╔═╡ 18e0502d-bd5d-44bd-b553-c9515d46a19d
+VectorizationBase._vbroadcast(StaticInt(4), Tropical(3.0), StaticInt(32))
+
+# ╔═╡ c345eb4f-3024-4752-a524-3912470b8567
+md"""
+`_vstore!` and `__vstore!`
+"""
+
+# ╔═╡ 2a8815b6-3969-46e7-8f51-59c4a606e6d5
+promote(vec, vec_unroll)
 
 # ╔═╡ 00581528-78b2-11eb-0904-e9ab3fd376ce
 md"#### vectorized operations"
 
-# ╔═╡ 099384d8-7852-11eb-165a-6bbbcf097309
-begin
-	@inline function VectorizationBase.vbroadcast(a::Union{Val{W},StaticInt{W}}, s::Tropical{T}) where {W,T}
-		Tropical(VectorizationBase.vbroadcast(a, content(s)))
-	end
+# ╔═╡ 2be3b482-15ac-46f2-af85-11fa662dffb4
+vec1, vec2, vec3, vec4 = Tropical(Vec(7.0,8.0,3.0,2.0)), Tropical(Vec(1.0,2.0,3.0,4.0)), Tropical(Vec(2.0,2.0,3.0,0.0)), Tropical(Vec(2.0,1.0,1.0,0.0))
 
-	@inline function VectorizationBase._vzero(::StaticInt{W}, ::Type{T}, ::StaticInt{RS}) where {W,T<:Tropical{FT},RS} where FT
-		Tropical(VectorizationBase._vbroadcast(StaticInt{W}(), FT(-Inf), StaticInt{RS}()))
-	end
+# ╔═╡ 018867bf-d8b9-4292-92a4-6fad9f8b6231
+vu = VecUnroll((vec1, vec2, vec3, vec4))
 
-	@inline function VectorizationBase.fma(x::Tropical{V}, y::Tropical{V}, z::Tropical{V}) where {V<:VectorizationBase.AbstractSIMD}
-		Tropical(max(content(z), content(x) + content(y)))
-	end
+# ╔═╡ e7b050ba-067b-44bd-bdc0-21ee3524c08f
+Base.FastMath.add_fast(vec1, vec2)
 
-	@inline function VectorizationBase.similar_no_offset(sptr::OffsetPrecalc{T}, ptr::Ptr{Tropical{T}}) where {T}
-		OffsetPrecalc(VectorizationBase.similar_no_offset(getfield(sptr, :ptr), ptr), getfield(sptr, :precalc))
-	end
+# ╔═╡ e197c1df-c8d4-4efc-9781-3214d45c7d81
+VectorizationBase.collapse_add(vu)
 
-	# is `gep` a shorthand for "get element pointer"?
-	@inline VectorizationBase.gep(ptr::Ptr{Tropical{T}}, i) where T = Ptr{Tropical{T}}(VectorizationBase.gep(Ptr{T}(ptr), i))
-end
+# ╔═╡ 972ea87b-f0f1-4eba-8497-897c8b8d7ac1
+VectorizationBase.contract_add(vu, StaticInt(2))
+
+# ╔═╡ cdba5628-6856-4ab0-8baa-dba64e85590b
+VectorizationBase.reduced_add(vec1, vec2)
+
+# ╔═╡ 695c8b2f-a795-4952-97bb-50d1163ae880
+Mask{4}(0x0e)
+
+# ╔═╡ 89a1b9d6-963d-485b-b623-8ebf08075ed0
+md"Compute `vec3 * vec2 + vec1`"
+
+# ╔═╡ 90037d86-e61e-40d6-a5d9-3c94ee3f2b71
+Base.fma(vec3, vec2, vec1)
+
+# ╔═╡ 36814ae9-af88-4a1b-90f1-9d56d2deece1
+md"Handle zero elements and one elements properly"
+
+# ╔═╡ f1b2cc2d-4fd1-4ac9-91ff-3524266348cf
+Base.FastMath.add_fast(StaticInt(0), vec1)
+
+# ╔═╡ 8d416951-0f54-4ba9-953c-c33027529583
+Base.FastMath.mul_fast(StaticInt(1), vec1)
+
+# ╔═╡ ca3e3907-7615-4ec0-88fe-001268221417
+VectorizationBase.ifelse(VectorizationBase.vfmadd_fast, Mask{4}(0x0e), vec1, vec2, vec3)
+
+# ╔═╡ da1bc10b-4fc7-48b5-83c6-c39c8337b93a
+VectorizationBase.vsum(vec1)
 
 # ╔═╡ 4e473cf2-78b2-11eb-2fd3-035e416d1650
-md"#### some ungly patches"
+md"## Other interfaces"
 
-# ╔═╡ 490487e2-78b2-11eb-3e0c-f9461bc1739c
-begin
-	# TODO: FIX!!!!!!
-	@inline function Base.promote(a::Int, b::Tropical{Vec{M,FT}}) where {M,FT}
-		elem = a == 0 ? -Inf : 0.0
-		Tropical(VectorizationBase.vbroadcast(StaticInt{M}(), FT(elem))), b
-	end
-
-	@inline function Base.promote(a::Int, b::Tropical{Vec{M,FT}}, c::Tropical{Vec{M,FT}}) where {M,FT}
-		elem = a == 0 ? -Inf : 0.0
-		Tropical(VectorizationBase.vbroadcast(StaticInt{M}(), FT(elem))), b, c
-	end
-end
-
-# ╔═╡ 6856bd10-7859-11eb-0d4f-4f3342310ddb
-
-function distance(a::AbstractArray{<:Tropical}, b::AbstractArray{<:Tropical})
-    sum(abs.(content.(a) .- content.(b)))
-end
-
-@testset "matmul" begin
-    for n in [4, 40]
-        a = Tropical.(randn(n, n))
-        b = Tropical.(randn(n, n))
-        @test distance(Octavian.matmul_serial(a, b), a*b) ≈ 0
-        @test distance(Octavian.matmul_serial(a, a), a*a) ≈ 0
-        @test distance(Octavian.matmul(a, b), a*b) ≈ 0
-    end
-end
-
-function naivemm!(o::Matrix, a::Matrix, b::Matrix)
-    @assert size(a, 2) == size(b, 1) && size(o) == (size(a, 1), size(b, 2))
-    for j=1:size(b, 2)
-        for k=1:size(a, 2)
-            for i=1:size(a, 1)
-                @inbounds o[i,j] += a[i,k] * b[k,j]
-            end
-        end
-    end
-    return o
-end
-
-# ╔═╡ 94bf6aba-7871-11eb-1431-697b41de04a3
-md"## Benchmarks"
-
-# ╔═╡ e39c24c8-8999-11eb-0def-7be2b449dd4f
+# ╔═╡ e140431a-7637-4f45-9267-9be1527c4779
 md"""
-```julia
-julia> @benchmark Octavian.matmul_serial!($(zero(a)), $a, $a)
-BenchmarkTools.Trial: 
-  memory estimate:  0 bytes
-  allocs estimate:  0
-  --------------
-  minimum time:     63.465 ms (0.00% GC)
-  median time:      63.739 ms (0.00% GC)
-  mean time:        63.900 ms (0.00% GC)
-  maximum time:     65.141 ms (0.00% GC)
-  --------------
-  samples:          79
-  evals/sample:     1
-```
+* `vecmaybe`
 """
 
 # ╔═╡ 93abda52-786d-11eb-2b2e-0787a202c609
@@ -425,39 +357,68 @@ Moreover, one can also employ the present approach to count the number of ground
 # ╔═╡ Cell order:
 # ╠═c456b902-7959-11eb-03ba-dd14a2cd5758
 # ╟─0faacc8a-7965-11eb-151c-2909d9c2f00e
-# ╟─5e3666e2-7961-11eb-2b2b-47737752159c
-# ╠═fa139cd8-7964-11eb-1c36-eb91c2f7f23c
-# ╠═1ba138d2-7963-11eb-1622-49c797062a8e
-# ╠═460adcbe-7964-11eb-261c-bdb704a573f3
 # ╟─8d24b3aa-7853-11eb-0be4-23088fd5e70a
 # ╟─56082ee0-898f-11eb-13fc-ab4eb456e479
 # ╟─31501e08-899d-11eb-0f3c-d95f668c0990
-# ╟─def82aee-898e-11eb-3b8d-2325f3709f73
 # ╟─dba0b4f6-8993-11eb-1822-c993a037dc6b
 # ╟─9bbaefa0-8993-11eb-37a9-854dea2f12dd
 # ╟─bd1fb060-786b-11eb-076a-998aee8fa485
+# ╟─28f83f37-200b-4bc1-9cdb-2a461e4262c9
 # ╟─76227a6c-7870-11eb-32b3-8392e158059b
+# ╟─def82aee-898e-11eb-3b8d-2325f3709f73
 # ╟─ca278bd6-89a3-11eb-2388-1d50ae560b7c
 # ╠═c1cc1e72-89a6-11eb-3c1d-8ba9aa0b5bb4
 # ╠═cbb85948-89a6-11eb-092e-f1194a9774d9
 # ╟─f0141896-89a6-11eb-05fe-9d140d242105
 # ╟─64af7e68-89b1-11eb-3d43-c1a80cb69dcd
 # ╠═6cf7c3e6-89b1-11eb-3374-83471f184496
-# ╠═8d9f1b94-89b1-11eb-12c2-991d640e839b
+# ╟─ae998b13-b18f-4ef6-ac1b-61cbde6ac008
+# ╟─1afbd730-9742-485e-87d4-bfab8882010e
+# ╠═d0667419-7f6a-4b37-89a4-3b7302e14cec
 # ╟─e84b96f2-89a3-11eb-3f92-4d4b2849b2e0
 # ╟─82af0af2-786b-11eb-3a49-97519a15a851
 # ╟─8167bf86-7852-11eb-0201-1996d24d3015
-# ╠═5143e258-7852-11eb-05fa-9df9234c5619
-# ╟─c9effb62-786e-11eb-076c-6375642a6398
-# ╠═e45289b2-786d-11eb-3ed0-f1034789f9f2
+# ╠═d3d8702e-8cf8-405a-9b56-45e4153ee265
+# ╠═81d4b4a4-c53a-4c29-9021-07eda458ec54
+# ╠═af79e3c7-b5e5-4187-b99b-f009d7b945d2
+# ╠═a824f58c-6c77-4a63-8e9a-3bf1e9f4c519
+# ╟─d18a1a44-d3d8-429c-80a5-c4ed352bfb0d
+# ╟─ae06057b-061c-42f3-8c0f-1b62b25d1b45
+# ╠═2b016b0b-5f22-4347-8c03-fe2c217f73af
+# ╟─7bc5bea3-8ec7-458e-89c5-08ad5e9353eb
+# ╠═f4f9167b-8b3d-4afe-bb78-475dea40f38c
+# ╟─2afc083b-2db0-4401-a3d6-e259e5dee09d
+# ╠═b16fa1f0-466d-4ab1-aa3e-aaa98ec93e86
+# ╟─2f0e159a-6b66-47c4-ac21-350ceeb3a5be
+# ╠═9a7b58c9-cc12-4292-adb9-5538af4aa3a8
+# ╟─9eebd69a-df78-47c2-827b-42691a1d7025
+# ╠═7a80faf5-4fd5-4235-a14e-3e6482b57dfb
+# ╠═2479b188-b242-487a-b08c-cde2d0d0468a
+# ╟─5a9a6418-2aa7-4b3c-929f-41ee1cb24e09
+# ╟─49d630cf-3d84-4c0f-a275-40ea04f0fe7c
+# ╠═7f7e5472-cb7e-47f8-86e2-1f70e848beb0
+# ╠═085f476f-7273-4b3a-af7f-2dd39ae4f803
+# ╟─97e1b1e2-11b4-4181-a8c2-2322490675d4
+# ╠═18e0502d-bd5d-44bd-b553-c9515d46a19d
+# ╟─c345eb4f-3024-4752-a524-3912470b8567
+# ╠═2a8815b6-3969-46e7-8f51-59c4a606e6d5
 # ╟─00581528-78b2-11eb-0904-e9ab3fd376ce
-# ╠═099384d8-7852-11eb-165a-6bbbcf097309
+# ╠═2be3b482-15ac-46f2-af85-11fa662dffb4
+# ╠═018867bf-d8b9-4292-92a4-6fad9f8b6231
+# ╠═e7b050ba-067b-44bd-bdc0-21ee3524c08f
+# ╠═e197c1df-c8d4-4efc-9781-3214d45c7d81
+# ╠═972ea87b-f0f1-4eba-8497-897c8b8d7ac1
+# ╠═cdba5628-6856-4ab0-8baa-dba64e85590b
+# ╠═695c8b2f-a795-4952-97bb-50d1163ae880
+# ╟─89a1b9d6-963d-485b-b623-8ebf08075ed0
+# ╠═90037d86-e61e-40d6-a5d9-3c94ee3f2b71
+# ╟─36814ae9-af88-4a1b-90f1-9d56d2deece1
+# ╠═f1b2cc2d-4fd1-4ac9-91ff-3524266348cf
+# ╠═8d416951-0f54-4ba9-953c-c33027529583
+# ╠═ca3e3907-7615-4ec0-88fe-001268221417
+# ╠═da1bc10b-4fc7-48b5-83c6-c39c8337b93a
 # ╟─4e473cf2-78b2-11eb-2fd3-035e416d1650
-# ╠═490487e2-78b2-11eb-3e0c-f9461bc1739c
-# ╠═6856bd10-7859-11eb-0d4f-4f3342310ddb
-# ╟─94bf6aba-7871-11eb-1431-697b41de04a3
-# ╠═f0b07c72-8999-11eb-316a-293e6cee3c88
-# ╟─e39c24c8-8999-11eb-0def-7be2b449dd4f
+# ╟─e140431a-7637-4f45-9267-9be1527c4779
 # ╟─93abda52-786d-11eb-2b2e-0787a202c609
-# ╠═b37ec12a-786d-11eb-286c-01ba8c3546c8
+# ╟─b37ec12a-786d-11eb-286c-01ba8c3546c8
 # ╟─695e405c-786d-11eb-0a6e-bb776d9626ad
