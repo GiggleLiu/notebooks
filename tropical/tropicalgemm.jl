@@ -8,13 +8,13 @@ using InteractiveUtils
 using LoopVectorization, VectorizationBase, TropicalGEMM
 
 # ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
-md"# Tropical GEMM"
+md"# Speed up Tropical matrix multiplication"
 
 # ╔═╡ d238ceee-f8de-4e14-8947-636c5f879e8c
 md"By: GiggleLiu and Chris Elrod"
 
 # ╔═╡ 56082ee0-898f-11eb-13fc-ab4eb456e479
-md"This blog is about how to make a GEMM extension for Tropical numbers, with a close to theoretical optimal performance. It is based on
+md"This blog is about how to make a GEMM extension for Tropical numbers ([TropicalGEMM.jl](https://github.com/TensorBFS/TropicalGEMM.jl/)), with a close to theoretical optimal performance. It is based on
 * [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl/), for vectorizing loops (i.e. utilizing SIMD),
 * and [Octavian.jl](https://github.com/JuliaLinearAlgebra/Octavian.jl), a native Julia GEMM library with similar to MKL performance.
 "
@@ -414,6 +414,7 @@ end
 # ╟─f10051e5-eca1-4b36-9c32-479e5e6ca7f7
 # ╟─def82aee-898e-11eb-3b8d-2325f3709f73
 # ╟─ca278bd6-89a3-11eb-2388-1d50ae560b7c
+# ╠═d3d8702e-8cf8-405a-9b56-45e4153ee265
 # ╠═c1cc1e72-89a6-11eb-3c1d-8ba9aa0b5bb4
 # ╟─df211b54-72ca-4d7a-9b17-ac98c97a40ca
 # ╠═a224ffd8-07cb-4166-9f59-142a63be7634
@@ -434,7 +435,6 @@ end
 # ╟─82af0af2-786b-11eb-3a49-97519a15a851
 # ╟─d81c61df-1179-462d-97b6-3ed5b4c114b5
 # ╟─8167bf86-7852-11eb-0201-1996d24d3015
-# ╠═d3d8702e-8cf8-405a-9b56-45e4153ee265
 # ╠═af79e3c7-b5e5-4187-b99b-f009d7b945d2
 # ╠═a824f58c-6c77-4a63-8e9a-3bf1e9f4c519
 # ╟─d18a1a44-d3d8-429c-80a5-c4ed352bfb0d
