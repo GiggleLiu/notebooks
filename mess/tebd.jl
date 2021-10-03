@@ -75,11 +75,11 @@ function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
     # multiple S tensors
     for b in li
         b == getphysicallabel(peps, i) && continue
-        ti = _apply_vec(peps, ti, li, findbondtensor(peps, b), b)
+        ti = _apply_vec(ti, li, findbondtensor(peps, b), b)
     end
     for b in only_right
         b == getphysicallabel(peps, j) && continue
-        tj = _apply_vec(peps, tj, lj, findbondtensor(peps, b), b)
+        tj = _apply_vec(tj, lj, findbondtensor(peps, b), b)
     end
     tij = EinCode(((li...,), (lj...,)), (lij...,))(ti, tj)
     lijkl = (getphysicallabel(peps, i), getphysicallabel(peps, j), newlabel(peps, 1), newlabel(peps, 2))
@@ -104,11 +104,11 @@ function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
     # devide S tensors
     for b in li
         b == getphysicallabel(peps, i) && continue
-        ti_ = _apply_vec(peps, ti_, li, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)  # assume S being positive
+        ti_ = _apply_vec(ti_, li, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)  # assume S being positive
     end
     for b in only_right
         b == getphysicallabel(peps, j) && continue
-        tj_ = _apply_vec(peps, tj_, lj, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)
+        tj_ = _apply_vec(tj_, lj, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)
     end
 
     # update tensors
@@ -118,7 +118,7 @@ function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
     return peps
 end
 
-function _apply_vec(peps, t, l, v, b)
+function _apply_vec(t, l, v, b)
     return EinCode(((l...,), (b,)), (l...,))(t, v)
 end
 
