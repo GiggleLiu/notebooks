@@ -19,22 +19,26 @@ end
 
 struct PEPS{T, LT<:Union{Int,Char}}
     physical_labels::Vector{LT}
-    bond_labels::Vector{LT}
+    virtual_labels::Vector{LT}
+
     vertex_labels::Vector{Vector{LT}}
     vertex_tensors::Vector{<:AbstractArray{T}}
+    # bond labels are same as virtual_labels
     bond_tensors::Vector{<:AbstractVector{T}}
     max_index::LT
 end
 
 function state(peps::PEPS)
-    code = EinCode((Tuple.(peps.vertex_labels)..., Tuple.(peps.bond_labels)...), Tuple(peps.physical_labels))
+    code = EinCode((Tuple.(peps.vertex_labels)..., Tuple.(peps.virtual_labels)...), Tuple(peps.physical_labels))
     size_dict = OMEinsum.get_size_dict(peps.vertex_labels, peps.vertex_tensors)
     optcode = optimize_greedy(code, size_dict)
     optcode(peps.vertex_tensors..., peps.bond_tensors...)
 end
 getvlabel(peps::PEPS, i::Int) = peps.vertex_labels[i]
+getblabel(peps::PEPS, i::Int) = [peps.virtual_labels[i]]
 getphysicallabel(peps::PEPS, i::Int) = peps.physical_labels[i]
 newlabel(peps, offset) = peps.max_index + offset
+findbondtensor(peps, b) = (peps.bond_tensors[findall(==(b), peps.virtual_labels)[]])
 
 function applyA!(peps, g, Δ::Real, Ω::Real, δt::Real)
     for v in vertices(g)
@@ -61,44 +65,75 @@ function apply_onsite!(peps::PEPS{T,LT}, i, mat::AbstractMatrix) where {T,LT}
     return peps
 end
 
-function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D::Int) where T
+function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
     ti, tj = peps.vertex_tensors[i], peps.vertex_tensors[j]
     li, lj = getvlabel(peps, i), getvlabel(peps, j)
     shared_label = li ∩ lj; @assert length(shared_label) == 1
     only_left, only_right = setdiff(li, lj), setdiff(lj, li)
     lij = ((only_left ∪ only_right)...,)
+
+    # multiple S tensors
+    for b in li
+        b == getphysicallabel(peps, i) && continue
+        ti = _apply_vec(ti, li, findbondtensor(peps, b), b)
+    end
+    for b in only_right
+        b == getphysicallabel(peps, j) && continue
+        tj = _apply_vec(tj, lj, findbondtensor(peps, b), b)
+    end
     tij = EinCode(((li...,), (lj...,)), (lij...,))(ti, tj)
     lijkl = (getphysicallabel(peps, i), getphysicallabel(peps, j), newlabel(peps, 1), newlabel(peps, 2))
     lkl = replace(lij, lijkl[1]=>lijkl[3], lijkl[2]=>lijkl[4])
     tkl = EinCode(((lij...,), lijkl), (lkl...,))(tij, mat)
+
     # SVD and truncate
     sl = [size(ti, findall(==(l), li)[]) for l in only_left]
     sr = [size(tj, findall(==(l), lj)[]) for l in only_right]
     U, S, Vt = svd(reshape(tkl, prod(sl), prod(sr)))
-    sqrtS = Diagonal(sqrt.(S[1:D]))
-    tl = U[:,1:D] * sqrtS
-    tr = conj.(Vt[:,1:D]) * sqrtS
-    println("truncation error is $(sum(S[D+1:end]))")
-
+    if D !== nothing
+        S = S[1:D]
+        U = U[:,1:D]
+        Vt = conj.(Vt[:,1:D])
+        println("truncation error is $(sum(S[D+1:end]))")
+    end
+    
     # reshape back
-    peps.vertex_tensors[i] = EinCode(((only_left..., shared_label[]),), (li...,))(reshape(tl, (sl..., size(tl,2))))
-    peps.vertex_tensors[j] = EinCode(((only_right..., shared_label[]),), (lj...,))(reshape(tr, (sr..., size(tr,2))))
-    #L, R = svd_compress(tkl, lkl, left, right, D)
+    ti_ = EinCode(((only_left..., shared_label[]),), (li...,))(reshape(U, (sl..., size(U,2))))
+    tj_ = EinCode(((only_right..., shared_label[]),), (lj...,))(reshape(Vt, (sr..., size(Vt,2))))
+
+    # devide S tensors
+    for b in li
+        b == getphysicallabel(peps, i) && continue
+        ti_ = _apply_vec(ti_, li, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)  # assume S being positive
+    end
+    for b in only_right
+        b == getphysicallabel(peps, j) && continue
+        tj_ = _apply_vec(tj_, lj, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)
+    end
+
+    # update tensors
+    peps.vertex_tensors[i] = ti_
+    peps.vertex_tensors[j] = tj_
+    peps.bond_tensors[findall(==(shared_label[]), peps.virtual_labels)[]] = S
     return peps
 end
 
+function _apply_vec(t, l, v, b)
+    return EinCode(((l...,), (b,)), (l...,))(t, v)
+end
+
 function PEPS(vertex_labels::AbstractVector{<:AbstractVector{LT}}, vertex_tensors::Vector{<:AbstractArray{T}},
-        bond_labels::AbstractVector{LT}, bond_tensors::Vector{<:AbstractVector}) where {LT,T}
-    physical_labels = [vl[findall(∉(bond_labels), vl)[]] for vl in vertex_labels]
-    max_ind = max(maximum(physical_labels), maximum(bond_labels))
-    PEPS(physical_labels, bond_labels, vertex_labels, vertex_tensors, bond_tensors, max_ind)
+        virtual_labels::AbstractVector{LT}, bond_tensors::Vector{<:AbstractVector}) where {LT,T}
+    physical_labels = [vl[findall(∉(virtual_labels), vl)[]] for vl in vertex_labels]
+    max_ind = max(maximum(physical_labels), maximum(virtual_labels))
+    PEPS(physical_labels, virtual_labels, vertex_labels, vertex_tensors, bond_tensors, max_ind)
 end
 
 function peps_zero_state(::Type{T}, g::SimpleGraph, D::Int) where T
-    bond_labels = collect(nv(g)+1:nv(g)+ne(g))
+    virtual_labels = collect(nv(g)+1:nv(g)+ne(g))
     vertex_labels = Vector{Int}[]
     vertex_tensors = Array{T}[]
-    edge_map = Dict(zip(edges(g), bond_labels))
+    edge_map = Dict(zip(edges(g), virtual_labels))
     for i=1:nv(g)
         push!(vertex_labels, [i,[get(edge_map, SimpleEdge(i,nb), get(edge_map,SimpleEdge(nb,i),0)) for nb in neighbors(g, i)]...])
         t = zeros(T, 2, fill(D, degree(g, i))...)
@@ -109,7 +144,7 @@ function peps_zero_state(::Type{T}, g::SimpleGraph, D::Int) where T
         error("incorrect input labels1")
     end
     bond_tensors = [ones(T, D) for _=1:ne(g)]
-    return PEPS(vertex_labels, vertex_tensors, bond_labels, bond_tensors)
+    return PEPS(vertex_labels, vertex_tensors, virtual_labels, bond_tensors)
 end
 using Test
 
@@ -124,6 +159,7 @@ using Test
     @test newlabel(peps, 4) == 11+4
     @test getphysicallabel(peps, 2) == 2
     @test length(getvlabel(peps, 2)) == 4
+    @test getblabel(peps, 2) == [7]
     apply_onsite!(peps, 1, [0 1; 1 0])
     @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[2]=1; x)
     apply_onbond!(peps, 1, 2, reshape(Matrix(ConstGate.CNOT), 2, 2, 2, 2), 2)
