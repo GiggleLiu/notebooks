@@ -55,39 +55,41 @@ end
 function apply_onsite!(peps::PEPS{T,LT}, i, mat::AbstractMatrix) where {T,LT}
     @assert size(mat, 1) == size(mat, 2)
     ti = peps.vertex_tensors[i]
-    old = getvlabel(peps, i)
+    old = (getvlabel(peps, i)...,)
     mlabel = (getphysicallabel(peps, i), newlabel(peps, 1))
     peps.vertex_tensors[i] = EinCode((old, mlabel), replace(old, mlabel[1]=>mlabel[2]))(ti, mat)
     return peps
 end
 
-function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}) where T
+function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D::Int) where T
     ti, tj = peps.vertex_tensors[i], peps.vertex_tensors[j]
     li, lj = getvlabel(peps, i), getvlabel(peps, j)
     shared_label = li ∩ lj; @assert length(shared_label) == 1
     only_left, only_right = setdiff(li, lj), setdiff(lj, li)
     lij = ((only_left ∪ only_right)...,)
-    tij = EinCode((li, lj), lij)(ti, tj)
+    tij = EinCode(((li...,), (lj...,)), (lij...,))(ti, tj)
     lijkl = (getphysicallabel(peps, i), getphysicallabel(peps, j), newlabel(peps, 1), newlabel(peps, 2))
     lkl = replace(lij, lijkl[1]=>lijkl[3], lijkl[2]=>lijkl[4])
-    tkl = EinCode((lij, lijkl), lkl)(tij, mat)
+    tkl = EinCode(((lij...,), lijkl), (lkl...,))(tij, mat)
     # SVD and truncate
-    U, S, V = svd(reshape(tkl, prod(sl), prod(sr)))
-    sqrtS = Diagonal(sqrt(S[1:D]))
+    sl = [size(ti, findall(==(l), li)[]) for l in only_left]
+    sr = [size(tj, findall(==(l), lj)[]) for l in only_right]
+    U, S, Vt = svd(reshape(tkl, prod(sl), prod(sr)))
+    sqrtS = Diagonal(sqrt.(S[1:D]))
     tl = U[:,1:D] * sqrtS
-    tr = sqrtS * V[1:D,:]
+    tr = conj.(Vt[:,1:D]) * sqrtS
     println("truncation error is $(sum(S[D+1:end]))")
 
     # reshape back
-    peps.vertex_tensors[i] = EinCode(((only_left..., shared_label[1]),), li)(reshape(tl, slnew))
-    peps.vertex_tensors[j] = EinCode(((shared_label[1], only_right...),), lj)(reshape(tr, srnew))
+    peps.vertex_tensors[i] = EinCode(((only_left..., shared_label[]),), (li...,))(reshape(tl, (sl..., size(tl,2))))
+    peps.vertex_tensors[j] = EinCode(((only_right..., shared_label[]),), (lj...,))(reshape(tr, (sr..., size(tr,2))))
     #L, R = svd_compress(tkl, lkl, left, right, D)
     return peps
 end
 
 function PEPS(vertex_labels::AbstractVector{<:AbstractVector{LT}}, vertex_tensors::Vector{<:AbstractArray{T}},
         bond_labels::AbstractVector{LT}, bond_tensors::Vector{<:AbstractVector}) where {LT,T}
-    physical_labels = [findall(∉(bond_labels), vl)[] for vl in vertex_labels]
+    physical_labels = [vl[findall(∉(bond_labels), vl)[]] for vl in vertex_labels]
     max_ind = max(maximum(physical_labels), maximum(bond_labels))
     PEPS(physical_labels, bond_labels, vertex_labels, vertex_tensors, bond_tensors, max_ind)
 end
@@ -109,10 +111,21 @@ function peps_zero_state(::Type{T}, g::SimpleGraph, D::Int) where T
     bond_tensors = [ones(T, D) for _=1:ne(g)]
     return PEPS(vertex_labels, vertex_tensors, bond_labels, bond_tensors)
 end
-g = SimpleGraph(5)
-for (i,j) in [(1,2), (1,3), (2,4), (2,5), (3,4), (3,5)]
-    add_edge!(g, i, j)
-end
-peps = peps_zero_state(ComplexF64, g, 2)
 using Test
-@test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[1]=1; x)
+
+@testset "initial state" begin
+    g = SimpleGraph(5)
+    for (i,j) in [(1,2), (1,3), (2,4), (2,5), (3,4), (3,5)]
+        add_edge!(g, i, j)
+    end
+    peps = peps_zero_state(ComplexF64, g, 2)
+    @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[1]=1; x)
+    @test newlabel(peps, 2) == 11+2
+    @test newlabel(peps, 4) == 11+4
+    @test getphysicallabel(peps, 2) == 2
+    @test length(getvlabel(peps, 2)) == 4
+    apply_onsite!(peps, 1, [0 1; 1 0])
+    @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[2]=1; x)
+    apply_onbond!(peps, 1, 2, reshape(Matrix(ConstGate.CNOT), 2, 2, 2, 2), 2)
+    @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[4]=1; x)
+end
