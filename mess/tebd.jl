@@ -4,6 +4,7 @@ using LightGraphs
 using Yao.ConstGate: P1
 using LinearAlgebra: svd
 using LightGraphs: SimpleEdge
+using Random
 
 function cterm(C::Real)
     return Matrix(C*kron(P1, P1))
@@ -34,6 +35,7 @@ function state(peps::PEPS)
     optcode = optimize_greedy(code, size_dict)
     optcode(peps.vertex_tensors..., peps.bond_tensors...)
 end
+Yao.statevec(peps::PEPS) = vec(state(peps))
 getvlabel(peps::PEPS, i::Int) = peps.vertex_labels[i]
 getblabel(peps::PEPS, i::Int) = [peps.virtual_labels[i]]
 getphysicallabel(peps::PEPS, i::Int) = peps.physical_labels[i]
@@ -46,22 +48,24 @@ function applyA!(peps, g, Δ::Real, Ω::Real, δt::Real)
         te = exp(-im*δt*hi)
         apply_onsite!(peps, v, te)
     end
+    return peps
 end
 
-function applyB!(peps, g, C::Real)
+function applyB!(peps, g, C::Real, D)
     for (i,j) in edges(g)
         hi = cterm(C)
         te = reshape(exp(-im*δt*hi), 2, 2, 2, 2)
-        apply_onbond!(peps, i, j, te)
+        apply_onbond!(peps, i, j, te, D)
     end
+    return peps
 end
 
 function apply_onsite!(peps::PEPS{T,LT}, i, mat::AbstractMatrix) where {T,LT}
     @assert size(mat, 1) == size(mat, 2)
     ti = peps.vertex_tensors[i]
     old = (getvlabel(peps, i)...,)
-    mlabel = (getphysicallabel(peps, i), newlabel(peps, 1))
-    peps.vertex_tensors[i] = EinCode((old, mlabel), replace(old, mlabel[1]=>mlabel[2]))(ti, mat)
+    mlabel = (newlabel(peps, 1), getphysicallabel(peps, i))
+    peps.vertex_tensors[i] = EinCode((old, mlabel), replace(old, mlabel[2]=>mlabel[1]))(ti, mat)
     return peps
 end
 
@@ -81,34 +85,36 @@ function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
         b == getphysicallabel(peps, j) && continue
         tj = _apply_vec(tj, lj, findbondtensor(peps, b), b)
     end
+
+    # contract
     tij = EinCode(((li...,), (lj...,)), (lij...,))(ti, tj)
-    lijkl = (getphysicallabel(peps, i), getphysicallabel(peps, j), newlabel(peps, 1), newlabel(peps, 2))
-    lkl = replace(lij, lijkl[1]=>lijkl[3], lijkl[2]=>lijkl[4])
+    lijkl = (newlabel(peps, 1), newlabel(peps, 2), getphysicallabel(peps, i), getphysicallabel(peps, j))
+    lkl = replace(lij, lijkl[3]=>lijkl[1], lijkl[4]=>lijkl[2])
     tkl = EinCode(((lij...,), lijkl), (lkl...,))(tij, mat)
 
     # SVD and truncate
     sl = [size(ti, findall(==(l), li)[]) for l in only_left]
     sr = [size(tj, findall(==(l), lj)[]) for l in only_right]
     U, S, Vt = svd(reshape(tkl, prod(sl), prod(sr)))
+    Vt = conj.(Vt)
     if D !== nothing
+        println("truncation error is $(sum(S[D+1:end]))")
         S = S[1:D]
         U = U[:,1:D]
-        Vt = conj.(Vt[:,1:D])
-        println("truncation error is $(sum(S[D+1:end]))")
+        Vt = Vt[:,1:D]
     end
-    
     # reshape back
     ti_ = EinCode(((only_left..., shared_label[]),), (li...,))(reshape(U, (sl..., size(U,2))))
     tj_ = EinCode(((only_right..., shared_label[]),), (lj...,))(reshape(Vt, (sr..., size(Vt,2))))
-
+    
     # devide S tensors
-    for b in li
+    for b in only_left
         b == getphysicallabel(peps, i) && continue
-        ti_ = _apply_vec(ti_, li, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)  # assume S being positive
+        ti_ = _apply_vec(ti_, li, safe_inv.(findbondtensor(peps, b)), b)  # assume S being positive
     end
     for b in only_right
         b == getphysicallabel(peps, j) && continue
-        tj_ = _apply_vec(tj_, lj, 1 ./ replace(findbondtensor(peps, b), T(0)=>T(1e-20)), b)
+        tj_ = _apply_vec(tj_, lj, safe_inv.(findbondtensor(peps, b)), b)
     end
 
     # update tensors
@@ -116,6 +122,13 @@ function apply_onbond!(peps::PEPS, i, j, mat::AbstractArray{T,4}, D) where T
     peps.vertex_tensors[j] = tj_
     peps.bond_tensors[findall(==(shared_label[]), peps.virtual_labels)[]] = S
     return peps
+end
+
+function safe_inv(y::T) where T
+    if abs(y) < -1e-16
+        y = y >= 0 ? T(1e-16) : T(-1e-16)
+    end
+    return inv(y)
 end
 
 function _apply_vec(t, l, v, b)
@@ -146,6 +159,16 @@ function peps_zero_state(::Type{T}, g::SimpleGraph, D::Int) where T
     bond_tensors = [ones(T, D) for _=1:ne(g)]
     return PEPS(vertex_labels, vertex_tensors, virtual_labels, bond_tensors)
 end
+function Random.rand!(peps::PEPS)
+    for t in peps.bond_tensors
+        rand!(t)
+    end
+    for t in peps.vertex_tensors
+        rand!(t)
+    end
+    return peps
+end
+
 using Test
 
 @testset "initial state" begin
@@ -164,4 +187,25 @@ using Test
     @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[2]=1; x)
     apply_onbond!(peps, 1, 2, reshape(Matrix(ConstGate.CNOT), 2, 2, 2, 2), 2)
     @test vec(state(peps)) ≈ (x=zeros(ComplexF64, 1<<5); x[4]=1; x)
+end
+
+@testset "random gate" begin
+    g = SimpleGraph(5)
+    for (i,j) in [(1,2), (1,3), (2,4), (2,5), (3,4), (3,5)]
+        add_edge!(g, i, j)
+    end
+    peps = peps_zero_state(ComplexF64, g, 2)
+    rand!(peps)
+    reg = Yao.ArrayReg(vec(state(peps)))
+
+    # unary
+    m = rand_unitary(2)
+    apply_onsite!(peps, 1, m)
+    reg |> put(5, (1,)=>matblock(m))
+    @test vec(state(peps)) ≈ statevec(reg)
+
+    m = rand_unitary(4)
+    reg |> put(5, (4,2)=>matblock(m))
+    apply_onbond!(peps, 4, 2, reshape(m,2,2,2,2), nothing)
+    @show vec(state(peps)) - statevec(reg)
 end
