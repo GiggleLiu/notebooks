@@ -1,17 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.14.2
+# v0.14.5
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ d3d8702e-8cf8-405a-9b56-45e4153ee265
 using LoopVectorization, VectorizationBase, TropicalGEMM
-
-# ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
-md"# Speed up Tropical matrix multiplication"
-
-# ╔═╡ d238ceee-f8de-4e14-8947-636c5f879e8c
-md"By: GiggleLiu and Chris Elrod"
 
 # ╔═╡ 8fe28e17-e716-4a78-a0ba-d70712598a90
 html"""
@@ -22,6 +16,12 @@ html"""
 <br>
 <a href="https://raw.githubusercontent.com/GiggleLiu/notebooks/master/notebooks/tropical/tropicalgemm.jl" target="_blank"> download this notebook </a></div>
 """
+
+# ╔═╡ 8d24b3aa-7853-11eb-0be4-23088fd5e70a
+md"# Speed up Tropical matrix multiplication"
+
+# ╔═╡ d238ceee-f8de-4e14-8947-636c5f879e8c
+md"By: GiggleLiu and Chris Elrod"
 
 # ╔═╡ 56082ee0-898f-11eb-13fc-ab4eb456e479
 md"This blog is about how to make a GEMM extension for Tropical numbers ([TropicalGEMM.jl](https://github.com/TensorBFS/TropicalGEMM.jl/)), with a close to theoretical optimal performance. It is based on
@@ -67,11 +67,11 @@ The goal is to sqeeze every drop of its computing power of our computing device 
 			      * 4 (avx instruction set has a 256 with register, it can
                        crunch 4 vectorized double precision floating point
 					   operations at one CPU cycle)
-				= 68.8 GFLOPS
+				= 46.4 GFLOPS
 """
 
 # ╔═╡ bd1fb060-786b-11eb-076a-998aee8fa485
-md"However, the theoretical computing power for tropical matrix multplication is half of that for floating point numbers, because it does not have `fma` like shortcut to do `*` and `+` in a same CPU cycle. So the theoretical maximum computing power for the TropicalF64 GEMM is `34.4 GFLOPS`.
+md"However, the theoretical computing power for tropical matrix multplication is half of that for floating point numbers, because it does not have `fma` like shortcut to do `*` and `+` in a same CPU cycle. So the theoretical maximum computing power for the TropicalF64 GEMM is `23.2 GFLOPS`.
 "
 
 # ╔═╡ 28f83f37-200b-4bc1-9cdb-2a461e4262c9
