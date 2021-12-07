@@ -18,7 +18,7 @@ end
 using Pkg; ; Pkg.activate()
 
 # ╔═╡ 2a145cba-26b0-43bd-9ab2-13818d246eae
-using PlutoUI
+using Revise, PlutoUI, Viznet, Compose
 
 # ╔═╡ 342685aa-5159-11ec-13fd-fb8954106bca
 using Yao, YaoPlots, Plots
@@ -119,6 +119,8 @@ end
 
 # ╔═╡ 52d14933-99d4-4ee6-9eff-7be4a5722334
 md"""## Why Yao?
+Yao is a ... by Roger Luo and Jinguo Liu, funded by Lei Wang and Pan Zhang.
+
 $(html"<img src=https://camo.githubusercontent.com/477280de44a6d4408d3a3255d3d82a615a27ac1c5120063ef7d6b2f6640befb8/68747470733a2f2f79616f7175616e74756d2e6f72672f6173736574732f6c6f676f2e706e67 width=200>")
 [https://yaoquantum.org/](https://yaoquantum.org/)
 
@@ -175,10 +177,13 @@ md"""
 typeof(X)
 
 # ╔═╡ 2e17662d-24ed-40c9-93b0-4cef526c3a75
-@bind selected_gate Select([I2, X, Y, Z, ConstGate.P0, ConstGate.P1, ConstGate.Pu, ConstGate.Pd, ConstGate.T, ConstGate.S, SWAP])
+@bind selected_gate Select([X, Y, Z, I2, ConstGate.P0, ConstGate.P1, ConstGate.Pu, ConstGate.Pd, ConstGate.T, ConstGate.S, SWAP, Yao.Measure(1)])
+
+# ╔═╡ 21b11fac-5efb-4fd5-a1b0-e684d215a46c
+vizcircuit(selected_gate; show_ending=false)
 
 # ╔═╡ a2129e65-7e73-4b42-9924-e88d60893ed2
-mat(Basic, selected_gate)
+!(selected_gate isa Yao.Measure) && mat(Basic, selected_gate)
 
 # ╔═╡ 8b1606b5-78d8-4020-8597-1cf9f2364a2b
 mat(rot(X, Basic(:θ)))
@@ -193,56 +198,119 @@ md"""
 
 # ╔═╡ 421abcef-a1be-4297-a159-adcd92332d6b
 md"
-put(n, (i,j...,)=>G) := ``I_1\otimes I_2 \otimes \ldots G_{i,j,\ldots} \ldots \otimes I_n``
+`put(n, (i,j...,)=>G)`
+```math
+I_1\otimes I_2 \otimes \ldots G_{i,j,\ldots} \ldots \otimes I_n
+```
 "
 
 # ╔═╡ 3388350c-fd8b-4cae-bf34-71446bd747ca
-g_primitive1 = put(2, 2=>X)
+g_put1 = put(2, 2=>selected_gate)
+
+# ╔═╡ 99847765-fd49-4c9d-914b-5d47eac89490
+vizcircuit(g_put1; show_ending=false)
 
 # ╔═╡ fbd1ea6e-16da-4289-b0e3-d8e8a5a55541
-mat(Basic, g_primitive1)
+!(selected_gate isa Yao.Measure) && mat(Basic, g_put1)
 
 # ╔═╡ 5dafbbbd-d6f7-423c-8a46-41b1596f83a3
-g_primitive2 = put(3, (3, 1)=>SWAP)
+g_put2 = put(3, (3, 1)=>SWAP)
 
 # ╔═╡ 984db7f2-30e0-421d-9f27-874553b6fae2
-mat(Basic, g_primitive1)
+mat(Basic, g_put2)
 
 # ╔═╡ f35b9789-788b-450d-af8e-472412efce77
-md"control(n, (c,d,...), (i,j,...)=>G)"
+md"`control(n, (c,d,...), (i,j,...)=>G)`
+```math
+\begin{align}
+&I_1\otimes I_2\otimes \ldots P_{c,d,\ldots} \ldots G_{i,j,\ldots} \ldots \otimes I_n + I_1\otimes I_2\otimes \ldots (1-P_{c,d,\ldots}) \ldots I_{i,j,\ldots} \ldots \otimes I_n\\
+&P_{c,d,\ldots} = P_c \otimes P_d \otimes \ldots\\
+&P_{c} = \begin{cases}
+|1\rangle\langle 1|_{|c|}, c > 0\\
+|0\rangle\langle 0|_{|c|}, \text{otherwise}
+\end{cases}
+\end{align}
+```"
+
+# ╔═╡ 34a0b380-ac20-4d88-b498-969745a0df7c
+g_ctrl1 = control(2, 2, 1=>selected_gate)
+
+# ╔═╡ 3aaa7e49-9507-4384-ac7e-f4d486127811
+vizcircuit(g_ctrl1; show_ending=false)
+
+# ╔═╡ 65a01ff1-8458-4198-990c-46814a16b714
+!(selected_gate isa Yao.Measure) && mat(Basic, g_ctrl1)
+
+# ╔═╡ 47da74c7-0f24-4dd5-b6f7-88c22a81de5a
+g_ctrl2 = control(2, -2, 1=>selected_gate)
+
+# ╔═╡ e06b23aa-7fae-4495-9b69-43cea3682a28
+vizcircuit(g_ctrl2; show_ending=false)
+
+# ╔═╡ 3e154273-d97f-4c71-a500-48913766c836
+!(selected_gate isa Yao.Measure) && mat(Basic, g_ctrl2)
+
+# ╔═╡ 915185d6-3b36-437e-bac0-22cd5503bba2
+mat(Basic, control(3, (3,2), 1=>X))
 
 # ╔═╡ 0a6d5a41-f42b-42e7-adf7-93a40f67c9f3
-md"chain(n, G1, G2, ..., Gn) := ``G_n G_{n-1} \ldots G_1``"
+md"`chain(G1, G2, ..., Gn)` or `Gn * ... * G_2 * G_1`
+```math
+G_n G_{n-1} \ldots G_1
+```
+"
 
 # ╔═╡ dc46cbbe-0eb5-41f9-ad5f-f8a7fba5ff9c
 mat(Basic, chain(X, Y))
 
+# ╔═╡ 0a7cab72-a50b-4d58-877a-4a9d939b198f
+g_chain2 = chain(put(2, 1=>selected_gate), control(2, 1, 2=>X))
+
+# ╔═╡ 6b2d8bb9-5a4f-4699-ac92-bc8a4003918f
+vizcircuit(g_chain2; show_ending=false)
+
 # ╔═╡ 26435992-fd7c-4797-8fc9-9c5f52fc6388
-mat(Basic, chain(put(2, 1=>X), control(2, 1, 2=>X)))
+!(selected_gate isa Yao.Measure) && mat(Basic, g_chain2)
+
+# ╔═╡ 3a89d593-ae7e-454c-bb18-0baa4cc06a25
+md"+(H1, H2, ..., Hn)
+```math
+H_n + H_{n-1} \ldots H_1
+```
+"
+
+# ╔═╡ 4559f70b-5a9b-478d-ba9a-3a35f6fc9716
++(X, Y, Z)
 
 # ╔═╡ 6cac6c4b-a0d7-4cae-bc2d-1cf9e0d775a2
 md"#### Example 1: Build a Heisenberg Hamiltonian"
 
 # ╔═╡ 1b35ea7b-c831-4fce-8109-3cd35a80214a
-h(n) = sum([sum([kron(n, i=>G, i+1=>G) for G in [X, Y, Z]]) for i=1:n-1])
+heisenberg(n) = sum([sum([kron(n, i=>G, i+1=>G) for G in [X, Y, Z]]) for i=1:n-1])
 
 # ╔═╡ 3fa73e8a-fe46-475f-8346-e54f52c144f4
 md"Hermitian: ``\mathcal{O} = \mathcal{O}^\dagger``"
 
+# ╔═╡ a4b4761b-0686-42bd-9f04-d6083b6064e4
+heisenberg(3)
+
 # ╔═╡ 31c1c4fc-7476-4066-8462-bf18f8d69966
-ishermitian(h(3))
+ishermitian(heisenberg(3))
 
 # ╔═╡ 81a55867-4158-4371-a12c-b08e3d64c0cb
 md"Unitary: ``\mathcal{O}^\dagger\mathcal{O} = I``"
 
 # ╔═╡ 7f15cbb0-09be-46ee-852c-e43dde9bc4f5
-isunitary(h(3))
+isunitary(heisenberg(3))
 
 # ╔═╡ cc4e7d7b-0596-4bc0-b23e-f6861fcd5260
 md"Reflexive: ``\mathcal{O}^2 = I``"
 
 # ╔═╡ 8b03f2f1-f38c-4d5e-b778-0c3b4aaf910d
-isreflexive(h(3))
+isreflexive(heisenberg(3))
+
+# ╔═╡ f639e1b4-e257-4218-8727-292eadedd7bf
+mat(heisenberg(20))
 
 # ╔═╡ 800262e6-5c78-4229-82d5-40de619d3013
 md"#### Example 2: Build a quantum fourier transformation circuit"
@@ -259,11 +327,22 @@ qft_circuit(n::Int) = chain(n, hcphases(n, i) for i = 1:n)
 # ╔═╡ c41dc6d8-07ff-42fb-a54a-d1a1cf1cc223
 vizcircuit(qft_circuit(5))
 
+# ╔═╡ 70e85333-26b7-40b8-8fe1-7fb470b5f7b3
+let
+	YaoPlots.CircuitStyles.linecolor[] = "#ffffff"
+	YaoPlots.CircuitStyles.textcolor[] = "#ffffff"
+	YaoPlots.CircuitStyles.gate_bgcolor[] = "white"
+	vizcircuit(qft_circuit(5))
+end |> PNG("qft_white.png")
+
+# ╔═╡ 28f657cd-8ae7-4572-94fa-813797b59b25
+import Cairo
+
 # ╔═╡ be280ec7-c42c-413b-b4de-274600190c17
 md"## Time evolution"
 
 # ╔═╡ c5e36e92-9717-45bc-91e0-568ae206d57c
-te = time_evolve(h(5), 0.3)
+te = time_evolve(heisenberg(5), 0.3)
 
 # ╔═╡ dce2db9d-c9ff-451d-ba91-0143e7a116cc
 apply!(rand_state(5), te)
@@ -288,7 +367,9 @@ md"## Tensor network based quantum simulation"
 
 # ╔═╡ 09137c47-1bd0-481b-8b60-ca2abff64afc
 md"""## Vector is not the only choice
-
+```math
+v := \left(\begin{matrix}a_1\\ b_1\end{matrix}\right) \otimes \left(\begin{matrix}a_2\\ b_2\end{matrix}\right) \otimes \ldots \otimes \left(\begin{matrix}a_n\\ b_n\end{matrix}\right)
+```
 """
 
 # ╔═╡ 62393bfb-5597-40cd-a5e4-c4b10a61d1cf
@@ -341,6 +422,7 @@ md"""
 # ╟─bfb9fcb5-2555-490a-9dcc-48cc91f8ab3c
 # ╠═82b6f24c-4eab-4420-848e-66026d5aa8ee
 # ╠═2e17662d-24ed-40c9-93b0-4cef526c3a75
+# ╠═21b11fac-5efb-4fd5-a1b0-e684d215a46c
 # ╠═a2129e65-7e73-4b42-9924-e88d60893ed2
 # ╠═8b1606b5-78d8-4020-8597-1cf9f2364a2b
 # ╠═8be8d92a-d882-4e77-a3c3-9846babeda2b
@@ -348,26 +430,42 @@ md"""
 # ╟─421abcef-a1be-4297-a159-adcd92332d6b
 # ╠═3388350c-fd8b-4cae-bf34-71446bd747ca
 # ╠═675b3398-01d7-4949-bb0e-7cdf9b805c69
+# ╠═99847765-fd49-4c9d-914b-5d47eac89490
 # ╠═fbd1ea6e-16da-4289-b0e3-d8e8a5a55541
 # ╠═5dafbbbd-d6f7-423c-8a46-41b1596f83a3
 # ╠═984db7f2-30e0-421d-9f27-874553b6fae2
 # ╟─f35b9789-788b-450d-af8e-472412efce77
+# ╠═34a0b380-ac20-4d88-b498-969745a0df7c
+# ╠═3aaa7e49-9507-4384-ac7e-f4d486127811
+# ╠═65a01ff1-8458-4198-990c-46814a16b714
+# ╠═47da74c7-0f24-4dd5-b6f7-88c22a81de5a
+# ╠═e06b23aa-7fae-4495-9b69-43cea3682a28
+# ╠═3e154273-d97f-4c71-a500-48913766c836
+# ╠═915185d6-3b36-437e-bac0-22cd5503bba2
 # ╟─0a6d5a41-f42b-42e7-adf7-93a40f67c9f3
 # ╠═dc46cbbe-0eb5-41f9-ad5f-f8a7fba5ff9c
+# ╠═0a7cab72-a50b-4d58-877a-4a9d939b198f
+# ╠═6b2d8bb9-5a4f-4699-ac92-bc8a4003918f
 # ╠═26435992-fd7c-4797-8fc9-9c5f52fc6388
+# ╟─3a89d593-ae7e-454c-bb18-0baa4cc06a25
+# ╠═4559f70b-5a9b-478d-ba9a-3a35f6fc9716
 # ╟─6cac6c4b-a0d7-4cae-bc2d-1cf9e0d775a2
 # ╠═1b35ea7b-c831-4fce-8109-3cd35a80214a
 # ╟─3fa73e8a-fe46-475f-8346-e54f52c144f4
+# ╠═a4b4761b-0686-42bd-9f04-d6083b6064e4
 # ╠═31c1c4fc-7476-4066-8462-bf18f8d69966
 # ╟─81a55867-4158-4371-a12c-b08e3d64c0cb
 # ╠═7f15cbb0-09be-46ee-852c-e43dde9bc4f5
 # ╟─cc4e7d7b-0596-4bc0-b23e-f6861fcd5260
 # ╠═8b03f2f1-f38c-4d5e-b778-0c3b4aaf910d
+# ╠═f639e1b4-e257-4218-8727-292eadedd7bf
 # ╟─800262e6-5c78-4229-82d5-40de619d3013
 # ╠═a6db5c0e-ea51-4071-b3fc-146ef90270aa
 # ╠═ecf006d7-335c-48de-b629-b561dc08b334
 # ╠═22fba19f-d337-48cc-a311-e44d03a0c050
 # ╠═c41dc6d8-07ff-42fb-a54a-d1a1cf1cc223
+# ╠═70e85333-26b7-40b8-8fe1-7fb470b5f7b3
+# ╠═28f657cd-8ae7-4572-94fa-813797b59b25
 # ╟─be280ec7-c42c-413b-b4de-274600190c17
 # ╠═c5e36e92-9717-45bc-91e0-568ae206d57c
 # ╠═dce2db9d-c9ff-451d-ba91-0143e7a116cc
@@ -378,7 +476,7 @@ md"""
 # ╠═f02a5014-45ed-4bfd-817f-4544ca15f0a0
 # ╠═23a5b68f-bc93-43a6-9072-7d929f5f62dc
 # ╟─840e56f4-2fcf-4136-bdb7-7feba88f25da
-# ╠═09137c47-1bd0-481b-8b60-ca2abff64afc
+# ╟─09137c47-1bd0-481b-8b60-ca2abff64afc
 # ╟─62393bfb-5597-40cd-a5e4-c4b10a61d1cf
 # ╠═6f131f36-0b4e-4570-8527-620297fae48e
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
