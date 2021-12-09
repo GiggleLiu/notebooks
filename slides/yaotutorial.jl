@@ -131,7 +131,7 @@ FULL_ADDER =
 "
 
 # ╔═╡ e1b6b7a9-2d26-4f43-a0bd-54f7ad22a5b3
-md"Univeral gate"
+md"Univeral gate NAND and NOR"
 
 # ╔═╡ 42f3e654-1836-491a-8119-b03b93822f45
 md"NAND = 
@@ -248,6 +248,41 @@ end
 # ╔═╡ aea490af-0bdd-4930-9ad2-7d9a13e08c46
 calculate_binaryadd(2, 2, 2)
 
+# ╔═╡ c0078012-3d81-4584-a050-9a58802d08a9
+gatecount(add_circuit(4)[1])
+
+# ╔═╡ aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
+begin
+	function decompose_toffoli(x::ControlBlock{N,XGate,2,1}) where N
+		if x.ctrl_config == (1, 1)
+			i, j, k = x.ctrl_locs[1], x.ctrl_locs[2], x.locs[1]
+			return chain(put(N, k=>H), control(N,j,k=>X), put(N, k=>ConstGate.T'), control(N, i, k=>X), put(N, k=>ConstGate.T), control(N, j, k=>X), put(N, k=>ConstGate.T'), control(N, i, k=>X), put(N, k=>ConstGate.T), put(N, j=>ConstGate.T), control(N, i, j=>X), put(N, k=>H), put(N, i=>ConstGate.T), put(N, j=>ConstGate.T'), control(N, i, j=>X))
+		else
+			return x
+		end
+	end
+	decompose_toffoli(x::AbstractBlock) = chsubblocks(x, decompose_toffoli.(subblocks(x)))
+end
+
+# ╔═╡ 1e2848d6-252b-4db5-9864-1f1886da9998
+vizcircuit(decompose_toffoli(control(3, (1,2), 3=>X)); w_depth=0.7, scale=0.6)
+
+# ╔═╡ 008d228b-5d88-44c2-a4bc-c877329349bd
+yao"""
+let nqubits = 5
+	1=>H
+	2=>C, 3=>X
+	3=>T'
+	1=>C, 3=>X
+end
+"""
+
+# ╔═╡ e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
+vizcircuit(decompose_toffoli(add_circuit(4)[1]); scale=0.06)
+
+# ╔═╡ 0e11d98d-79c6-444d-8df1-357e8218f233
+gatecount(decompose_toffoli(add_circuit(4)[1]))
+
 # ╔═╡ ee4186d7-1f93-4b72-a86c-076b136e2eda
 md"## Not gate"
 
@@ -276,7 +311,7 @@ latexify(mat(Basic, cnot_gate))
 latexify(mat(Basic, control(3, (3,2), 1=>X)))
 
 # ╔═╡ cee8db91-7e84-4728-aef6-ea861c62ff96
-vizcircuit(X; show_ending_bar=false, starting_texts=[1], starting_offset=-0.3, ending_texts=[0], ending_offset=0.3)
+vizcircuit(control(3, (1,2), 3=>X); show_ending_bar=false, starting_texts=[1,1,0], starting_offset=-0.3, ending_texts=[1,1,1], ending_offset=0.3)
 
 # ╔═╡ b6a356a8-de90-405f-ad5e-6ae9131f871e
 md"""## The linear algebra representation of Quantum machanics
@@ -364,7 +399,7 @@ typeof(X)
 @bind selected_gate Select([X, Y, Z, I2, ConstGate.P0, ConstGate.P1, ConstGate.Pu, ConstGate.Pd, ConstGate.T, ConstGate.S, SWAP, Yao.Measure(1)])
 
 # ╔═╡ 21b11fac-5efb-4fd5-a1b0-e684d215a46c
-vizcircuit(selected_gate; show_ending=false)
+vizcircuit(selected_gate)
 
 # ╔═╡ a2129e65-7e73-4b42-9924-e88d60893ed2
 !(selected_gate isa Yao.Measure) && mat(Basic, selected_gate)
@@ -392,7 +427,7 @@ I_1\otimes I_2 \otimes \ldots G_{i,j,\ldots} \ldots \otimes I_n
 g_put1 = put(2, 2=>selected_gate)
 
 # ╔═╡ 99847765-fd49-4c9d-914b-5d47eac89490
-vizcircuit(g_put1; show_ending=false)
+vizcircuit(g_put1)
 
 # ╔═╡ fbd1ea6e-16da-4289-b0e3-d8e8a5a55541
 !(selected_gate isa Yao.Measure) && mat(Basic, g_put1)
@@ -420,7 +455,7 @@ md"`control(n, (c,d,...), (i,j,...)=>G)`
 g_ctrl1 = control(2, 2, 1=>selected_gate)
 
 # ╔═╡ 3aaa7e49-9507-4384-ac7e-f4d486127811
-vizcircuit(g_ctrl1; show_ending=false)
+vizcircuit(g_ctrl1)
 
 # ╔═╡ 65a01ff1-8458-4198-990c-46814a16b714
 !(selected_gate isa Yao.Measure) && mat(Basic, g_ctrl1)
@@ -429,7 +464,7 @@ vizcircuit(g_ctrl1; show_ending=false)
 g_ctrl2 = control(2, -2, 1=>selected_gate)
 
 # ╔═╡ e06b23aa-7fae-4495-9b69-43cea3682a28
-vizcircuit(g_ctrl2; show_ending=false)
+vizcircuit(g_ctrl2)
 
 # ╔═╡ 3e154273-d97f-4c71-a500-48913766c836
 !(selected_gate isa Yao.Measure) && mat(Basic, g_ctrl2)
@@ -451,7 +486,7 @@ mat(Basic, chain(X, Y))
 g_chain2 = chain(put(2, 1=>selected_gate), control(2, 1, 2=>X))
 
 # ╔═╡ 6b2d8bb9-5a4f-4699-ac92-bc8a4003918f
-vizcircuit(g_chain2; show_ending=false)
+vizcircuit(g_chain2)
 
 # ╔═╡ 26435992-fd7c-4797-8fc9-9c5f52fc6388
 !(selected_gate isa Yao.Measure) && mat(Basic, g_chain2)
@@ -567,6 +602,9 @@ md"""
 * Julia slack (channel: yao-dev)
 """
 
+# ╔═╡ e32ba5c5-ad8d-46be-beea-182b9c653af4
+32
+
 # ╔═╡ Cell order:
 # ╠═4a96f5c9-37b4-4a8a-a6bd-8a4b4440eb49
 # ╠═2a145cba-26b0-43bd-9ab2-13818d246eae
@@ -610,6 +648,12 @@ md"""
 # ╠═617ba29e-a9f9-4ac4-83b6-232b2aff68d7
 # ╠═e2e4ec60-2737-4560-89b1-1e14a35044e8
 # ╠═aea490af-0bdd-4930-9ad2-7d9a13e08c46
+# ╠═c0078012-3d81-4584-a050-9a58802d08a9
+# ╠═aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
+# ╠═1e2848d6-252b-4db5-9864-1f1886da9998
+# ╠═008d228b-5d88-44c2-a4bc-c877329349bd
+# ╠═e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
+# ╠═0e11d98d-79c6-444d-8df1-357e8218f233
 # ╟─ee4186d7-1f93-4b72-a86c-076b136e2eda
 # ╠═57a3616e-49af-40b7-a000-a4ecc81af84e
 # ╠═0f655562-0c18-43a8-83f0-4d11b7eeb068
@@ -704,3 +748,4 @@ md"""
 # ╟─62393bfb-5597-40cd-a5e4-c4b10a61d1cf
 # ╠═6f131f36-0b4e-4570-8527-620297fae48e
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
+# ╠═e32ba5c5-ad8d-46be-beea-182b9c653af4
