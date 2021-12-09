@@ -20,6 +20,12 @@ using Pkg; ; Pkg.activate()
 # ╔═╡ 2a145cba-26b0-43bd-9ab2-13818d246eae
 using Revise, PlutoUI, Viznet, Compose
 
+# ╔═╡ a8b06352-5265-4b89-bd82-b31f3cdac391
+using Latexify
+
+# ╔═╡ 57a3616e-49af-40b7-a000-a4ecc81af84e
+using BitBasis
+
 # ╔═╡ 342685aa-5159-11ec-13fd-fb8954106bca
 using Yao, YaoPlots, Plots
 
@@ -38,11 +44,10 @@ SPACE = html"&nbsp; &nbsp; &nbsp; &nbsp;"
 # ╔═╡ 0f099c85-f039-477e-a70d-a3801cbb2656
 md"""
 ## Goals
-* quantum simulation basics,
-* high level understanding of tensor network based quantum circuit simulation,
-* Julia (a programming language) quantum toolbox
+* write a quantum simulation program on your own with Julia (a programming language) quantum toolbox
     * Yao
     * OMEinsum
+* high level understanding of tensor network based quantum circuit simulation,
 """
 
 # ╔═╡ 48854a73-4896-4542-9ad4-15ae87418f1d
@@ -50,7 +55,7 @@ md"## Background knowledge"
 
 # ╔═╡ c1d40103-1710-4221-b414-0958c13fb95f
 md"""
-I wish you are familiar with the following notations
+I wish you are familiar with the following notations (~ 3rd year undergraduate)
 * ``|\psi\rangle`` is a quantum state, or "ket",
 * ``H`` is a Hamiltonian, it determines the dynamics of the quantum state as ``|\psi(t)\rangle = e^{-iHt}|\psi(0)\rangle``,
 * ``\mathcal{O}`` is an observable, known as a Hermitian operator. One can measure this observable. The expectation value is the observed result is $\langle\mathcal{O}\rangle = \langle\psi|\mathcal{O}|\psi\rangle$
@@ -66,42 +71,6 @@ html"""
 <img src="https://static.docsity.com/documents_first_pages/notas/2012/04/17/dfe728fbf6999820eecb2c8fc0e773b6.png" width=300 style="vertical-align:sub;"><img src="https://images-na.ssl-images-amazon.com/images/I/51X+dIBIeZL._SY344_BO1,204,203,200_.jpg" width=290 style="vertical-align:super;">
 </p>
 """
-
-# ╔═╡ b6a356a8-de90-405f-ad5e-6ae9131f871e
-md"""## The linear algebra representation of Quantum machanics
-Linear algebra to quantum dynamics is what regular number to abstract algebra.
-"""
-
-# ╔═╡ 400f697d-fbdb-4067-881f-e004f50bbc0f
-md"A quantum state is represented as a **normalized** vector. e.g. the following vector represents a quantum system with 5 states ($s=1,2,\ldots,5$)"
-
-# ╔═╡ b3daf0a3-4d1e-4474-bb99-948c718059ce
-ψ0 = normalize!(randn(ComplexF64, 5))
-
-# ╔═╡ 6a719cf5-d8a4-4369-95e7-c1dfbc5cebf8
-md"""
-Its elements ``\langle s|\psi\rangle =\sqrt{p_s}e^{i \phi_s}``.
-"""
-
-# ╔═╡ 681cdc3b-348f-45c4-9031-6298e81d995d
-md"""
-Hamiltonian is a **Hermitian** matrix
-"""
-
-# ╔═╡ b3813f2d-4e9d-4789-a653-d28fd1b98eda
-rand_hami = rand_hermitian(5)
-
-# ╔═╡ 6294a05c-46b1-47e4-9f3c-e741ab191a09
-obs = rand_hermitian(5)
-
-# ╔═╡ bf983162-66e3-40e0-afce-7f5b7728c490
-@bind evolve_time Slider(0:0.03:2; show_value=true)
-
-# ╔═╡ d85a2028-9b6f-4d6c-ba61-fecef3fd4876
-ψt = exp(-im*rand_hami*evolve_time) * ψ0
-
-# ╔═╡ 0139dbd2-486e-4b58-b656-6b5e06864cd1
-mean_obs = ψt' * obs * ψt
 
 # ╔═╡ b83f7675-68fa-44b5-8681-c85984eeb877
 md"# Quantum simulation with Yao"
@@ -133,6 +102,221 @@ one of **Top 50** most popular Julia packages. It provides
 * Built-in automatic differentiation engine,
 * Generic data type (symbolic computation, tropical algera),
 """
+
+# ╔═╡ b7d90c25-2f66-4ace-8d52-841ea376b3f9
+md"## How classical gates work"
+
+# ╔═╡ 2c6d024a-3187-4976-af27-393af8826a2d
+md"This is an adder"
+
+# ╔═╡ 165b369a-3d0a-4ae7-99f1-de0297f93707
+md"![](http://www.worldofindie.co.uk/wp-content/uploads/2018/02/4-bit-adder-subtractor-circuit.png)"
+
+# ╔═╡ 800bc5ce-1521-4c24-aaef-4911910d34cf
+md"Adder in the configuration space"
+
+# ╔═╡ c841f2e2-b907-4f74-be57-968ca339bec4
+md"
+FULL_ADDER = 
+```
+000 → 00
+001 → 01
+010 → 01
+011 → 10
+100 → 01
+101 → 10
+110 → 10
+111 → 11
+```
+"
+
+# ╔═╡ e1b6b7a9-2d26-4f43-a0bd-54f7ad22a5b3
+md"Univeral gate"
+
+# ╔═╡ 42f3e654-1836-491a-8119-b03b93822f45
+md"NAND = 
+```
+00 → 1
+01 → 1
+10 → 1
+11 → 0
+```
+"
+
+# ╔═╡ cc0d4b1c-07b6-42ed-b1e2-80581a02ee6f
+md"NOT(1) = NAND(1, 1)"
+
+# ╔═╡ c5694b66-d023-42c1-ae62-b7218ba8ebe7
+md"AND(1, 2) = NOT(NAND(1, 2))"
+
+# ╔═╡ c5812ca6-c4ca-4211-9d2d-df498fd7a2da
+md"OR(1, 2) = NAND(NOT(1), NOT(2))"
+
+# ╔═╡ 6b4e2611-5a5a-4646-aa8b-fec0d84d240c
+md"## Reversible Gates"
+
+# ╔═╡ 29d7eb5f-2d26-41af-80bc-1a14f0acce67
+md"XOR(1, 2) is reversible"
+
+# ╔═╡ 4591b3a0-ff3f-46c8-8c8d-ef7c6ba76cc5
+md"NAND gate -> Toffoli Gate"
+
+# ╔═╡ 657e1cfb-83ae-4f37-a237-15ff571e64b5
+md"
+```julia
+001 → 001
+011 → 011
+101 → 101
+111 → 110
+000 → 000
+010 → 010
+100 → 100
+110 → 111
+```
+"
+
+# ╔═╡ 07f36b6e-a98d-4bee-9091-b1a717dab0e8
+not_gate(n, i) = put(n, i=>X)
+
+# ╔═╡ 7440555d-685f-4447-a44a-0463b37bd43c
+xor_gate(n, i, j) = control(n, i, j=>X)
+
+# ╔═╡ b2bf15bb-1350-4304-a932-c87b09558115
+or_gate(n, i, j, k) = chain(kron(n, i=>X, j=>X, k=>X), control(n, (i, j), k=>X), kron(n, i=>X, j=>X))
+
+# ╔═╡ 0e63c1eb-fea6-411a-bae6-0bc90dee6bc7
+vizcircuit(or_gate(3, 1, 2, 3); show_ending_bar=false)
+
+# ╔═╡ f311befa-ba09-42e6-ac9b-b59450162ebd
+md"AND Gate"
+
+# ╔═╡ 816ebc7b-43ec-47e2-a24a-86ac70dd6afe
+and_gate(n, i, j, k) = control(n, (i, j), k=>X)
+
+# ╔═╡ 893baeda-d5b0-43c1-9018-8d18c06486ca
+vizcircuit(and_gate(3, 1, 2, 3); show_ending_bar=false)
+
+# ╔═╡ 0c267c28-967b-4268-8372-00d7b48b7b8e
+md"XOR gate"
+
+# ╔═╡ f7b8dc5a-c589-41db-b550-d7b4c928dfef
+full_adder() = xor_gate()
+
+# ╔═╡ fed37413-c341-4dcf-a637-404d2f186b2b
+vizcircuit(xor_gate(2, 1, 2); show_ending_bar=false)
+
+# ╔═╡ 622fdaac-87dd-4c22-85b9-470510566480
+# `s`, `cout` and ancillas (`x` and `y`) are initialized to 0
+# flush data in `cin`
+full_adder(n, a, b, cin, cout, x, y) = chain(and_gate(n, cin, a, x), xor_gate(n, a, cin), and_gate(n, b, cin, y), or_gate(n, x, y, cout), xor_gate(n, b, cin))
+
+# ╔═╡ 26e5d619-7119-49bc-8907-17ae0db424f5
+vizcircuit(full_adder(6, 1:6...); scale=0.7)
+
+# ╔═╡ a7d85b82-a705-4f3b-a371-06a87071335d
+function add_circuit(n::Int)
+	nbit = 5n+1
+	as = 1:n
+	bs = n+1:2n
+	cin = 2n+1
+	carries = 2n+2:3n+1
+	xs = 3n+2:4n+1
+	ys = 4n+2:nbit
+	c = chain(nbit)
+	cs = zeros(Int, n+1)
+	for i=1:n
+		cout = carries[i]
+		blk = full_adder(nbit, as[i], bs[i], cin, cout, xs[i], ys[i])
+		push!(c, blk)
+		cs[i] = cin
+		cin = cout
+	end
+	cs[end] = cin
+	return c, cs
+end
+
+# ╔═╡ 617ba29e-a9f9-4ac4-83b6-232b2aff68d7
+vizcircuit(add_circuit(2)[1]; scale=0.5)
+
+# ╔═╡ e2e4ec60-2737-4560-89b1-1e14a35044e8
+function calculate_binaryadd(n::Int, x, y)
+	c, outputs = add_circuit(n)
+	res = product_state(bit_literal([takebit(x, i) for i=1:n]..., [takebit(y, i) for i=1:n]..., zeros(Int, 3*n+1)...)) |> c |> measure!
+	Int(readbit(res, outputs...))
+end
+
+# ╔═╡ aea490af-0bdd-4930-9ad2-7d9a13e08c46
+calculate_binaryadd(2, 2, 2)
+
+# ╔═╡ ee4186d7-1f93-4b72-a86c-076b136e2eda
+md"## Not gate"
+
+# ╔═╡ 0f655562-0c18-43a8-83f0-4d11b7eeb068
+vizcircuit_with_inputs(g, inputs) = vizcircuit(g; show_ending_bar=false, starting_texts=inputs, starting_offset=-0.3, ending_texts=measure!(product_state(bit_literal(inputs...)) |> g), ending_offset=0.3);
+
+# ╔═╡ 9f402b0e-f6ae-4a2c-960e-5b756a1f6739
+vizcircuit_with_inputs(X, [1])
+
+# ╔═╡ 8dac807a-445e-477a-8dca-b717277039e0
+vizcircuit_with_inputs(X, [0])
+
+# ╔═╡ e188093d-1ef1-4e70-966b-77cc0761a801
+Latexify.LaTeXString("X = " * latexify(mat(Basic, X); env=:raw).s)
+
+# ╔═╡ 02e018b3-2f2e-42b7-b5ab-e06bc72daad4
+cnot_gate = control(2, 1, 2=>X);
+
+# ╔═╡ 13fdcd91-4360-4245-8cb6-dbc0b2238976
+vizcircuit(cnot_gate; show_ending_bar=false, starting_texts=[1, 1], starting_offset=-0.3, ending_texts=[0, 1], ending_offset=0.3)
+
+# ╔═╡ 67ad78c7-930a-48b1-b8d3-d9e549ee7379
+latexify(mat(Basic, cnot_gate))
+
+# ╔═╡ 38194214-3bf1-4229-9fe8-37282b30a5ad
+latexify(mat(Basic, control(3, (3,2), 1=>X)))
+
+# ╔═╡ cee8db91-7e84-4728-aef6-ea861c62ff96
+vizcircuit(X; show_ending_bar=false, starting_texts=[1], starting_offset=-0.3, ending_texts=[0], ending_offset=0.3)
+
+# ╔═╡ b6a356a8-de90-405f-ad5e-6ae9131f871e
+md"""## The linear algebra representation of Quantum machanics
+Linear algebra to quantum dynamics is what regular number to abstract algebra.
+"""
+
+# ╔═╡ 400f697d-fbdb-4067-881f-e004f50bbc0f
+md"A quantum state is represented as a **normalized** vector. e.g. the following vector represents a quantum system with 5 states ($s=1,2,\ldots,5$)"
+
+# ╔═╡ b3daf0a3-4d1e-4474-bb99-948c718059ce
+#   normalized  random-gaussian   complex-valued  vector
+ψ0 = normalize!(   randn(          ComplexF64,      5))
+
+# ╔═╡ 6a719cf5-d8a4-4369-95e7-c1dfbc5cebf8
+md"""
+Its elements ``\langle s|\psi\rangle =\sqrt{p_s}e^{i \phi_s}``. $p$ is the probability given by Born's rule.
+"""
+
+# ╔═╡ 681cdc3b-348f-45c4-9031-6298e81d995d
+md"""
+Hamiltonian is a **Hermitian** matrix
+"""
+
+# ╔═╡ b3813f2d-4e9d-4789-a653-d28fd1b98eda
+rand_hami = rand_hermitian(5)
+
+# ╔═╡ 6294a05c-46b1-47e4-9f3c-e741ab191a09
+obs = rand_hermitian(5)
+
+# ╔═╡ bf983162-66e3-40e0-afce-7f5b7728c490
+@bind evolve_time Slider(0:0.03:2; show_value=true)
+
+# ╔═╡ d85a2028-9b6f-4d6c-ba61-fecef3fd4876
+ψt = exp(-im*rand_hami*evolve_time) * ψ0
+
+# ╔═╡ 0139dbd2-486e-4b58-b656-6b5e06864cd1
+mean_obs = ψt' * obs * ψt
+
+# ╔═╡ 847051a1-48e9-4852-8f6d-9a5f604e9142
+
 
 # ╔═╡ fe47198a-5f63-4171-90d2-ce1e9e5ec0a2
 md"## Qubits"
@@ -329,11 +513,8 @@ vizcircuit(qft_circuit(5))
 
 # ╔═╡ 70e85333-26b7-40b8-8fe1-7fb470b5f7b3
 let
-	YaoPlots.CircuitStyles.linecolor[] = "#ffffff"
-	YaoPlots.CircuitStyles.textcolor[] = "#ffffff"
-	YaoPlots.CircuitStyles.gate_bgcolor[] = "white"
 	vizcircuit(qft_circuit(5))
-end |> PNG("qft_white.png")
+end
 
 # ╔═╡ 28f657cd-8ae7-4572-94fa-813797b59b25
 import Cairo
@@ -390,13 +571,57 @@ md"""
 # ╠═4a96f5c9-37b4-4a8a-a6bd-8a4b4440eb49
 # ╠═2a145cba-26b0-43bd-9ab2-13818d246eae
 # ╠═e11c26c0-e534-45fc-bb1c-c0f2ce4016db
+# ╠═a8b06352-5265-4b89-bd82-b31f3cdac391
 # ╟─0f099c85-f039-477e-a70d-a3801cbb2656
 # ╟─48854a73-4896-4542-9ad4-15ae87418f1d
 # ╟─c1d40103-1710-4221-b414-0958c13fb95f
 # ╟─4c8a4cea-63f4-49f0-82b9-dfa608be46bf
 # ╟─eb75810a-a746-4e4a-889f-c87c8d1e153f
+# ╟─b83f7675-68fa-44b5-8681-c85984eeb877
+# ╟─8017edf3-05b2-4cee-8a4e-90331a681037
+# ╟─52d14933-99d4-4ee6-9eff-7be4a5722334
+# ╟─b7d90c25-2f66-4ace-8d52-841ea376b3f9
+# ╟─2c6d024a-3187-4976-af27-393af8826a2d
+# ╟─165b369a-3d0a-4ae7-99f1-de0297f93707
+# ╟─800bc5ce-1521-4c24-aaef-4911910d34cf
+# ╟─c841f2e2-b907-4f74-be57-968ca339bec4
+# ╟─e1b6b7a9-2d26-4f43-a0bd-54f7ad22a5b3
+# ╟─42f3e654-1836-491a-8119-b03b93822f45
+# ╟─cc0d4b1c-07b6-42ed-b1e2-80581a02ee6f
+# ╟─c5694b66-d023-42c1-ae62-b7218ba8ebe7
+# ╟─c5812ca6-c4ca-4211-9d2d-df498fd7a2da
+# ╟─6b4e2611-5a5a-4646-aa8b-fec0d84d240c
+# ╟─29d7eb5f-2d26-41af-80bc-1a14f0acce67
+# ╟─4591b3a0-ff3f-46c8-8c8d-ef7c6ba76cc5
+# ╟─657e1cfb-83ae-4f37-a237-15ff571e64b5
+# ╠═07f36b6e-a98d-4bee-9091-b1a717dab0e8
+# ╠═7440555d-685f-4447-a44a-0463b37bd43c
+# ╠═b2bf15bb-1350-4304-a932-c87b09558115
+# ╠═0e63c1eb-fea6-411a-bae6-0bc90dee6bc7
+# ╟─f311befa-ba09-42e6-ac9b-b59450162ebd
+# ╠═816ebc7b-43ec-47e2-a24a-86ac70dd6afe
+# ╠═893baeda-d5b0-43c1-9018-8d18c06486ca
+# ╟─0c267c28-967b-4268-8372-00d7b48b7b8e
+# ╠═f7b8dc5a-c589-41db-b550-d7b4c928dfef
+# ╠═fed37413-c341-4dcf-a637-404d2f186b2b
+# ╠═622fdaac-87dd-4c22-85b9-470510566480
+# ╠═26e5d619-7119-49bc-8907-17ae0db424f5
+# ╠═a7d85b82-a705-4f3b-a371-06a87071335d
+# ╠═617ba29e-a9f9-4ac4-83b6-232b2aff68d7
+# ╠═e2e4ec60-2737-4560-89b1-1e14a35044e8
+# ╠═aea490af-0bdd-4930-9ad2-7d9a13e08c46
+# ╟─ee4186d7-1f93-4b72-a86c-076b136e2eda
+# ╠═57a3616e-49af-40b7-a000-a4ecc81af84e
+# ╠═0f655562-0c18-43a8-83f0-4d11b7eeb068
+# ╟─9f402b0e-f6ae-4a2c-960e-5b756a1f6739
+# ╟─8dac807a-445e-477a-8dca-b717277039e0
+# ╠═e188093d-1ef1-4e70-966b-77cc0761a801
+# ╟─02e018b3-2f2e-42b7-b5ab-e06bc72daad4
+# ╟─13fdcd91-4360-4245-8cb6-dbc0b2238976
+# ╠═67ad78c7-930a-48b1-b8d3-d9e549ee7379
+# ╟─38194214-3bf1-4229-9fe8-37282b30a5ad
+# ╠═cee8db91-7e84-4728-aef6-ea861c62ff96
 # ╟─b6a356a8-de90-405f-ad5e-6ae9131f871e
-# ╠═342685aa-5159-11ec-13fd-fb8954106bca
 # ╟─400f697d-fbdb-4067-881f-e004f50bbc0f
 # ╠═b3daf0a3-4d1e-4474-bb99-948c718059ce
 # ╟─6a719cf5-d8a4-4369-95e7-c1dfbc5cebf8
@@ -406,10 +631,9 @@ md"""
 # ╠═bf983162-66e3-40e0-afce-7f5b7728c490
 # ╠═d85a2028-9b6f-4d6c-ba61-fecef3fd4876
 # ╠═0139dbd2-486e-4b58-b656-6b5e06864cd1
-# ╟─b83f7675-68fa-44b5-8681-c85984eeb877
-# ╟─8017edf3-05b2-4cee-8a4e-90331a681037
-# ╟─52d14933-99d4-4ee6-9eff-7be4a5722334
+# ╠═847051a1-48e9-4852-8f6d-9a5f604e9142
 # ╟─fe47198a-5f63-4171-90d2-ce1e9e5ec0a2
+# ╠═342685aa-5159-11ec-13fd-fb8954106bca
 # ╟─30ef3d84-f85c-45f3-9256-f413637ccb2f
 # ╟─def1dae7-cd10-4d75-9a7b-cbe02b430609
 # ╠═edd1809e-9087-4301-bbea-31420699d777

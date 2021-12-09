@@ -68,9 +68,6 @@ using CUDA
 # ╔═╡ 70cd5e7d-9200-444f-b974-0238c74c6013
 using OMEinsumContractionOrders
 
-# ╔═╡ ada57188-e70e-4ade-83d3-777192169b2b
-using TropicalNumbers
-
 # ╔═╡ bb3d0c31-787c-44d6-a415-4f85a20eac5d
 html"<button onclick='present();'>present</button>"
 
@@ -321,14 +318,29 @@ code_seq_2 = ein"(ij,jk),(kl,lm)->im"
 # ╔═╡ 5ff2bdd9-a708-4ee3-92fa-b8fbae6bd3e3
 flop(code_seq_2, uniformsize(code_seq_2, Basic(:n)))
 
-# ╔═╡ d4040b3f-5595-4fe9-9356-6438017820fa
-md"[Song Shan Lake Spring School challenge](https://github.com/QuantumBFS/SSSS)"
-
 # ╔═╡ 484b3561-6ed3-40bf-b94d-526f508c4755
 md"## The Song Shan Lake Spring School (SSSS) Challenge"
 
+# ╔═╡ d4040b3f-5595-4fe9-9356-6438017820fa
+md"[Song Shan Lake Spring School Github](https://github.com/QuantumBFS/SSSS)"
+
 # ╔═╡ ca083761-51d9-4144-ad79-5281e3ca4522
 md"In 2019, Lei Wang, Pan Zhang, Roger and me released a challenge in the Song Shan Lake Spring School, the one gives the largest number of solutions to the challenge quiz can take a macbook home ([@LinuxDaFaHao](https://github.com/LinuxDaFaHao)). Students submitted many [solutions to the problem](https://github.com/QuantumBFS/SSSS/blob/master/Challenge.md). The second part of the quiz is"
+
+# ╔═╡ 8482d4d2-b377-4d36-a395-5db79ccb136c
+md"""
+θ = $(@bind θ2 Slider(0.0:0.01:π; default=0.5))
+
+ϕ = $(@bind ϕ2 Slider(0.0:0.01:2π; default=0.3))
+"""
+
+# ╔═╡ 7288ba08-f845-428e-a02c-cccfe4d160cb
+md"""
+In the $(highlight("Buckyball")) structure shown in the figure, we attach an ising spin ``s_i=\pm 1`` on each vertex. The neighboring spins interact with an $(highlight("anti-ferromagnetic")) coupling of unit strength. Count the $(highlight("degeneracy")) of configurations that minimizes the energy
+```math
+E(\{s_1,s_2,\ldots,s_n\}) = \sum_{i,j \in edges}s_i s_j
+```
+"""
 
 # ╔═╡ 87613668-8585-49fe-b43a-8bb4be430287
 # returns atom locations
@@ -346,13 +358,6 @@ function fullerene()
 	end
 	return res
 end;
-
-# ╔═╡ 8482d4d2-b377-4d36-a395-5db79ccb136c
-md"""
-θ = $(@bind θ2 Slider(0.0:0.01:π; default=0.5))
-
-ϕ = $(@bind ϕ2 Slider(0.0:0.01:2π; default=0.3))
-"""
 
 # ╔═╡ dec4a621-8d5c-4c20-a9ae-d7f765852950
 let
@@ -383,17 +388,6 @@ let
 	img
 end
 
-# ╔═╡ 7288ba08-f845-428e-a02c-cccfe4d160cb
-md"""
-In the $(highlight("Buckyball")) structure shown in the figure, we attach an ising spin ``s_i=\pm 1`` on each vertex. The neighboring spins interact with an $(highlight("anti-ferromagnetic")) coupling of unit strength. Count the $(highlight("degeneracy")) of configurations that minimizes the energy
-```math
-E(\{s_1,s_2,\ldots,s_n\}) = \sum_{i,j \in edges}s_i s_j
-```
-"""
-
-# ╔═╡ 738e9ed9-c6b3-4b90-8475-1923a3485447
-md"## Step 2: Find a good contraction order"
-
 # ╔═╡ 004ebf76-0bce-4e4d-99f6-ef60816ecc07
 c60_xy = fullerene();
 
@@ -403,26 +397,27 @@ c60_edges = [[i,j] for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in en
 # ╔═╡ 21c55a1d-018f-480a-91e6-c46f3a516fe3
 c60_code = EinCode(c60_edges, Int[])
 
+# ╔═╡ e731f0ed-948d-49ea-81ad-5bb8d66802ae
+length(getixsv(c60_code))  # number of input tensors
+
+# ╔═╡ 6746d834-9c40-4e32-b0f4-a6d716df277a
+getiyv(c60_code)  # labels for the output tensor
+
+# ╔═╡ 7107b506-58e3-4d5a-8899-4dccff1c6591
+length(uniquelabels(c60_code))  # number of unique labels
+
 # ╔═╡ ce134b9f-d4be-4728-b883-01b1c2ec9158
 flop(c60_code, uniformsize(c60_code, Basic(:n)))
 
+# ╔═╡ 738e9ed9-c6b3-4b90-8475-1923a3485447
+md"## Find a good contraction order"
+
 # ╔═╡ 41f07437-6f81-4da7-b4f2-037d9f36daff
+# optimize use the `TreeSA` optimizer
 c60_optcode = optimize_code(c60_code, uniformsize(c60_code, 2), TreeSA())
 
 # ╔═╡ 647b241c-b08c-4a0c-9b40-c0398ad6b6ca
-c60_elimination_order = let
-	vertex_elimination_order(code::SlicedEinsum) = vertex_elimination_order(code.eins)
-	vertex_elimination_order(code::NestedEinsum) = vertex_elimination_order!(code, labeltype(code)[])
-	function vertex_elimination_order!(code, eliminated_vertices)
-		OMEinsum.isleaf(code) && return eliminated_vertices
-		for arg in code.args
-			vertex_elimination_order!(arg, eliminated_vertices)
-		end
-		append!(eliminated_vertices, setdiff(vcat(getixsv(code.eins)...), getiyv(code.eins)))
-		return eliminated_vertices
-	end
-	vertex_elimination_order(c60_optcode)
-end
+c60_elimination_order = OMEinsum.label_elimination_order(c60_optcode)
 
 # ╔═╡ 0739e08b-0873-415e-a77b-07b83eae9fb6
 md"contraction step = $(@bind nstep_c60 Slider(0:60; show_value=true, default=0))"
@@ -462,21 +457,14 @@ let
 	Compose.compose(Compose.context(0.5,0.35, 1.0, 1.0), fig)
 end
 
+# ╔═╡ 2bff8d2e-838e-4581-8d2a-1dbde609eccc
+md"The partition function"
+
 # ╔═╡ 174b14a9-91fe-4c6e-861d-b669fe791138
 Z = c60_optcode([(J = 1.0; β = 1.0; expJ = exp(β*J); [1/expJ expJ; expJ 1/expJ]) for i=1:90]...)[]
 
 # ╔═╡ 63001407-5b10-4b0d-b4ec-98138d24b927
 log(Z) / 60
-
-# ╔═╡ 3ce3c5ca-9402-4af8-bda1-a9c320932f0d
-c60_optcode([(J = 1.0; CountingTropical.([-J J; J -J])) for i=1:90]...)
-
-# ╔═╡ 174a1bc3-42f6-4d29-87b5-d648feb91924
-md"# Summary
-* Einsum is expressive, it can represent `matrix multiplication`, `batched matrix multiplication`, `trace`, `summation`, `repeating` and `tensor network`s.
-* The algorithmic complexity of the einsum notation is ``n^{(\#~of~labels)}``.
-* Contraction order matters.
-"
 
 # ╔═╡ Cell order:
 # ╠═bb3d0c31-787c-44d6-a415-4f85a20eac5d
@@ -546,26 +534,27 @@ md"# Summary
 # ╠═623551e9-48bb-4976-920e-12396a596975
 # ╠═d4a3557a-9de2-4500-b09e-5b3c249906fc
 # ╠═5ff2bdd9-a708-4ee3-92fa-b8fbae6bd3e3
-# ╟─d4040b3f-5595-4fe9-9356-6438017820fa
 # ╟─484b3561-6ed3-40bf-b94d-526f508c4755
+# ╟─d4040b3f-5595-4fe9-9356-6438017820fa
 # ╟─ca083761-51d9-4144-ad79-5281e3ca4522
-# ╠═87613668-8585-49fe-b43a-8bb4be430287
 # ╟─dec4a621-8d5c-4c20-a9ae-d7f765852950
 # ╟─8482d4d2-b377-4d36-a395-5db79ccb136c
 # ╟─7288ba08-f845-428e-a02c-cccfe4d160cb
-# ╟─738e9ed9-c6b3-4b90-8475-1923a3485447
+# ╠═87613668-8585-49fe-b43a-8bb4be430287
 # ╠═004ebf76-0bce-4e4d-99f6-ef60816ecc07
 # ╠═f3ad225a-0b42-460e-a82c-b799d5da8f13
 # ╠═21c55a1d-018f-480a-91e6-c46f3a516fe3
-# ╠═70cd5e7d-9200-444f-b974-0238c74c6013
+# ╠═e731f0ed-948d-49ea-81ad-5bb8d66802ae
+# ╠═6746d834-9c40-4e32-b0f4-a6d716df277a
+# ╠═7107b506-58e3-4d5a-8899-4dccff1c6591
 # ╠═ce134b9f-d4be-4728-b883-01b1c2ec9158
+# ╟─738e9ed9-c6b3-4b90-8475-1923a3485447
+# ╠═70cd5e7d-9200-444f-b974-0238c74c6013
 # ╠═41f07437-6f81-4da7-b4f2-037d9f36daff
 # ╠═647b241c-b08c-4a0c-9b40-c0398ad6b6ca
 # ╟─0739e08b-0873-415e-a77b-07b83eae9fb6
 # ╟─739e3777-b8fc-4cd4-a92e-960f355a74ad
-# ╠═78da91e7-1b76-46df-ae9a-6d611c2638e1
+# ╟─78da91e7-1b76-46df-ae9a-6d611c2638e1
+# ╟─2bff8d2e-838e-4581-8d2a-1dbde609eccc
 # ╠═174b14a9-91fe-4c6e-861d-b669fe791138
 # ╠═63001407-5b10-4b0d-b4ec-98138d24b927
-# ╠═ada57188-e70e-4ade-83d3-777192169b2b
-# ╠═3ce3c5ca-9402-4af8-bda1-a9c320932f0d
-# ╟─174a1bc3-42f6-4d29-87b5-d648feb91924
