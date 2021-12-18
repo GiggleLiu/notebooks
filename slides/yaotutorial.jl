@@ -36,7 +36,7 @@ using SymEngine: Basic  # import the symbolic data type
 using YaoExtensions
 
 # ╔═╡ 6f131f36-0b4e-4570-8527-620297fae48e
-using YaoToEinsum
+using YaoToEinsum, OMEinsumContractionOrders, OMEinsum
 
 # ╔═╡ e11c26c0-e534-45fc-bb1c-c0f2ce4016db
 SPACE = html"&nbsp; &nbsp; &nbsp; &nbsp;"
@@ -44,10 +44,15 @@ SPACE = html"&nbsp; &nbsp; &nbsp; &nbsp;"
 # ╔═╡ 0f099c85-f039-477e-a70d-a3801cbb2656
 md"""
 ## Goals
-* write a quantum simulation program on your own with Julia (a programming language) quantum toolbox
-    * Yao
-    * OMEinsum
-* high level understanding of tensor network based quantum circuit simulation,
+* Introduce some open source packages for quantum simulation in Julia
+* Full amplitude and tensor network based quantum simulation
+
+## Contents
+* Introduce Yao.jl (Roger Luo and Jinguo),
+* From classical adder to reversible adder,
+* What is new in Quantum, the Deutsch-Jozsa algorithm,
+* Introduce OMEinsum (Andreas Peter and Jinguo)
+* Towards faster simulation, a tensor network based quantum circuit simulation (basic).
 """
 
 # ╔═╡ 48854a73-4896-4542-9ad4-15ae87418f1d
@@ -88,10 +93,17 @@ end
 
 # ╔═╡ 52d14933-99d4-4ee6-9eff-7be4a5722334
 md"""## Why Yao?
-Yao is a ... by Roger Luo and Jinguo Liu, funded by Lei Wang and Pan Zhang.
+Yao is an open source framework that aims to empower quantum information research with software tools. It is designed with following in mind:
 
-$(html"<img src=https://camo.githubusercontent.com/477280de44a6d4408d3a3255d3d82a615a27ac1c5120063ef7d6b2f6640befb8/68747470733a2f2f79616f7175616e74756d2e6f72672f6173736574732f6c6f676f2e706e67 width=200>")
-[https://yaoquantum.org/](https://yaoquantum.org/)
+* quantum algorithm design;
+* quantum software 2.0;
+* $(highlight{quantum computation education.})
+
+by Roger Luo and Jinguo Liu, funded by Lei Wang and Pan Zhang.
+
+$(html"<img src=https://camo.githubusercontent.com/477280de44a6d4408d3a3255d3d82a615a27ac1c5120063ef7d6b2f6640befb8/68747470733a2f2f79616f7175616e74756d2e6f72672f6173736574732f6c6f676f2e706e67 width=150>")
+[https://yaoquantum.org/](https://yaoquantum.org/) (arXiv:1912.10877)
+
 
 The most popular quantum simulator in Julia,
 one of **Top 50** most popular Julia packages. It provides
@@ -251,6 +263,103 @@ calculate_binaryadd(2, 2, 2)
 # ╔═╡ c0078012-3d81-4584-a050-9a58802d08a9
 gatecount(add_circuit(4)[1])
 
+# ╔═╡ ea458fa2-1f9f-46e1-88da-942034d0fa73
+let
+	n = 4
+	circuit, out = add_circuit(n)
+	vizcircuit(circuit; scale=0.3, starting_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., ["0" for i=1:3n+1]...], ending_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., [i ∈ out ? "c$(i-8)" : "" for i=1:3n+1]...])
+end
+
+# ╔═╡ 0840e7ea-aa63-44df-a788-ad18ac842006
+md"## Balanced or constant?"
+
+# ╔═╡ e5004508-2b9a-4acd-91ba-ad21fc7d1b16
+md"""
+``f: \{0, 1\}^n \rightarrow \{0, 1\}``
+
+* *Balanced*: $f$ has an equal probability to output vaue 0 and 1.
+* *Constant*: $f$ is a constant function.
+"""
+
+# ╔═╡ 2da83f06-e639-4f75-a162-cb561a8207ca
+constantf(n) = chain(control(n+1, 1, n+1=>X), put(n+1, n+1=>X), control(n+1, 1, n+1=>X))
+
+# ╔═╡ 408f534d-5553-4a95-8d14-cabf36f8aff5
+vizcircuit(constantf(4), starting_texts=[["a$i" for i=1:4]..., "0"], ending_texts=[["a$i" for i=1:4]..., "f"])
+
+# ╔═╡ 774def48-8f9f-425a-aa47-ffe396692247
+md"## Quantum bits and quantum gates"
+
+# ╔═╡ 847051a1-48e9-4852-8f6d-9a5f604e9142
+md"## Deutsch–Jozsa algorithm"
+
+# ╔═╡ 85228d6e-731d-465d-a000-672e7fff8aff
+md"![](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Deutsch-Jozsa-algorithm-quantum-circuit.png/600px-Deutsch-Jozsa-algorithm-quantum-circuit.png)"
+
+# ╔═╡ f66bd812-cfd0-4ff2-be21-71c38cb8ab79
+md"Case 1, ``f(x)`` is a constant.
+"
+
+# ╔═╡ 6d6b55d4-4ddb-4ef9-b2b1-154021c01273
+md"Case 2, ``f(x)`` is uniform."
+
+# ╔═╡ 5467dafc-265a-4848-a898-364124a6e9b4
+mat(chain(H, H))
+
+# ╔═╡ 1e01ef7f-63d0-4b0d-8455-7b524206f15f
+statevec(zero_state(1) |> X |> H)
+
+# ╔═╡ 1ca545b9-6f88-4251-aa8a-d5ad0236c77e
+statevec(zero_state(1) |> X |> H |> X)
+
+# ╔═╡ 528bfa77-d6da-4700-a72c-5afffdbe6139
+zero_state(4) |> repeat(4, H, 1:4) |> statevec
+
+# ╔═╡ 1571a8ae-aae5-4af8-9b9c-6fe9e832a39e
+md"""
+```math
+\begin{align}
+|\psi\rangle &= \sum_x|x\rangle \otimes \left(X^{f(x)}\frac{|0\rangle + |1\rangle}{\sqrt{2}}\right)\\
+ &= \sum_{x\in\{x|f(x)=0\}}|x\rangle \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}} - \sum_{x\in\{x|f(x)=1\}}|x\rangle \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}}\\
+&= \underbrace{\sum_{x\in\{x|f(x)=0\}}|x\rangle - \sum_{x\in\{x|f(x)=1\}}|x\rangle}_{\text{has zero overlap with $(H |0\rangle)^{\otimes n}$}} \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}}
+\end{align}
+```
+"""
+
+# ╔═╡ c60ea349-6b96-4f70-8369-a92379338bbd
+deutsch_jozsa(circuit::AbstractBlock{N}, inputs, output) where N = chain(put(N+1, N+1=>X), repeat(N+1, H, [inputs..., N+1]), subroutine(N+1, circuit, 1:N), control(N+1, output, N+1=>X),  repeat(N+1, H, inputs), Yao.Measure(N+1, locs=inputs))
+
+# ╔═╡ d8e9ae38-1569-497a-8506-a3e059ffc7ab
+let
+	c = deutsch_jozsa(constantf(4), 1:4, 5)
+	vizcircuit(c)
+end
+
+# ╔═╡ 195ccd7e-f1ea-4704-9392-ffe596a756f9
+let
+	addc, outputs = add_circuit(4)
+	c = deutsch_jozsa(addc, 1:4, outputs[1])
+	vizcircuit(c; scale=0.3)
+end
+
+# ╔═╡ f1814dfa-588d-49b8-a68e-bda185f3712f
+let
+	c = deutsch_jozsa(constantf(4), 1:4, 5)
+	zero_state(nqubits(c)) |> c
+	c[end].results
+end
+
+# ╔═╡ 023a5424-ab33-433a-bcdf-2315735aa00d
+let
+	addc, outputs = add_circuit(4)
+	c = deutsch_jozsa(addc, 1:4, outputs[1])
+	zero_state(nqubits(c)) |> c
+	c[end].results
+end
+
+# ╔═╡ e8201e38-73dc-45d4-b93d-20f063d2ac3a
+md"## Quantum Compiling"
+
 # ╔═╡ aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
 begin
 	function decompose_toffoli(x::ControlBlock{N,XGate,2,1}) where N
@@ -267,18 +376,8 @@ end
 # ╔═╡ 1e2848d6-252b-4db5-9864-1f1886da9998
 vizcircuit(decompose_toffoli(control(3, (1,2), 3=>X)); w_depth=0.7, scale=0.6)
 
-# ╔═╡ 008d228b-5d88-44c2-a4bc-c877329349bd
-yao"""
-let nqubits = 5
-	1=>H
-	2=>C, 3=>X
-	3=>T'
-	1=>C, 3=>X
-end
-"""
-
 # ╔═╡ e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
-vizcircuit(decompose_toffoli(add_circuit(4)[1]); scale=0.06)
+vizcircuit(decompose_toffoli(add_circuit(4)[1]); scale=0.3)
 
 # ╔═╡ 0e11d98d-79c6-444d-8df1-357e8218f233
 gatecount(decompose_toffoli(add_circuit(4)[1]))
@@ -349,9 +448,6 @@ obs = rand_hermitian(5)
 
 # ╔═╡ 0139dbd2-486e-4b58-b656-6b5e06864cd1
 mean_obs = ψt' * obs * ψt
-
-# ╔═╡ 847051a1-48e9-4852-8f6d-9a5f604e9142
-
 
 # ╔═╡ fe47198a-5f63-4171-90d2-ce1e9e5ec0a2
 md"## Qubits"
@@ -595,15 +691,22 @@ md"""
 * Solving the sampling problem of the Sycamore quantum supremacy circuits, Feng Pan, Keyang Chen, Pan Zhang (arXiv:2111.03011)
 """
 
+# ╔═╡ fdf13c95-6d95-4220-9759-5fea44eea274
+optcode = let
+	c = decompose_toffoli(add_circuit(4)[1])
+	code, xs = yao2einsum(c; initial_state=Dict([i=>rand(0:1) for i=1:nqubits(c)]))
+	optcode = optimize_code(code, uniformsize(code, 2), TreeSA())
+end
+
+# ╔═╡ 669bed15-1c57-401b-bcfb-48b5a1520a58
+timespace_complexity(optcode, uniformsize(optcode, 2))
+
 # ╔═╡ d04690ca-390b-462b-8257-e9ebe01b3fd0
 md"""
 ## Discussion
 * Github issue (Yao.jl)
 * Julia slack (channel: yao-dev)
 """
-
-# ╔═╡ e32ba5c5-ad8d-46be-beea-182b9c653af4
-32
 
 # ╔═╡ Cell order:
 # ╠═4a96f5c9-37b4-4a8a-a6bd-8a4b4440eb49
@@ -617,7 +720,7 @@ md"""
 # ╟─eb75810a-a746-4e4a-889f-c87c8d1e153f
 # ╟─b83f7675-68fa-44b5-8681-c85984eeb877
 # ╟─8017edf3-05b2-4cee-8a4e-90331a681037
-# ╟─52d14933-99d4-4ee6-9eff-7be4a5722334
+# ╠═52d14933-99d4-4ee6-9eff-7be4a5722334
 # ╟─b7d90c25-2f66-4ace-8d52-841ea376b3f9
 # ╟─2c6d024a-3187-4976-af27-393af8826a2d
 # ╟─165b369a-3d0a-4ae7-99f1-de0297f93707
@@ -649,9 +752,29 @@ md"""
 # ╠═e2e4ec60-2737-4560-89b1-1e14a35044e8
 # ╠═aea490af-0bdd-4930-9ad2-7d9a13e08c46
 # ╠═c0078012-3d81-4584-a050-9a58802d08a9
+# ╠═ea458fa2-1f9f-46e1-88da-942034d0fa73
+# ╟─0840e7ea-aa63-44df-a788-ad18ac842006
+# ╟─e5004508-2b9a-4acd-91ba-ad21fc7d1b16
+# ╟─2da83f06-e639-4f75-a162-cb561a8207ca
+# ╟─408f534d-5553-4a95-8d14-cabf36f8aff5
+# ╟─774def48-8f9f-425a-aa47-ffe396692247
+# ╟─847051a1-48e9-4852-8f6d-9a5f604e9142
+# ╟─85228d6e-731d-465d-a000-672e7fff8aff
+# ╟─f66bd812-cfd0-4ff2-be21-71c38cb8ab79
+# ╟─6d6b55d4-4ddb-4ef9-b2b1-154021c01273
+# ╠═5467dafc-265a-4848-a898-364124a6e9b4
+# ╠═1e01ef7f-63d0-4b0d-8455-7b524206f15f
+# ╠═1ca545b9-6f88-4251-aa8a-d5ad0236c77e
+# ╠═528bfa77-d6da-4700-a72c-5afffdbe6139
+# ╟─1571a8ae-aae5-4af8-9b9c-6fe9e832a39e
+# ╠═c60ea349-6b96-4f70-8369-a92379338bbd
+# ╠═d8e9ae38-1569-497a-8506-a3e059ffc7ab
+# ╠═195ccd7e-f1ea-4704-9392-ffe596a756f9
+# ╠═f1814dfa-588d-49b8-a68e-bda185f3712f
+# ╠═023a5424-ab33-433a-bcdf-2315735aa00d
+# ╟─e8201e38-73dc-45d4-b93d-20f063d2ac3a
 # ╠═aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
 # ╠═1e2848d6-252b-4db5-9864-1f1886da9998
-# ╠═008d228b-5d88-44c2-a4bc-c877329349bd
 # ╠═e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
 # ╠═0e11d98d-79c6-444d-8df1-357e8218f233
 # ╟─ee4186d7-1f93-4b72-a86c-076b136e2eda
@@ -675,7 +798,6 @@ md"""
 # ╠═bf983162-66e3-40e0-afce-7f5b7728c490
 # ╠═d85a2028-9b6f-4d6c-ba61-fecef3fd4876
 # ╠═0139dbd2-486e-4b58-b656-6b5e06864cd1
-# ╠═847051a1-48e9-4852-8f6d-9a5f604e9142
 # ╟─fe47198a-5f63-4171-90d2-ce1e9e5ec0a2
 # ╠═342685aa-5159-11ec-13fd-fb8954106bca
 # ╟─30ef3d84-f85c-45f3-9256-f413637ccb2f
@@ -747,5 +869,6 @@ md"""
 # ╟─09137c47-1bd0-481b-8b60-ca2abff64afc
 # ╟─62393bfb-5597-40cd-a5e4-c4b10a61d1cf
 # ╠═6f131f36-0b4e-4570-8527-620297fae48e
+# ╠═fdf13c95-6d95-4220-9759-5fea44eea274
+# ╠═669bed15-1c57-401b-bcfb-48b5a1520a58
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
-# ╠═e32ba5c5-ad8d-46be-beea-182b9c653af4
