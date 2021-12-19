@@ -14,14 +14,8 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 4a96f5c9-37b4-4a8a-a6bd-8a4b4440eb49
-using Pkg; Pkg.activate()
-
 # ╔═╡ 2a145cba-26b0-43bd-9ab2-13818d246eae
-using Revise, PlutoUI, Viznet, Compose
-
-# ╔═╡ a8b06352-5265-4b89-bd82-b31f3cdac391
-using Latexify
+using Revise, PlutoUI, Viznet, Compose, Latexify
 
 # ╔═╡ 57a3616e-49af-40b7-a000-a4ecc81af84e
 using BitBasis
@@ -29,14 +23,8 @@ using BitBasis
 # ╔═╡ 40563837-b1e9-4df9-9cc7-8841d0068973
 using Yao, YaoPlots
 
-# ╔═╡ 675b3398-01d7-4949-bb0e-7cdf9b805c69
-using SymEngine: Basic  # import the symbolic data type
-
-# ╔═╡ 0f8d63ac-f677-4889-b033-2a93f62be700
-using YaoExtensions: variational_circuit
-
-# ╔═╡ 342685aa-5159-11ec-13fd-fb8954106bca
-using Plots
+# ╔═╡ 8faad9e1-8b29-4721-be29-fab2ce3c0e4c
+using SymEngine: Basic  # the symbolics type
 
 # ╔═╡ 5fbddde1-3594-43c4-9f56-c0ae258d926f
 using Yao.ConstGate: P0
@@ -44,8 +32,11 @@ using Yao.ConstGate: P0
 # ╔═╡ 6f131f36-0b4e-4570-8527-620297fae48e
 using YaoToEinsum, OMEinsumContractionOrders, OMEinsum
 
-# ╔═╡ e11c26c0-e534-45fc-bb1c-c0f2ce4016db
-SPACE = html"&nbsp; &nbsp; &nbsp; &nbsp;"
+# ╔═╡ 0f8d63ac-f677-4889-b033-2a93f62be700
+using YaoExtensions: variational_circuit
+
+# ╔═╡ 342685aa-5159-11ec-13fd-fb8954106bca
+using Plots
 
 # ╔═╡ e6306a69-bd6a-4c01-9c6e-1cb523668019
 begin
@@ -81,9 +72,6 @@ table.nohover tr:hover td {
 		HTML("""<span style="background-color:yellow">$(str)</span>""")
 	end
 end;
-
-# ╔═╡ 86b15fb0-f112-4689-8663-8cc6c0a8fb2a
-html"<button onclick='present();'>present</button>"
 
 # ╔═╡ 0f099c85-f039-477e-a70d-a3801cbb2656
 let
@@ -179,6 +167,9 @@ md"They are univeral:
 * \{NOT, AND\}
 * \{NOT, OR\}
 "
+
+# ╔═╡ 620f31d6-45ec-470f-bf21-0eee32214666
+md"A gate set can form any logical expression."
 
 # ╔═╡ d631887a-a222-402d-94bb-ecc6db6bea56
 md"### Example"
@@ -365,6 +356,9 @@ full_adder(n, a, b, cin, cout, x, y) = chain(and_gate(n, cin, a, x), xor_gate(n,
 # ╔═╡ 26e5d619-7119-49bc-8907-17ae0db424f5
 vizcircuit(full_adder(6, 1:6...); scale=0.7, starting_texts=["a", "b", "cᵢ", "0", "0", "0"], ending_texts=["a", "b", "cᵢ'", "cₒ", "?", "?"])
 
+# ╔═╡ 3381001d-1120-4b88-ac01-5ca861f0a9be
+md"Note: ancillas must be initialized to a known value, e.g. 0"
+
 # ╔═╡ a7d85b82-a705-4f3b-a371-06a87071335d
 function add_circuit(n::Int)
 	nbit = 5n+1
@@ -412,9 +406,6 @@ calculate_binaryadd(2, 2, 2);
 # ╔═╡ 7f84eed8-edd8-4f8e-a2b1-3ad862285934
 md"## A 4 bit binary adder"
 
-# ╔═╡ c0078012-3d81-4584-a050-9a58802d08a9
-gatecount(add_circuit(4)[1]);
-
 # ╔═╡ ea458fa2-1f9f-46e1-88da-942034d0fa73
 let
 	n = 4
@@ -422,14 +413,8 @@ let
 	vizcircuit(circuit; scale=0.3, starting_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., ["0" for i=1:3n+1]...], ending_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., [i+2n ∈ out ? "c$(i)" : "?" for i=1:3n+1]...])
 end
 
-# ╔═╡ 3381001d-1120-4b88-ac01-5ca861f0a9be
-md"Note: ancillas must be initialized to state 0"
-
-# ╔═╡ 7524029c-2b7e-465e-9827-c993d6cdd34a
-Yao.YaoBlocks.LuxurySparse.SparseMatrixCSC(mat(add_circuit(4)[1]))
-
 # ╔═╡ 22cd8a36-c76f-4a8c-a8a2-e1924136012a
-md"Adder with uncomputing"
+md"## Adder with uncomputing"
 
 # ╔═╡ 051548ff-dd39-4d55-ac53-e8e2bacec68e
 function adder_with_uncomputing(n)
@@ -442,8 +427,11 @@ end;
 let
 	n = 4
 	circuit, out = adder_with_uncomputing(n)
-	vizcircuit(circuit; scale=0.3, starting_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., ["0" for i=1:4n+1]...], ending_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., [i+2n ∈ out ? "c$(i)" : "0" for i=1:4n+1]...])
+	vizcircuit(circuit; scale=0.15, starting_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., ["0" for i=1:4n+1]...], ending_texts=[["a$i" for i=1:n]..., ["b$i" for i=1:n]..., [i+2n ∈ out ? "c$(i)" : "0" for i=1:4n+1]...])
 end
+
+# ╔═╡ b69f7d3f-cc92-4e9d-813d-55643a2a3b30
+md"""This is $(highlight("compute-copy-uncompute")), it can bring polynomial overhead in time/space. """
 
 # ╔═╡ cb2c496c-e9dc-4666-b41b-d97cca377047
 md"## Universal reversible gate
@@ -451,6 +439,9 @@ md"## Universal reversible gate
 * {Toffoli}
 * {Fredkin}
 "
+
+# ╔═╡ 176f3757-9f03-4990-840e-2cebccd6abaa
+md"The combination of these gate can form any permutaion matrix."
 
 # ╔═╡ 78cb38db-b0b6-49f7-bcaf-1a2df58b8150
 md"CNOT = "
@@ -465,10 +456,10 @@ md"NOT = "
 vizcircuit(and_gate(3, 1, 2, 3); starting_texts=["1", "1", "a"])
 
 # ╔═╡ ca094f81-bef3-40eb-9279-086fe7eb506a
-md"## Irreversible v.s. Reversible
-* Reversible computing can be much more energy efficient (arxiv: 1803.02789), because erasing 1 bit information costs a least ``k_bT`` energy (known as the Landauer's principle).
+md"""## Irreversible v.s. Reversible
 * Reversible computing may have polynomial time/space overhead.
-"
+* Reversible computing can be much more $(highlight("energy efficient")) (arxiv: 1803.02789), because erasing 1 bit information costs a least ``k_bT`` energy (known as the Landauer's principle).
+"""
 
 # ╔═╡ 0840e7ea-aa63-44df-a788-ad18ac842006
 md"## Balanced or constant?"
@@ -505,8 +496,8 @@ md"""# Summary 1
 * Classical Adder -> Reversible Adder,
 * Reversible circuit notation,
     * NOT gate
-    * AND gate
-    * XOR gate
+    * Toffoli gate
+    * CNOT gate
 * One hot representation of a classical state, which has a probabilistic interpretation. A reversible gate is a permutation matrix.
 * Univeral gate sets
 * The problem of distinguishing balanced or constant functions.
@@ -614,51 +605,18 @@ md"permutation matrix -> unitary matrix"
 
 # ╔═╡ 681cdc3b-348f-45c4-9031-6298e81d995d
 md"""
-Hamiltonian is a **Hermitian** matrix
+Hamiltonian is a **Hermitian** matrix, its time evolve operator is unitary
 """
 
-# ╔═╡ b3813f2d-4e9d-4789-a653-d28fd1b98eda
-hami = kron(X, X) + kron(Y, Y) + kron(Z, Z)
-
-# ╔═╡ a9d19c74-1b83-4211-9c83-95ad1059d432
-mat(hami)   # get the matrix representation
-
-# ╔═╡ 48427378-face-48eb-b635-f3f460a51e26
-ishermitian(hami)
-
 # ╔═╡ 45d19896-ae93-4f9a-b1fe-bb143c7ff580
-md"Time evolve
+md"
 ```math
 |\psi(t)\rangle = e^{-iHt} |\psi(0)\rangle
 ```
 "
 
-# ╔═╡ bf983162-66e3-40e0-afce-7f5b7728c490
-let
-	gadget = @bind evolve_time Slider(0:0.03:2; show_value=true)
-	md"evolve_time = $gadget"
-end
-
-# ╔═╡ bf357f44-54e2-49c0-b0b6-263abb1dbcb0
-gate = time_evolve(hami, evolve_time)
-
-# ╔═╡ 913bc173-8cfd-4680-ad13-36ea806acecb
-mat(gate)
-
-# ╔═╡ 09df3c8e-3d25-4ba2-bf19-9947224dfca4
-mat(Basic, SWAP)
-
-# ╔═╡ 45ace908-90df-488c-9258-459c0344baae
-isunitary(gate)
-
-# ╔═╡ de21a067-4587-461d-94bb-a295b6768f96
-ψ0 = rand_state(2)
-
-# ╔═╡ d85a2028-9b6f-4d6c-ba61-fecef3fd4876
-ψt = apply(ψ0, gate)  # applying gate on state ψ0
-
-# ╔═╡ 4a7e56ac-a69f-4b1f-b585-3a92f43e42e8
-statevec(ψt)
+# ╔═╡ 4fd68654-bb38-499f-8e93-1872a3ded4db
+md"Permutation matrix is a special unitary matrix."
 
 # ╔═╡ f4f18b91-86f6-460c-b5de-4c52931a4098
 md"## Quantum universal gate set
@@ -667,6 +625,9 @@ md"## Quantum universal gate set
 * \{CNOT, H, S, T\}
 "
 
+# ╔═╡ 2b231cca-a450-4773-867a-65c2d367ed1d
+md"The combination of these gate can form any unitary matrix."
+
 # ╔═╡ bfb9fcb5-2555-490a-9dcc-48cc91f8ab3c
 md"""
 ## Primitive Operators
@@ -674,6 +635,9 @@ md"""
 
 # ╔═╡ 2e17662d-24ed-40c9-93b0-4cef526c3a75
 @bind selected_gate Select([X, Y, Z, I2, ConstGate.P0, ConstGate.P1, ConstGate.Pu, ConstGate.Pd, ConstGate.T, ConstGate.S, SWAP, ConstGate.CNOT, ConstGate.Toffoli, Yao.Measure(1)])
+
+# ╔═╡ db743480-4c67-465d-89a8-f0d2e6d0d152
+md"Note: for PDF version, this selection box might not work. For the original notebook, check the link on the top of this file."
 
 # ╔═╡ 21b11fac-5efb-4fd5-a1b0-e684d215a46c
 vizcircuit(selected_gate)
@@ -765,7 +729,7 @@ md"`control(n, (c,d,...), (i,j,...)=>G)`
 g_ctrl1 = control(2, 2, 1=>X)
 
 # ╔═╡ 3aaa7e49-9507-4384-ac7e-f4d486127811
-vizcircuit(g_ctrl1)
+vizcircuit(g_ctrl1)   # Pluto notebook/VSCode
 
 # ╔═╡ ac2f9c18-f4bc-4077-9ad1-1f4f0d75a7b1
 md"Inverse control"
@@ -842,84 +806,23 @@ obs = kron(Z, Z)
 # ╔═╡ 22175f6d-b984-4bfc-b776-5f6da6742e75
 Yao.ishermitian(obs)
 
-# ╔═╡ 0139dbd2-486e-4b58-b656-6b5e06864cd1
-expectation_value = expect(obs, ψt)  # not physically implementable
-
-# ╔═╡ f02617e1-8856-4369-a33d-c73e555435b2
-md"Measure is a bit complicated"
+# ╔═╡ c2e846cb-9f80-4ea1-8295-eb9dadd7b878
+md"Measuring on computational basis ``\{P_1^{(n)}, P_1^{(n-1)}, \ldots P_1^{(1)}\}``"
 
 # ╔═╡ 8a94551d-c82a-4db0-aaf0-3c5285ab0695
 let
-	ψt2 = copy(ψt)
-	measure!(ψt2), statevec(ψt2)
+	reg = rand_state(2)
+	measure!(reg), statevec(reg)
 end
 
 # ╔═╡ 9eb46218-30c9-4109-9b32-9382fdee1081
 let
-	ψt2 = copy(ψt)
-	measure!(obs, ψt2), statevec(ψt2)
+	reg = rand_state(2)
+	measure!(obs, reg), statevec(reg)
 end
 
-# ╔═╡ 1ef52a16-16f9-40c6-b61c-3a00dfa3ce9f
-md"# Quantum circuit simulation"
-
-# ╔═╡ f1bc3f79-5c82-4e4f-b970-81ea33c4493b
-md"""
-1. quantum state -> quantum bits
-2. time evolution ->  applying the circuit
-3. measure  ->  readout
-"""
-
-# ╔═╡ a74105a9-0a55-419b-895b-f3c2c831bffb
-a_random_circuit = chain(dispatch!(variational_circuit(5, 2), :random), Yao.Measure());
-
-# ╔═╡ 1465cd17-94f7-44b9-9179-4d7b39ae8c3a
-vizcircuit(a_random_circuit; starting_texts=["0" for i=1:5],  ending_texts=["?" for i=1:5])
-
-# ╔═╡ c09975ac-4387-451d-98e7-800b8b14760c
-statevec(zero_state(5))
-
-# ╔═╡ 2bf0685a-42ff-4d73-a009-6b1523ce7f4b
-function plot_amplitude(reg::ArrayReg)
-	Plots.bar(0:1<<nqubits(reg)-1, reg |> probs, label="probability")
-end;
-
-# ╔═╡ 27ee8d46-710c-48fe-981c-6ab282843741
-function plot_measured(measure_results::Vector{<:BitStr{N}}) where N
-	bar(0:1<<N-1, [count(b->Int(b)==i, measure_results) for i=0:1<<N-1], label="counting")
-end;
-
-# ╔═╡ 1224f1bc-9835-42eb-9b9c-4e5628575a4c
-reg0 = zero_state(5)
-
-# ╔═╡ 38cf5a1a-e995-4949-bd4e-deba6500cf00
-plot_amplitude(reg0)
-
-# ╔═╡ c2e846cb-9f80-4ea1-8295-eb9dadd7b878
-md"Measuring on computational basis ``\{P_1^{(n)}, P_1^{(n-1)}, \ldots P_1^{(1)}\}``"
-
-# ╔═╡ 480e476f-c62e-49e6-b022-4f10c5b42e57
-measure!(reg0)
-
-# ╔═╡ 922f19c7-4d2f-48a7-9fff-4c63acb868ba
-let
-	reg0 = zero_state(5)
-	plot_amplitude(reg0 |> a_random_circuit)
-	Plots.annotate!(30, 0.5, "$(bitstring(Int(a_random_circuit[end].results))[end-4:end])")
-end
-
-# ╔═╡ 812aa02f-e8b0-4226-b2ef-5260884b2f09
-function run_and_get_measure_results(circuit)
-	m = circuit[end]
- 	zero_state(nqubits(circuit)) |> circuit
-	m.results
-end
-
-# ╔═╡ fe69d633-1da8-4db5-9e30-eb19c4ec392f
- measure_results = [run_and_get_measure_results(a_random_circuit) for i=1:1000]
-
-# ╔═╡ 23a5b68f-bc93-43a6-9072-7d929f5f62dc
-plot_measured(measure_results)
+# ╔═╡ 957b8318-a4a6-45aa-839d-4f301ccf3c80
+mat(obs)
 
 # ╔═╡ 847051a1-48e9-4852-8f6d-9a5f604e9142
 md"## Deutsch–Jozsa algorithm"
@@ -932,13 +835,13 @@ md"Case 1, ``f(x)`` is a constant.
 "
 
 # ╔═╡ 6d6b55d4-4ddb-4ef9-b2b1-154021c01273
-md"Case 2, ``f(x)`` is uniform."
+md"Case 2, ``f(x)`` is balanced."
 
 # ╔═╡ 5467dafc-265a-4848-a898-364124a6e9b4
-mat(chain(H, H))
+mat(chain(H, H))    # hadamard gate is reflexive
 
 # ╔═╡ 1e01ef7f-63d0-4b0d-8455-7b524206f15f
-statevec(zero_state(1) |> X |> H)
+statevec(zero_state(1) |> X |> H)   # `|>` is the pipline operator
 
 # ╔═╡ 1ca545b9-6f88-4251-aa8a-d5ad0236c77e
 statevec(zero_state(1) |> X |> H |> X)
@@ -950,33 +853,89 @@ zero_state(4) |> repeat(4, H, 1:4) |> statevec
 md"""
 ```math
 \begin{align}
-|\psi\rangle &= \sum_x|x\rangle \otimes \left(X^{f(x)}\frac{|0\rangle + |1\rangle}{\sqrt{2}}\right)\\
- &= \sum_{x\in\{x|f(x)=0\}}|x\rangle \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}} - \sum_{x\in\{x|f(x)=1\}}|x\rangle \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}}\\
-&= \underbrace{\sum_{x\in\{x|f(x)=0\}}|x\rangle - \sum_{x\in\{x|f(x)=1\}}|x\rangle}_{\text{has zero overlap with $(H |0\rangle)^{\otimes n}$}} \otimes \frac{|0\rangle + |1\rangle}{\sqrt{2}}
+|\psi\rangle &= \sum_x|x\rangle \otimes \left(X^{f(x)}\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\\
+ &= \sum_{x\in\{x|f(x)=0\}}|x\rangle \otimes \frac{|0\rangle - |1\rangle}{\sqrt{2}} - \sum_{x\in\{x|f(x)=1\}}|x\rangle \otimes \frac{|0\rangle - |1\rangle}{\sqrt{2}}\\
+&= \underbrace{\sum_{x\in\{x|f(x)=0\}}|x\rangle - \sum_{x\in\{x|f(x)=1\}}|x\rangle}_{\text{has zero overlap with $(H |0\rangle)^{\otimes n}$}} \otimes \frac{|0\rangle - |1\rangle}{\sqrt{2}}
 \end{align}
 ```
 """
 
 # ╔═╡ c60ea349-6b96-4f70-8369-a92379338bbd
 deutsch_jozsa(circuit::AbstractBlock{N}, inputs, output) where N = chain(
-	put(N+1, N+1=>X), 
-	repeat(N+1, H, [inputs..., N+1]),
-	subroutine(N+1, circuit, 1:N),
-	control(N+1, output, N+1=>X), 
-	subroutine(N+1, circuit', 1:N),
-	repeat(N+1, H, inputs),
-	Yao.Measure(N+1, locs=inputs)
+	put(N+1, N+1=>X),                   # initialize the last qubit to state `1`
+	repeat(N+1, H, [inputs..., N+1]),   # hadamard gates
+	subroutine(N+1, circuit, 1:N),      # compute
+	control(N+1, output, N+1=>X),       # CNOT used for copy
+	subroutine(N+1, circuit', 1:N),     # uncompute
+	repeat(N+1, H, inputs),             # hadamard gates
+	Yao.Measure(N+1, locs=inputs)       # measure
 )
+
+# ╔═╡ 6c370435-4bca-42f6-975e-b633b5611444
+md"# Quantum adder?
+The same as reversible circuits."
+
+# ╔═╡ 79d21733-6d95-4d95-a337-261fb483f4f0
+# `s`, `cout` and ancillas (`x` and `y`) are initialized to 0
+# flush data in `cin`
+q_full_adder(n, a, b, cin, cout, x, y) = chain(and_gate(n, cin, a, x), xor_gate(n, a, cin), and_gate(n, b, cin, y), or_gate(n, x, y, cout), xor_gate(n, b, cin));
+
+# ╔═╡ ba3ac294-5f74-4169-966f-f8d93b48253b
+q_constantf(n) = chain(control(n+1, 1, n+1=>X), put(n+1, n+1=>X), control(n+1, 1, n+1=>X));
+
+# ╔═╡ 82119d4b-a08a-4c0e-b4ee-6a018e88731e
+vizcircuit(q_constantf(4), starting_texts=[["a$i" for i=1:4]..., "0"], ending_texts=[["a$i" for i=1:4]..., "f"])
+
+# ╔═╡ 129135d6-9623-4e4f-812a-fcfe15d1e5f5
+vizcircuit(q_full_adder(6, 1:6...); scale=0.7, starting_texts=["a", "b", "cᵢ", "0", "0", "0"], ending_texts=["a", "b", "cᵢ'", "cₒ", "?", "?"])
+
+# ╔═╡ dc345279-84ca-4a4e-b37d-74a644e0a83a
+function q_add_circuit(n::Int)
+	nbit = 5n+1
+	as = 1:n
+	bs = n+1:2n
+	cin = 2n+1
+	carries = 2n+2:3n+1
+	xs = 3n+2:4n+1
+	ys = 4n+2:nbit
+	c = chain(nbit)
+	cs = zeros(Int, n+1)
+	for i=1:n
+		cout = carries[i]
+		blk = q_full_adder(nbit, as[i], bs[i], cin, cout, xs[i], ys[i])
+		push!(c, blk)
+		cs[i] = cin
+		cin = cout
+	end
+	cs[end] = cin
+	return c, cs
+end;
+
+# ╔═╡ 74dc8276-35c3-43a1-a92b-b7116fef6bb1
+function q_adder_with_uncomputing(n)
+	add, outputs = q_add_circuit(n)
+	n1 = nqubits(add)
+	chain(subroutine(n1+n, add, 1:n1), [control(n1+n, outputs[i], n1+i=>X) for i=1:n]..., subroutine(n1+n, add', 1:n1)), collect(n1+1:n1+n)
+end;
+
+# ╔═╡ 63917a68-597e-40e5-a479-624fc80d7cc6
+vizcircuit(q_adder_with_uncomputing(4)[1]; scale=0.3)
+
+# ╔═╡ 8d3c9ef3-1dec-4369-aa8c-ecff882ace6b
+md"## Use Deutsch-Jozsa algorithm to solve the balance-constant problem."
 
 # ╔═╡ d8e9ae38-1569-497a-8506-a3e059ffc7ab
 let
-	c = deutsch_jozsa(constantf(4), 1:4, 5)
+	c = deutsch_jozsa(q_constantf(4), 1:4, 5)
 	vizcircuit(c; scale=0.5)
 end
 
+# ╔═╡ 11f74d18-1fb4-405f-8923-195a861029f4
+md"The balanced function"
+
 # ╔═╡ 195ccd7e-f1ea-4704-9392-ffe596a756f9
 let
-	addc, outputs = add_circuit(2)
+	addc, outputs = q_add_circuit(2)
 	c = deutsch_jozsa(addc, 1:4, outputs[1])
 	zero_state(nqubits(c)) |> c
 	#vizcircuit(c; scale=0.3)
@@ -1010,10 +969,10 @@ end
 md"## Quantum is not only probability"
 
 # ╔═╡ 6271ddf9-dea1-4b69-baed-ce4387fa91d7
-zero_state(4) |> repeat(4, H, 1:4) |> probs
+statevec(zero_state(4) |> repeat(4, H, 1:4))
 
 # ╔═╡ 84d4d1fd-0921-48ea-b292-fa2ccce58e7d
-zero_state(4) |> repeat(4, H, 1:4) |> put(4, 1=>X) |> probs
+statevec(zero_state(4) |> repeat(4, H, 1:4) |> put(4, 1=>Z))
 
 # ╔═╡ 952bd5bf-c7d9-483c-b8e7-a6e371808548
 let
@@ -1185,6 +1144,68 @@ md"""
 * Julia slack (channel: #yao-dev, or @GiggleLiu)
 """
 
+# ╔═╡ e66e2a67-3dde-49d0-a009-1ef67d679375
+md"jinguoliu@g.harvard.edu"
+
+# ╔═╡ 1ef52a16-16f9-40c6-b61c-3a00dfa3ce9f
+md"# Quantum circuit simulation"
+
+# ╔═╡ f1bc3f79-5c82-4e4f-b970-81ea33c4493b
+md"""
+1. quantum state -> quantum bits
+2. time evolution ->  applying the circuit
+3. measure  ->  readout
+"""
+
+# ╔═╡ a74105a9-0a55-419b-895b-f3c2c831bffb
+a_random_circuit = chain(dispatch!(variational_circuit(5, 2), :random), Yao.Measure());
+
+# ╔═╡ 1465cd17-94f7-44b9-9179-4d7b39ae8c3a
+vizcircuit(a_random_circuit; starting_texts=["0" for i=1:5],  ending_texts=["?" for i=1:5])
+
+# ╔═╡ c09975ac-4387-451d-98e7-800b8b14760c
+statevec(zero_state(5))
+
+# ╔═╡ 2bf0685a-42ff-4d73-a009-6b1523ce7f4b
+function plot_amplitude(reg::ArrayReg)
+	Plots.bar(0:1<<nqubits(reg)-1, reg |> probs, label="probability")
+end;
+
+# ╔═╡ 1224f1bc-9835-42eb-9b9c-4e5628575a4c
+reg0 = zero_state(5)
+
+# ╔═╡ 38cf5a1a-e995-4949-bd4e-deba6500cf00
+plot_amplitude(reg0)
+
+# ╔═╡ 27ee8d46-710c-48fe-981c-6ab282843741
+function plot_measured(measure_results::Vector{<:BitStr{N}}) where N
+	bar(0:1<<N-1, [count(b->Int(b)==i, measure_results) for i=0:1<<N-1], label="counting")
+end;
+
+# ╔═╡ 480e476f-c62e-49e6-b022-4f10c5b42e57
+measure!(reg0)
+
+# ╔═╡ 922f19c7-4d2f-48a7-9fff-4c63acb868ba
+let
+	reg0 = zero_state(5)
+	plot_amplitude(reg0 |> a_random_circuit)
+	Plots.annotate!(30, 0.5, "$(bitstring(Int(a_random_circuit[end].results))[end-4:end])")
+end
+
+# ╔═╡ 812aa02f-e8b0-4226-b2ef-5260884b2f09
+# run a circuit and get the measurement results
+function run_and_get_measure_results(circuit)
+	m = circuit[end]
+ 	zero_state(nqubits(circuit)) |> circuit
+	m.results
+end
+
+# ╔═╡ fe69d633-1da8-4db5-9e30-eb19c4ec392f
+ measure_results = [run_and_get_measure_results(a_random_circuit) for i=1:1000]
+
+# ╔═╡ 23a5b68f-bc93-43a6-9072-7d929f5f62dc
+plot_measured(measure_results)
+
 # ╔═╡ e8201e38-73dc-45d4-b93d-20f063d2ac3a
 md"## Quantum Compiling"
 
@@ -1253,13 +1274,1350 @@ end
 # ╔═╡ 28f657cd-8ae7-4572-94fa-813797b59b25
 import Cairo
 
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+BitBasis = "50ba71b6-fa0f-514d-ae9a-0916efc90dcf"
+Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
+Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+OMEinsum = "ebe7aa44-baf0-506c-a96f-8464559b3922"
+OMEinsumContractionOrders = "6f22d1fd-8eed-4bb7-9776-e7d684900715"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
+Viznet = "52a3aca4-6234-47fd-b74a-806bdf78ede9"
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
+YaoExtensions = "7a06699c-c960-11e9-3c98-9f78548b5f0f"
+YaoPlots = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
+YaoToEinsum = "9b173c7b-dc24-4dc5-a0e1-adab2f7b6ba9"
+
+[compat]
+BitBasis = "~0.7.4"
+Cairo = "~1.0.5"
+Compose = "~0.9.2"
+Latexify = "~0.15.9"
+OMEinsum = "~0.6.5"
+OMEinsumContractionOrders = "~0.6.2"
+Plots = "~1.25.2"
+PlutoUI = "~0.7.23"
+Revise = "~3.2.1"
+SymEngine = "~0.8.7"
+Viznet = "~0.3.3"
+Yao = "~0.6.4"
+YaoExtensions = "~0.2.6"
+YaoPlots = "~0.7.0"
+YaoToEinsum = "~0.1.2"
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.7.0"
+manifest_format = "2.0"
+
+[[deps.AbstractFFTs]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "485ee0867925449198280d4af84bdb46a2a404d0"
+uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+version = "1.0.1"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "abb72771fd8895a7ebd83d5632dc4b989b022b5b"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.2"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.3.4"
+
+[[deps.Adapt]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "84918055d15b3114ede17ac6a7182f68870c16f7"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "3.3.1"
+
+[[deps.ArgTools]]
+uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
+
+[[deps.ArnoldiMethod]]
+deps = ["LinearAlgebra", "Random", "StaticArrays"]
+git-tree-sha1 = "f87e559f87a45bece9c9ed97458d3afe98b1ebb9"
+uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
+version = "0.1.0"
+
+[[deps.ArrayInterface]]
+deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
+git-tree-sha1 = "265b06e2b1f6a216e0e8f183d28e4d354eab3220"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "3.2.1"
+
+[[deps.Artifacts]]
+uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[deps.BFloat16s]]
+deps = ["LinearAlgebra", "Printf", "Random", "Test"]
+git-tree-sha1 = "a598ecb0d717092b5539dbbe890c98bac842b072"
+uuid = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"
+version = "0.2.0"
+
+[[deps.Base64]]
+uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BatchedRoutines]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "8ee75390ba4bbfaf9aa48c121857b0da9a914265"
+uuid = "a9ab73d0-e05c-5df1-8fde-d6a4645b8d8e"
+version = "0.2.1"
+
+[[deps.BetterExp]]
+git-tree-sha1 = "dd3448f3d5b2664db7eceeec5f744535ce6e759b"
+uuid = "7cffe744-45fd-4178-b173-cf893948b8b7"
+version = "0.1.0"
+
+[[deps.BitBasis]]
+deps = ["LinearAlgebra", "StaticArrays"]
+git-tree-sha1 = "68ce92be119ad7ff44ebbb9ffc0f7a70b1e34c45"
+uuid = "50ba71b6-fa0f-514d-ae9a-0916efc90dcf"
+version = "0.7.4"
+
+[[deps.Bzip2_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
+uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
+version = "1.0.8+0"
+
+[[deps.CEnum]]
+git-tree-sha1 = "215a9aa4a1f23fbd05b92769fdd62559488d70e9"
+uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+version = "0.4.1"
+
+[[deps.CUDA]]
+deps = ["AbstractFFTs", "Adapt", "BFloat16s", "CEnum", "CompilerSupportLibraries_jll", "ExprTools", "GPUArrays", "GPUCompiler", "LLVM", "LazyArtifacts", "Libdl", "LinearAlgebra", "Logging", "Printf", "Random", "Random123", "RandomNumbers", "Reexport", "Requires", "SparseArrays", "SpecialFunctions", "TimerOutputs"]
+git-tree-sha1 = "2c8329f16addffd09e6ca84c556e2185a4933c64"
+uuid = "052768ef-5323-5732-b1bb-66c8b64840ba"
+version = "3.5.0"
+
+[[deps.CacheServers]]
+deps = ["Distributed", "Test"]
+git-tree-sha1 = "b584b04f236d3677b4334fab095796a128445bf8"
+uuid = "a921213e-d44a-5460-ac04-5d720a99ba71"
+version = "0.2.0"
+
+[[deps.Cairo]]
+deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
+git-tree-sha1 = "d0b3f8b4ad16cb0a2988c6788646a5e6a17b6b1b"
+uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
+version = "1.0.5"
+
+[[deps.Cairo_jll]]
+deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
+uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
+version = "1.16.1+1"
+
+[[deps.ChainRulesCore]]
+deps = ["Compat", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "4c26b4e9e91ca528ea212927326ece5918a04b47"
+uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+version = "1.11.2"
+
+[[deps.ChangesOfVariables]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
+git-tree-sha1 = "bf98fa45a0a4cee295de98d4c1462be26345b9a1"
+uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+version = "0.1.2"
+
+[[deps.CodeTracking]]
+deps = ["InteractiveUtils", "UUIDs"]
+git-tree-sha1 = "9aa8a5ebb6b5bf469a7e0e2b5202cf6f8c291104"
+uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
+version = "1.0.6"
+
+[[deps.ColorSchemes]]
+deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
+git-tree-sha1 = "a851fec56cb73cfdf43762999ec72eff5b86882a"
+uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
+version = "3.15.0"
+
+[[deps.ColorTypes]]
+deps = ["FixedPointNumbers", "Random"]
+git-tree-sha1 = "32a2b8af383f11cbb65803883837a149d10dfe8a"
+uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+version = "0.10.12"
+
+[[deps.Colors]]
+deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
+git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
+uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
+version = "0.12.8"
+
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
+[[deps.Compat]]
+deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
+git-tree-sha1 = "44c37b4636bc54afac5c574d2d02b625349d6582"
+uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
+version = "3.41.0"
+
+[[deps.CompilerSupportLibraries_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
+
+[[deps.Compose]]
+deps = ["Base64", "Colors", "DataStructures", "Dates", "IterTools", "JSON", "LinearAlgebra", "Measures", "Printf", "Random", "Requires", "Statistics", "UUIDs"]
+git-tree-sha1 = "c6461fc7c35a4bb8d00905df7adafcff1fe3a6bc"
+uuid = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+version = "0.9.2"
+
+[[deps.Contour]]
+deps = ["StaticArrays"]
+git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
+uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
+version = "0.5.7"
+
+[[deps.DataAPI]]
+git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
+uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
+version = "1.9.0"
+
+[[deps.DataStructures]]
+deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
+git-tree-sha1 = "3daef5523dd2e769dad2365274f760ff5f282c7d"
+uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+version = "0.18.11"
+
+[[deps.DataValueInterfaces]]
+git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
+uuid = "e2d170a0-9d28-54be-80f0-106bbe20a464"
+version = "1.0.0"
+
+[[deps.Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+
+[[deps.DelimitedFiles]]
+deps = ["Mmap"]
+uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+
+[[deps.Dierckx]]
+deps = ["Dierckx_jll"]
+git-tree-sha1 = "5fefbe52e9a6e55b8f87cb89352d469bd3a3a090"
+uuid = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+version = "0.5.1"
+
+[[deps.Dierckx_jll]]
+deps = ["CompilerSupportLibraries_jll", "Libdl", "Pkg"]
+git-tree-sha1 = "a580560f526f6fc6973e8bad2b036514a4e3b013"
+uuid = "cd4c43a9-7502-52ba-aa6d-59fb2a88580b"
+version = "0.0.1+0"
+
+[[deps.Distributed]]
+deps = ["Random", "Serialization", "Sockets"]
+uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+
+[[deps.DocStringExtensions]]
+deps = ["LibGit2"]
+git-tree-sha1 = "b19534d1895d702889b219c382a6e18010797f0b"
+uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+version = "0.8.6"
+
+[[deps.Downloads]]
+deps = ["ArgTools", "LibCURL", "NetworkOptions"]
+uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+
+[[deps.EarCut_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "3f3a2501fa7236e9b911e0f7a588c657e822bb6d"
+uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
+version = "2.2.3+0"
+
+[[deps.Expat_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "b3bfd02e98aedfa5cf885665493c5598c350cd2f"
+uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
+version = "2.2.10+0"
+
+[[deps.ExponentialUtilities]]
+deps = ["ArrayInterface", "LinearAlgebra", "Printf", "Requires", "SparseArrays"]
+git-tree-sha1 = "1b873816d2cfc8c0fcb1edcb08e67fdf630a70b7"
+uuid = "d4d017d3-3776-5f7e-afef-a10c40355c18"
+version = "1.10.2"
+
+[[deps.ExprTools]]
+git-tree-sha1 = "b7e3d17636b348f005f11040025ae8c6f645fe92"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.6"
+
+[[deps.Expronicon]]
+deps = ["MLStyle", "Pkg", "TOML"]
+git-tree-sha1 = "eb43b420c63be5df51549ae86c43ed72f20ebcb9"
+uuid = "6b7a57c9-7cc1-4fdf-b7f5-e857abae3636"
+version = "0.6.13"
+
+[[deps.FFMPEG]]
+deps = ["FFMPEG_jll"]
+git-tree-sha1 = "b57e3acbe22f8484b4b5ff66a7499717fe1a9cc8"
+uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
+version = "0.4.1"
+
+[[deps.FFMPEG_jll]]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "Pkg", "Zlib_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+git-tree-sha1 = "d8a578692e3077ac998b50c0217dfd67f21d1e5f"
+uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
+version = "4.4.0+0"
+
+[[deps.FFTW]]
+deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
+git-tree-sha1 = "463cb335fa22c4ebacfd1faba5fde14edb80d96c"
+uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+version = "1.4.5"
+
+[[deps.FFTW_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
+uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
+version = "3.3.10+0"
+
+[[deps.FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+
+[[deps.FixedPointNumbers]]
+deps = ["Statistics"]
+git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
+uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+version = "0.8.4"
+
+[[deps.Fontconfig_jll]]
+deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "21efd19106a55620a188615da6d3d06cd7f6ee03"
+uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
+version = "2.13.93+0"
+
+[[deps.Formatting]]
+deps = ["Printf"]
+git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
+uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
+version = "0.4.2"
+
+[[deps.FreeType2_jll]]
+deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "87eb71354d8ec1a96d4a7636bd57a7347dde3ef9"
+uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
+version = "2.10.4+0"
+
+[[deps.FriBidi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
+uuid = "559328eb-81f9-559d-9380-de523a88c83c"
+version = "1.0.10+0"
+
+[[deps.GLFW_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
+git-tree-sha1 = "0c603255764a1fa0b61752d2bec14cfbd18f7fe8"
+uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
+version = "3.3.5+1"
+
+[[deps.GMP_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
+
+[[deps.GPUArrays]]
+deps = ["Adapt", "LinearAlgebra", "Printf", "Random", "Serialization", "Statistics"]
+git-tree-sha1 = "7772508f17f1d482fe0df72cabc5b55bec06bbe0"
+uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
+version = "8.1.2"
+
+[[deps.GPUCompiler]]
+deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "TimerOutputs", "UUIDs"]
+git-tree-sha1 = "2cac236070c2c4b36de54ae9146b55ee2c34ac7a"
+uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
+version = "0.13.10"
+
+[[deps.GR]]
+deps = ["Base64", "DelimitedFiles", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Printf", "Random", "Serialization", "Sockets", "Test", "UUIDs"]
+git-tree-sha1 = "30f2b340c2fff8410d89bfcdc9c0a6dd661ac5f7"
+uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+version = "0.62.1"
+
+[[deps.GR_jll]]
+deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Pkg", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "fd75fa3a2080109a2c0ec9864a6e14c60cca3866"
+uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
+version = "0.62.0+0"
+
+[[deps.GeometryBasics]]
+deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
+git-tree-sha1 = "58bcdf5ebc057b085e58d95c138725628dd7453c"
+uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+version = "0.4.1"
+
+[[deps.Gettext_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
+git-tree-sha1 = "9b02998aba7bf074d14de89f9d37ca24a1a0b046"
+uuid = "78b55507-aeef-58d4-861c-77aaff3498b1"
+version = "0.21.0+0"
+
+[[deps.Glib_jll]]
+deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE_jll", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "a32d672ac2c967f3deb8a81d828afc739c838a06"
+uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
+version = "2.68.3+2"
+
+[[deps.GraphPlot]]
+deps = ["ArnoldiMethod", "ColorTypes", "Colors", "Compose", "DelimitedFiles", "Graphs", "LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "5e51d9d9134ebcfc556b82428521fe92f709e512"
+uuid = "a2cc645c-3eea-5389-862e-a155d0052231"
+version = "0.5.0"
+
+[[deps.Graphics]]
+deps = ["Colors", "LinearAlgebra", "NaNMath"]
+git-tree-sha1 = "1c5a84319923bea76fa145d49e93aa4394c73fc2"
+uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
+version = "1.1.1"
+
+[[deps.Graphite2_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
+uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
+version = "1.3.14+0"
+
+[[deps.Graphs]]
+deps = ["ArnoldiMethod", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
+git-tree-sha1 = "92243c07e786ea3458532e199eb3feee0e7e08eb"
+uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
+version = "1.4.1"
+
+[[deps.Grisu]]
+git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
+uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
+version = "1.0.2"
+
+[[deps.HTTP]]
+deps = ["Base64", "Dates", "IniFile", "Logging", "MbedTLS", "NetworkOptions", "Sockets", "URIs"]
+git-tree-sha1 = "0fa77022fe4b511826b39c894c90daf5fce3334a"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "0.9.17"
+
+[[deps.HarfBuzz_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
+git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
+uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
+version = "2.8.1+1"
+
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.3"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
+[[deps.IfElse]]
+git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
+uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
+version = "0.1.1"
+
+[[deps.Inflate]]
+git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
+uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
+version = "0.1.2"
+
+[[deps.IniFile]]
+deps = ["Test"]
+git-tree-sha1 = "098e4d2c533924c921f9f9847274f2ad89e018b8"
+uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
+version = "0.5.0"
+
+[[deps.IntelOpenMP_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "d979e54b71da82f3a65b62553da4fc3d18c9004c"
+uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
+version = "2018.0.3+2"
+
+[[deps.InteractiveUtils]]
+deps = ["Markdown"]
+uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[deps.InverseFunctions]]
+deps = ["Test"]
+git-tree-sha1 = "a7254c0acd8e62f1ac75ad24d5db43f5f19f3c65"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.2"
+
+[[deps.IrrationalConstants]]
+git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
+uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
+version = "0.1.1"
+
+[[deps.IterTools]]
+git-tree-sha1 = "fa6287a4469f5e048d763df38279ee729fbd44e5"
+uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+version = "1.4.0"
+
+[[deps.IteratorInterfaceExtensions]]
+git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
+uuid = "82899510-4779-5014-852e-03e436cf321d"
+version = "1.0.0"
+
+[[deps.JLLWrappers]]
+deps = ["Preferences"]
+git-tree-sha1 = "642a199af8b68253517b80bd3bfd17eb4e84df6e"
+uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
+version = "1.3.0"
+
+[[deps.JSON]]
+deps = ["Dates", "Mmap", "Parsers", "Unicode"]
+git-tree-sha1 = "8076680b162ada2a031f707ac7b4953e30667a37"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.21.2"
+
+[[deps.JpegTurbo_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "d735490ac75c5cb9f1b00d8b5509c11984dc6943"
+uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
+version = "2.1.0+0"
+
+[[deps.JuliaInterpreter]]
+deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
+git-tree-sha1 = "e273807f38074f033d94207a201e6e827d8417db"
+uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
+version = "0.8.21"
+
+[[deps.LAME_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "f6250b16881adf048549549fba48b1161acdac8c"
+uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
+version = "3.100.1+0"
+
+[[deps.LLVM]]
+deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
+git-tree-sha1 = "7cc22e69995e2329cc047a879395b2b74647ab5f"
+uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
+version = "4.7.0"
+
+[[deps.LLVMExtra_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "c5fc4bef251ecd37685bea1c4068a9cfa41e8b9a"
+uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
+version = "0.0.13+0"
+
+[[deps.LZO_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "e5b909bcf985c5e2605737d2ce278ed791b89be6"
+uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
+version = "2.10.1+0"
+
+[[deps.LaTeXStrings]]
+git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
+uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+version = "1.3.0"
+
+[[deps.Latexify]]
+deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "Printf", "Requires"]
+git-tree-sha1 = "a8f4f279b6fa3c3c4f1adadd78a621b13a506bce"
+uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+version = "0.15.9"
+
+[[deps.LazyArtifacts]]
+deps = ["Artifacts", "Pkg"]
+uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
+
+[[deps.LegibleLambdas]]
+deps = ["MacroTools"]
+git-tree-sha1 = "7946db4829eb8de47c399f92c19790f9cc0bbd07"
+uuid = "f1f30506-32fe-5131-bd72-7c197988f9e5"
+version = "0.3.0"
+
+[[deps.LibCURL]]
+deps = ["LibCURL_jll", "MozillaCACerts_jll"]
+uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
+
+[[deps.LibCURL_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
+uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
+
+[[deps.LibGit2]]
+deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
+uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+
+[[deps.LibSSH2_jll]]
+deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
+uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
+
+[[deps.Libdl]]
+uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[[deps.Libffi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "0b4a5d71f3e5200a7dff793393e09dfc2d874290"
+uuid = "e9f186c6-92d2-5b65-8a66-fee21dc1b490"
+version = "3.2.2+1"
+
+[[deps.Libgcrypt_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgpg_error_jll", "Pkg"]
+git-tree-sha1 = "64613c82a59c120435c067c2b809fc61cf5166ae"
+uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
+version = "1.8.7+0"
+
+[[deps.Libglvnd_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll", "Xorg_libXext_jll"]
+git-tree-sha1 = "7739f837d6447403596a75d19ed01fd08d6f56bf"
+uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
+version = "1.3.0+3"
+
+[[deps.Libgpg_error_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "c333716e46366857753e273ce6a69ee0945a6db9"
+uuid = "7add5ba3-2f88-524e-9cd5-f83b8a55f7b8"
+version = "1.42.0+0"
+
+[[deps.Libiconv_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "42b62845d70a619f063a7da093d995ec8e15e778"
+uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
+version = "1.16.1+1"
+
+[[deps.Libmount_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "9c30530bf0effd46e15e0fdcf2b8636e78cbbd73"
+uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
+version = "2.35.0+0"
+
+[[deps.Libtiff_jll]]
+deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
+git-tree-sha1 = "340e257aada13f95f98ee352d316c3bed37c8ab9"
+uuid = "89763e89-9b03-5906-acba-b20f662cd828"
+version = "4.3.0+0"
+
+[[deps.Libuuid_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
+uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
+version = "2.36.0+0"
+
+[[deps.LinearAlgebra]]
+deps = ["Libdl", "libblastrampoline_jll"]
+uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[deps.LogExpFunctions]]
+deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
+git-tree-sha1 = "e5718a00af0ab9756305a0392832c8952c7426c1"
+uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+version = "0.3.6"
+
+[[deps.Logging]]
+uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+
+[[deps.LoweredCodeUtils]]
+deps = ["JuliaInterpreter"]
+git-tree-sha1 = "491a883c4fef1103077a7f648961adbf9c8dd933"
+uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
+version = "2.1.2"
+
+[[deps.LuxurySparse]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "f6eb35c3a10571c1d62748250197c66ed4c42607"
+uuid = "d05aeea4-b7d4-55ac-b691-9e7fabb07ba2"
+version = "0.6.8"
+
+[[deps.MKL_jll]]
+deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
+git-tree-sha1 = "5455aef09b40e5020e1520f551fa3135040d4ed0"
+uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
+version = "2021.1.1+2"
+
+[[deps.MLStyle]]
+git-tree-sha1 = "594e189325f66e23a8818e5beb11c43bb0141bcd"
+uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
+version = "0.4.10"
+
+[[deps.MPC_jll]]
+deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPFR_jll", "Pkg"]
+git-tree-sha1 = "9618bed470dcb869f944f4fe4a9e76c4c8bf9a11"
+uuid = "2ce0c516-f11f-5db3-98ad-e0e1048fbd70"
+version = "1.2.1+0"
+
+[[deps.MPFR_jll]]
+deps = ["Artifacts", "GMP_jll", "Libdl"]
+uuid = "3a97d323-0669-5f0c-9066-3539efd106a3"
+
+[[deps.MacroTools]]
+deps = ["Markdown", "Random"]
+git-tree-sha1 = "3d3e902b31198a27340d0bf00d6ac452866021cf"
+uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+version = "0.5.9"
+
+[[deps.Markdown]]
+deps = ["Base64"]
+uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
+git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.0.3"
+
+[[deps.MbedTLS_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+
+[[deps.Measures]]
+git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
+uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+version = "0.3.1"
+
+[[deps.Missings]]
+deps = ["DataAPI"]
+git-tree-sha1 = "bf210ce90b6c9eed32d25dbcae1ebc565df2687f"
+uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+version = "1.0.2"
+
+[[deps.Mmap]]
+uuid = "a63ad114-7e13-5084-954f-fe012c677804"
+
+[[deps.MozillaCACerts_jll]]
+uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
+
+[[deps.Multigraphs]]
+deps = ["Graphs", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "055a7c49a626e17a8c99bcaaf472d0de60848929"
+uuid = "7ebac608-6c66-46e6-9856-b5f43e107bac"
+version = "0.3.0"
+
+[[deps.NaNMath]]
+git-tree-sha1 = "f755f36b19a5116bb580de457cda0c140153f283"
+uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+version = "0.3.6"
+
+[[deps.NetworkOptions]]
+uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
+
+[[deps.OMEinsum]]
+deps = ["AbstractTrees", "BatchedRoutines", "CUDA", "ChainRulesCore", "Combinatorics", "LinearAlgebra", "MacroTools", "Requires", "Test", "TupleTools"]
+git-tree-sha1 = "c172922074434ef8dda952da7178208ad832637a"
+uuid = "ebe7aa44-baf0-506c-a96f-8464559b3922"
+version = "0.6.5"
+
+[[deps.OMEinsumContractionOrders]]
+deps = ["BetterExp", "OMEinsum", "Requires", "SparseArrays", "Suppressor"]
+git-tree-sha1 = "c3f853756b1c1b52d2959ebe3921366b724c367d"
+uuid = "6f22d1fd-8eed-4bb7-9776-e7d684900715"
+version = "0.6.2"
+
+[[deps.Ogg_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "7937eda4681660b4d6aeeecc2f7e1c81c8ee4e2f"
+uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
+version = "1.3.5+0"
+
+[[deps.OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
+
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+
+[[deps.OpenSSL_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "15003dcb7d8db3c6c857fda14891a539a8f2705a"
+uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
+version = "1.1.10+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.5+0"
+
+[[deps.Opus_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "51a08fb14ec28da2ec7a927c4337e4332c2a4720"
+uuid = "91d4177d-7536-5919-b921-800302f37372"
+version = "1.3.2+0"
+
+[[deps.OrderedCollections]]
+git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
+uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+version = "1.4.1"
+
+[[deps.PCRE_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "b2a7af664e098055a7529ad1a900ded962bca488"
+uuid = "2f80f16e-611a-54ab-bc61-aa92de5b98fc"
+version = "8.44.0+0"
+
+[[deps.Pango_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "9bc1871464b12ed19297fbc56c4fb4ba84988b0d"
+uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
+version = "1.47.0+0"
+
+[[deps.Parsers]]
+deps = ["Dates"]
+git-tree-sha1 = "d7fa6237da8004be601e19bd6666083056649918"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.1.3"
+
+[[deps.Pixman_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "b4f5d02549a10e20780a24fce72bea96b6329e29"
+uuid = "30392449-352a-5448-841d-b1acce4e97dc"
+version = "0.40.1+0"
+
+[[deps.Pkg]]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+
+[[deps.PlotThemes]]
+deps = ["PlotUtils", "Requires", "Statistics"]
+git-tree-sha1 = "a3a964ce9dc7898193536002a6dd892b1b5a6f1d"
+uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
+version = "2.0.1"
+
+[[deps.PlotUtils]]
+deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Statistics"]
+git-tree-sha1 = "e4fe0b50af3130ddd25e793b471cb43d5279e3e6"
+uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
+version = "1.1.1"
+
+[[deps.Plots]]
+deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun"]
+git-tree-sha1 = "65ebc27d8c00c84276f14aaf4ff63cbe12016c70"
+uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+version = "1.25.2"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "5152abbdab6488d5eec6a01029ca6697dff4ec8f"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.23"
+
+[[deps.Preferences]]
+deps = ["TOML"]
+git-tree-sha1 = "00cfd92944ca9c760982747e9a1d0d5d86ab1e5a"
+uuid = "21216c6a-2e73-6563-6e65-726566657250"
+version = "1.2.2"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.Qt5Base_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
+git-tree-sha1 = "ad368663a5e20dbb8d6dc2fddeefe4dae0781ae8"
+uuid = "ea2cea3b-5b76-57ae-a6ef-0a8af62496e1"
+version = "5.15.3+0"
+
+[[deps.REPL]]
+deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
+uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+
+[[deps.Random]]
+deps = ["SHA", "Serialization"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[deps.Random123]]
+deps = ["Libdl", "Random", "RandomNumbers"]
+git-tree-sha1 = "0e8b146557ad1c6deb1367655e052276690e71a3"
+uuid = "74087812-796a-5b5d-8853-05524746bad3"
+version = "1.4.2"
+
+[[deps.RandomNumbers]]
+deps = ["Random", "Requires"]
+git-tree-sha1 = "043da614cc7e95c703498a491e2c21f58a2b8111"
+uuid = "e6cf234a-135c-5ec9-84dd-332b85af5143"
+version = "1.5.3"
+
+[[deps.RecipesBase]]
+git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.2.1"
+
+[[deps.RecipesPipeline]]
+deps = ["Dates", "NaNMath", "PlotUtils", "RecipesBase"]
+git-tree-sha1 = "7ad0dfa8d03b7bcf8c597f59f5292801730c55b8"
+uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
+version = "0.4.1"
+
+[[deps.Reexport]]
+git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
+uuid = "189a3867-3050-52da-a836-e630ba90ab69"
+version = "1.2.2"
+
+[[deps.Requires]]
+deps = ["UUIDs"]
+git-tree-sha1 = "8f82019e525f4d5c669692772a6f4b0a58b06a6a"
+uuid = "ae029012-a4dd-5104-9daa-d747884805df"
+version = "1.2.0"
+
+[[deps.Revise]]
+deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
+git-tree-sha1 = "e55f4c73ec827f96cd52db0bc6916a3891c726b5"
+uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
+version = "3.2.1"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+
+[[deps.Scratch]]
+deps = ["Dates"]
+git-tree-sha1 = "0b4b7f1393cff97c33891da2a0bf69c6ed241fda"
+uuid = "6c6a2e73-6563-6170-7368-637461726353"
+version = "1.1.0"
+
+[[deps.Serialization]]
+uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.SharedArrays]]
+deps = ["Distributed", "Mmap", "Random", "Serialization"]
+uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.Showoff]]
+deps = ["Dates", "Grisu"]
+git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
+uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
+version = "1.0.3"
+
+[[deps.SimpleTraits]]
+deps = ["InteractiveUtils", "MacroTools"]
+git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
+uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
+version = "0.9.4"
+
+[[deps.Sockets]]
+uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[[deps.SortingAlgorithms]]
+deps = ["DataStructures"]
+git-tree-sha1 = "b3363d7460f7d098ca0912c69b082f75625d7508"
+uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
+version = "1.0.1"
+
+[[deps.SparseArrays]]
+deps = ["LinearAlgebra", "Random"]
+uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[[deps.SpecialFunctions]]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "f0bccf98e16759818ffc5d97ac3ebf87eb950150"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "1.8.1"
+
+[[deps.Static]]
+deps = ["IfElse"]
+git-tree-sha1 = "7f5a513baec6f122401abfc8e9c074fdac54f6c1"
+uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+version = "0.4.1"
+
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "3c76dde64d03699e074ac02eb2e8ba8254d428da"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "1.2.13"
+
+[[deps.Statistics]]
+deps = ["LinearAlgebra", "SparseArrays"]
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[[deps.StatsAPI]]
+git-tree-sha1 = "0f2aa8e32d511f758a2ce49208181f7733a0936a"
+uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
+version = "1.1.0"
+
+[[deps.StatsBase]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "2bb0cb32026a66037360606510fca5984ccc6b75"
+uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+version = "0.33.13"
+
+[[deps.StructArrays]]
+deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
+git-tree-sha1 = "2ce41e0d042c60ecd131e9fb7154a3bfadbf50d3"
+uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+version = "0.6.3"
+
+[[deps.Suppressor]]
+git-tree-sha1 = "a819d77f31f83e5792a76081eee1ea6342ab8787"
+uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
+version = "0.2.0"
+
+[[deps.SymEngine]]
+deps = ["Compat", "Libdl", "LinearAlgebra", "RecipesBase", "SpecialFunctions", "SymEngine_jll"]
+git-tree-sha1 = "6cf88a0b98c758a36e6e978a41e8a12f6f5cdacc"
+uuid = "123dc426-2d89-5057-bbad-38513e3affd8"
+version = "0.8.7"
+
+[[deps.SymEngine_jll]]
+deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPC_jll", "MPFR_jll", "Pkg"]
+git-tree-sha1 = "3cd0f249ae20a0093f839738a2f2c1476d5581fe"
+uuid = "3428059b-622b-5399-b16f-d347a77089a4"
+version = "0.8.1+0"
+
+[[deps.TOML]]
+deps = ["Dates"]
+uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[[deps.TableTraits]]
+deps = ["IteratorInterfaceExtensions"]
+git-tree-sha1 = "c06b2f539df1c6efa794486abfb6ed2022561a39"
+uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
+version = "1.0.1"
+
+[[deps.Tables]]
+deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "TableTraits", "Test"]
+git-tree-sha1 = "bb1064c9a84c52e277f1096cf41434b675cd368b"
+uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+version = "1.6.1"
+
+[[deps.Tar]]
+deps = ["ArgTools", "SHA"]
+uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
+
+[[deps.Test]]
+deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
+uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[[deps.TimerOutputs]]
+deps = ["ExprTools", "Printf"]
+git-tree-sha1 = "7cb456f358e8f9d102a8b25e8dfedf58fa5689bc"
+uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+version = "0.5.13"
+
+[[deps.TupleTools]]
+git-tree-sha1 = "3c712976c47707ff893cf6ba4354aa14db1d8938"
+uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+version = "1.3.0"
+
+[[deps.URIs]]
+git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.3.0"
+
+[[deps.UUIDs]]
+deps = ["Random", "SHA"]
+uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[[deps.UnicodeFun]]
+deps = ["REPL"]
+git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
+uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
+version = "0.4.1"
+
+[[deps.Viznet]]
+deps = ["Compose", "Dierckx"]
+git-tree-sha1 = "7a022ae6ac8b153d47617ed8c196ce60645689f1"
+uuid = "52a3aca4-6234-47fd-b74a-806bdf78ede9"
+version = "0.3.3"
+
+[[deps.Wayland_jll]]
+deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg", "XML2_jll"]
+git-tree-sha1 = "3e61f0b86f90dacb0bc0e73a0c5a83f6a8636e23"
+uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
+version = "1.19.0+0"
+
+[[deps.Wayland_protocols_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "66d72dc6fcc86352f01676e8f0f698562e60510f"
+uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
+version = "1.23.0+0"
+
+[[deps.XML2_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "1acf5bdf07aa0907e0a37d3718bb88d4b687b74a"
+uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
+version = "2.9.12+0"
+
+[[deps.XSLT_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
+git-tree-sha1 = "91844873c4085240b95e795f692c4cec4d805f8a"
+uuid = "aed1982a-8fda-507f-9586-7b0439959a61"
+version = "1.1.34+0"
+
+[[deps.Xorg_libX11_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
+git-tree-sha1 = "5be649d550f3f4b95308bf0183b82e2582876527"
+uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
+version = "1.6.9+4"
+
+[[deps.Xorg_libXau_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "4e490d5c960c314f33885790ed410ff3a94ce67e"
+uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
+version = "1.0.9+4"
+
+[[deps.Xorg_libXcursor_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
+git-tree-sha1 = "12e0eb3bc634fa2080c1c37fccf56f7c22989afd"
+uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
+version = "1.2.0+4"
+
+[[deps.Xorg_libXdmcp_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "4fe47bd2247248125c428978740e18a681372dd4"
+uuid = "a3789734-cfe1-5b06-b2d0-1dd0d9d62d05"
+version = "1.1.3+4"
+
+[[deps.Xorg_libXext_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
+git-tree-sha1 = "b7c0aa8c376b31e4852b360222848637f481f8c3"
+uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
+version = "1.3.4+4"
+
+[[deps.Xorg_libXfixes_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
+git-tree-sha1 = "0e0dc7431e7a0587559f9294aeec269471c991a4"
+uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
+version = "5.0.3+4"
+
+[[deps.Xorg_libXi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXfixes_jll"]
+git-tree-sha1 = "89b52bc2160aadc84d707093930ef0bffa641246"
+uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
+version = "1.7.10+4"
+
+[[deps.Xorg_libXinerama_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll"]
+git-tree-sha1 = "26be8b1c342929259317d8b9f7b53bf2bb73b123"
+uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
+version = "1.1.4+4"
+
+[[deps.Xorg_libXrandr_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
+git-tree-sha1 = "34cea83cb726fb58f325887bf0612c6b3fb17631"
+uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
+version = "1.5.2+4"
+
+[[deps.Xorg_libXrender_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
+git-tree-sha1 = "19560f30fd49f4d4efbe7002a1037f8c43d43b96"
+uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
+version = "0.9.10+4"
+
+[[deps.Xorg_libpthread_stubs_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "6783737e45d3c59a4a4c4091f5f88cdcf0908cbb"
+uuid = "14d82f49-176c-5ed1-bb49-ad3f5cbd8c74"
+version = "0.1.0+3"
+
+[[deps.Xorg_libxcb_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "XSLT_jll", "Xorg_libXau_jll", "Xorg_libXdmcp_jll", "Xorg_libpthread_stubs_jll"]
+git-tree-sha1 = "daf17f441228e7a3833846cd048892861cff16d6"
+uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
+version = "1.13.0+3"
+
+[[deps.Xorg_libxkbfile_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
+git-tree-sha1 = "926af861744212db0eb001d9e40b5d16292080b2"
+uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
+version = "1.1.0+4"
+
+[[deps.Xorg_xcb_util_image_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "0fab0a40349ba1cba2c1da699243396ff8e94b97"
+uuid = "12413925-8142-5f55-bb0e-6d7ca50bb09b"
+version = "0.4.0+1"
+
+[[deps.Xorg_xcb_util_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libxcb_jll"]
+git-tree-sha1 = "e7fd7b2881fa2eaa72717420894d3938177862d1"
+uuid = "2def613f-5ad1-5310-b15b-b15d46f528f5"
+version = "0.4.0+1"
+
+[[deps.Xorg_xcb_util_keysyms_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "d1151e2c45a544f32441a567d1690e701ec89b00"
+uuid = "975044d2-76e6-5fbe-bf08-97ce7c6574c7"
+version = "0.4.0+1"
+
+[[deps.Xorg_xcb_util_renderutil_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "dfd7a8f38d4613b6a575253b3174dd991ca6183e"
+uuid = "0d47668e-0667-5a69-a72c-f761630bfb7e"
+version = "0.3.9+1"
+
+[[deps.Xorg_xcb_util_wm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "e78d10aab01a4a154142c5006ed44fd9e8e31b67"
+uuid = "c22f9ab0-d5fe-5066-847c-f4bb1cd4e361"
+version = "0.4.1+1"
+
+[[deps.Xorg_xkbcomp_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libxkbfile_jll"]
+git-tree-sha1 = "4bcbf660f6c2e714f87e960a171b119d06ee163b"
+uuid = "35661453-b289-5fab-8a00-3d9160c6a3a4"
+version = "1.4.2+4"
+
+[[deps.Xorg_xkeyboard_config_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_xkbcomp_jll"]
+git-tree-sha1 = "5c8424f8a67c3f2209646d4425f3d415fee5931d"
+uuid = "33bec58e-1273-512f-9401-5d533626f822"
+version = "2.27.0+4"
+
+[[deps.Xorg_xtrans_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
+uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
+version = "1.4.0+3"
+
+[[deps.Yao]]
+deps = ["BitBasis", "Reexport", "YaoArrayRegister", "YaoBase", "YaoBlocks", "YaoSym"]
+git-tree-sha1 = "21e49c3b1f3ec891fd728664feae600c8601b013"
+uuid = "5872b779-8223-5990-8dd0-5abbb0748c8c"
+version = "0.6.4"
+
+[[deps.YaoAPI]]
+git-tree-sha1 = "dc4edfcda2e59fd2624f84941da040a4e30220e3"
+uuid = "0843a435-28de-4971-9e8b-a9641b2983a8"
+version = "0.1.0"
+
+[[deps.YaoArrayRegister]]
+deps = ["Adapt", "BitBasis", "LinearAlgebra", "LuxurySparse", "Random", "StaticArrays", "StatsBase", "TupleTools", "YaoBase"]
+git-tree-sha1 = "0a29506643daf3d39f38b337d42ac287ffb9b535"
+uuid = "e600142f-9330-5003-8abb-0ebd767abc51"
+version = "0.7.10"
+
+[[deps.YaoBase]]
+deps = ["BitBasis", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "Reexport", "SparseArrays", "TupleTools", "YaoAPI"]
+git-tree-sha1 = "bd91eaf91b5a5c5a8091b5ade97810dc63695851"
+uuid = "a8f54c17-34bc-5a9d-b050-f522fe3f755f"
+version = "0.14.5"
+
+[[deps.YaoBlocks]]
+deps = ["BitBasis", "CacheServers", "ChainRulesCore", "ExponentialUtilities", "InteractiveUtils", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "SimpleTraits", "SparseArrays", "StaticArrays", "StatsBase", "TupleTools", "YaoArrayRegister", "YaoBase"]
+git-tree-sha1 = "e3f0a62b1934dd75ae751b0d73ef99f9ffa0ceed"
+uuid = "418bc28f-b43b-5e0b-a6e7-61bbc1a2c1df"
+version = "0.11.10"
+
+[[deps.YaoExtensions]]
+deps = ["BitBasis", "FFTW", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "Random", "StaticArrays", "StatsBase", "Yao"]
+git-tree-sha1 = "d5063d12f44617f203aead48eb885a10fbd24272"
+uuid = "7a06699c-c960-11e9-3c98-9f78548b5f0f"
+version = "0.2.6"
+
+[[deps.YaoHIR]]
+deps = ["Expronicon", "MLStyle", "YaoLocations"]
+git-tree-sha1 = "938fb1436c702dddbbfb2bf173f28e8ebbc48ee0"
+uuid = "6769671a-fce8-4286-b3f7-6099e1b1298a"
+version = "0.2.0"
+
+[[deps.YaoLocations]]
+git-tree-sha1 = "c90c42c8668c9096deb0c861822f0f8f80cbdc68"
+uuid = "66df03fb-d475-48f7-b449-3d9064bf085b"
+version = "0.1.6"
+
+[[deps.YaoPlots]]
+deps = ["BitBasis", "Colors", "Compose", "GraphPlot", "Graphs", "Multigraphs", "Viznet", "YaoBlocks", "ZXCalculus"]
+git-tree-sha1 = "bae26fcc84ae8082755dcdd087c943fc06b5aebd"
+uuid = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
+version = "0.7.0"
+
+[[deps.YaoSym]]
+deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "Requires", "SparseArrays", "YaoArrayRegister", "YaoBase", "YaoBlocks"]
+git-tree-sha1 = "e34838fa98d02d4c969ba9f92783a12a336e2f88"
+uuid = "3b27209a-d3d6-11e9-3c0f-41eb92b2cb9d"
+version = "0.4.7"
+
+[[deps.YaoToEinsum]]
+deps = ["LinearAlgebra", "OMEinsum", "Yao"]
+git-tree-sha1 = "2b22e59f0f73b0fa978085269e6d944ee6864808"
+uuid = "9b173c7b-dc24-4dc5-a0e1-adab2f7b6ba9"
+version = "0.1.2"
+
+[[deps.ZXCalculus]]
+deps = ["Graphs", "LinearAlgebra", "MLStyle", "Multigraphs", "SparseArrays", "YaoHIR", "YaoLocations"]
+git-tree-sha1 = "58e4f9a72618f2daf483f328fd82f0d10df8dc37"
+uuid = "3525faa3-032d-4235-a8d4-8c2939a218dd"
+version = "0.5.0"
+
+[[deps.Zlib_jll]]
+deps = ["Libdl"]
+uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
+
+[[deps.Zstd_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "cc4bf3fdde8b7e3e9fa0351bdeedba1cf3b7f6e6"
+uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
+version = "1.5.0+0"
+
+[[deps.libass_jll]]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "5982a94fcba20f02f42ace44b9894ee2b140fe47"
+uuid = "0ac62f75-1d6f-5e53-bd7c-93b484bb37c0"
+version = "0.15.1+0"
+
+[[deps.libblastrampoline_jll]]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
+
+[[deps.libfdk_aac_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "daacc84a041563f965be61859a36e17c4e4fcd55"
+uuid = "f638f0a6-7fb0-5443-88ba-1cc74229b280"
+version = "2.0.2+0"
+
+[[deps.libpng_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
+git-tree-sha1 = "94d180a6d2b5e55e447e2d27a29ed04fe79eb30c"
+uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
+version = "1.6.38+0"
+
+[[deps.libvorbis_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
+git-tree-sha1 = "c45f4e40e7aafe9d086379e5578947ec8b95a8fb"
+uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
+version = "1.3.7+0"
+
+[[deps.nghttp2_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
+
+[[deps.p7zip_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
+
+[[deps.x264_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "4fea590b89e6ec504593146bf8b988b2c00922b2"
+uuid = "1270edf5-f2f9-52d2-97e9-ab00b5d0237a"
+version = "2021.5.5+0"
+
+[[deps.x265_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "ee567a171cce03570d77ad3a43e90218e38937a9"
+uuid = "dfaa095f-4041-5dcd-9319-2fabd8486b76"
+version = "3.5.0+0"
+
+[[deps.xkbcommon_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Wayland_jll", "Wayland_protocols_jll", "Xorg_libxcb_jll", "Xorg_xkeyboard_config_jll"]
+git-tree-sha1 = "ece2350174195bb31de1a63bea3a41ae1aa593b6"
+uuid = "d8fb68d0-12a3-5cfd-a85a-d49703b185fd"
+version = "0.9.1+5"
+"""
+
 # ╔═╡ Cell order:
-# ╠═4a96f5c9-37b4-4a8a-a6bd-8a4b4440eb49
-# ╠═2a145cba-26b0-43bd-9ab2-13818d246eae
-# ╠═e11c26c0-e534-45fc-bb1c-c0f2ce4016db
-# ╠═a8b06352-5265-4b89-bd82-b31f3cdac391
+# ╟─2a145cba-26b0-43bd-9ab2-13818d246eae
 # ╟─e6306a69-bd6a-4c01-9c6e-1cb523668019
-# ╟─86b15fb0-f112-4689-8663-8cc6c0a8fb2a
 # ╟─0f099c85-f039-477e-a70d-a3801cbb2656
 # ╟─48854a73-4896-4542-9ad4-15ae87418f1d
 # ╟─c1d40103-1710-4221-b414-0958c13fb95f
@@ -1275,6 +2633,7 @@ import Cairo
 # ╟─c841f2e2-b907-4f74-be57-968ca339bec4
 # ╟─e1b6b7a9-2d26-4f43-a0bd-54f7ad22a5b3
 # ╟─16febe07-7f52-4b74-b9d6-e20fd8b05ab3
+# ╟─620f31d6-45ec-470f-bf21-0eee32214666
 # ╟─d631887a-a222-402d-94bb-ecc6db6bea56
 # ╟─42f3e654-1836-491a-8119-b03b93822f45
 # ╟─cc0d4b1c-07b6-42ed-b1e2-80581a02ee6f
@@ -1315,19 +2674,19 @@ import Cairo
 # ╟─0b42d7bb-b9cf-42ef-aad7-5fc5d5918be3
 # ╟─622fdaac-87dd-4c22-85b9-470510566480
 # ╟─26e5d619-7119-49bc-8907-17ae0db424f5
+# ╟─3381001d-1120-4b88-ac01-5ca861f0a9be
 # ╟─a7d85b82-a705-4f3b-a371-06a87071335d
 # ╟─86b398d0-844d-4d06-9ede-79d618502cce
 # ╟─e2e4ec60-2737-4560-89b1-1e14a35044e8
 # ╟─aea490af-0bdd-4930-9ad2-7d9a13e08c46
 # ╟─7f84eed8-edd8-4f8e-a2b1-3ad862285934
-# ╟─c0078012-3d81-4584-a050-9a58802d08a9
 # ╟─ea458fa2-1f9f-46e1-88da-942034d0fa73
-# ╟─3381001d-1120-4b88-ac01-5ca861f0a9be
-# ╟─7524029c-2b7e-465e-9827-c993d6cdd34a
 # ╟─22cd8a36-c76f-4a8c-a8a2-e1924136012a
 # ╟─051548ff-dd39-4d55-ac53-e8e2bacec68e
 # ╟─e7b2e327-952e-4062-9193-19653eaee19c
+# ╟─b69f7d3f-cc92-4e9d-813d-55643a2a3b30
 # ╟─cb2c496c-e9dc-4666-b41b-d97cca377047
+# ╟─176f3757-9f03-4990-840e-2cebccd6abaa
 # ╟─78cb38db-b0b6-49f7-bcaf-1a2df58b8150
 # ╟─334db854-7805-4548-a414-ad7d215fe387
 # ╟─40956c0e-3833-4397-a4a8-c46e1890ef39
@@ -1365,22 +2724,13 @@ import Cairo
 # ╟─217e42d4-d226-42b2-bbd7-de85bc467ec4
 # ╟─0e1e5385-db28-474f-a14a-cf3fd1efcd94
 # ╟─681cdc3b-348f-45c4-9031-6298e81d995d
-# ╠═b3813f2d-4e9d-4789-a653-d28fd1b98eda
-# ╠═a9d19c74-1b83-4211-9c83-95ad1059d432
-# ╠═48427378-face-48eb-b635-f3f460a51e26
 # ╟─45d19896-ae93-4f9a-b1fe-bb143c7ff580
-# ╟─bf983162-66e3-40e0-afce-7f5b7728c490
-# ╠═bf357f44-54e2-49c0-b0b6-263abb1dbcb0
-# ╠═913bc173-8cfd-4680-ad13-36ea806acecb
-# ╠═675b3398-01d7-4949-bb0e-7cdf9b805c69
-# ╠═09df3c8e-3d25-4ba2-bf19-9947224dfca4
-# ╠═45ace908-90df-488c-9258-459c0344baae
-# ╠═de21a067-4587-461d-94bb-a295b6768f96
-# ╠═d85a2028-9b6f-4d6c-ba61-fecef3fd4876
-# ╠═4a7e56ac-a69f-4b1f-b585-3a92f43e42e8
+# ╟─4fd68654-bb38-499f-8e93-1872a3ded4db
 # ╟─f4f18b91-86f6-460c-b5de-4c52931a4098
+# ╟─2b231cca-a450-4773-867a-65c2d367ed1d
 # ╟─bfb9fcb5-2555-490a-9dcc-48cc91f8ab3c
-# ╠═2e17662d-24ed-40c9-93b0-4cef526c3a75
+# ╟─2e17662d-24ed-40c9-93b0-4cef526c3a75
+# ╟─db743480-4c67-465d-89a8-f0d2e6d0d152
 # ╠═21b11fac-5efb-4fd5-a1b0-e684d215a46c
 # ╟─3fa73e8a-fe46-475f-8346-e54f52c144f4
 # ╠═31c1c4fc-7476-4066-8462-bf18f8d69966
@@ -1388,6 +2738,7 @@ import Cairo
 # ╠═7f15cbb0-09be-46ee-852c-e43dde9bc4f5
 # ╟─cc4e7d7b-0596-4bc0-b23e-f6861fcd5260
 # ╠═8b03f2f1-f38c-4d5e-b778-0c3b4aaf910d
+# ╠═8faad9e1-8b29-4721-be29-fab2ce3c0e4c
 # ╠═a2129e65-7e73-4b42-9924-e88d60893ed2
 # ╟─4dd7f18c-2c0f-4405-bbfe-706699ea8958
 # ╟─faf2b47d-ab3b-4087-8cda-a564303c3bc9
@@ -1427,27 +2778,10 @@ import Cairo
 # ╟─1b9ff9b0-fd59-41fc-98b0-650eddf52ab2
 # ╠═6294a05c-46b1-47e4-9f3c-e741ab191a09
 # ╠═22175f6d-b984-4bfc-b776-5f6da6742e75
-# ╠═0139dbd2-486e-4b58-b656-6b5e06864cd1
-# ╟─f02617e1-8856-4369-a33d-c73e555435b2
+# ╟─c2e846cb-9f80-4ea1-8295-eb9dadd7b878
 # ╠═8a94551d-c82a-4db0-aaf0-3c5285ab0695
 # ╠═9eb46218-30c9-4109-9b32-9382fdee1081
-# ╟─1ef52a16-16f9-40c6-b61c-3a00dfa3ce9f
-# ╟─f1bc3f79-5c82-4e4f-b970-81ea33c4493b
-# ╠═0f8d63ac-f677-4889-b033-2a93f62be700
-# ╠═a74105a9-0a55-419b-895b-f3c2c831bffb
-# ╠═1465cd17-94f7-44b9-9179-4d7b39ae8c3a
-# ╠═c09975ac-4387-451d-98e7-800b8b14760c
-# ╟─2bf0685a-42ff-4d73-a009-6b1523ce7f4b
-# ╟─27ee8d46-710c-48fe-981c-6ab282843741
-# ╠═1224f1bc-9835-42eb-9b9c-4e5628575a4c
-# ╠═38cf5a1a-e995-4949-bd4e-deba6500cf00
-# ╟─c2e846cb-9f80-4ea1-8295-eb9dadd7b878
-# ╠═480e476f-c62e-49e6-b022-4f10c5b42e57
-# ╟─922f19c7-4d2f-48a7-9fff-4c63acb868ba
-# ╠═812aa02f-e8b0-4226-b2ef-5260884b2f09
-# ╠═fe69d633-1da8-4db5-9e30-eb19c4ec392f
-# ╠═23a5b68f-bc93-43a6-9072-7d929f5f62dc
-# ╠═342685aa-5159-11ec-13fd-fb8954106bca
+# ╠═957b8318-a4a6-45aa-839d-4f301ccf3c80
 # ╟─847051a1-48e9-4852-8f6d-9a5f604e9142
 # ╟─85228d6e-731d-465d-a000-672e7fff8aff
 # ╟─f66bd812-cfd0-4ff2-be21-71c38cb8ab79
@@ -1458,7 +2792,17 @@ import Cairo
 # ╠═528bfa77-d6da-4700-a72c-5afffdbe6139
 # ╟─1571a8ae-aae5-4af8-9b9c-6fe9e832a39e
 # ╠═c60ea349-6b96-4f70-8369-a92379338bbd
+# ╟─6c370435-4bca-42f6-975e-b633b5611444
+# ╠═79d21733-6d95-4d95-a337-261fb483f4f0
+# ╠═ba3ac294-5f74-4169-966f-f8d93b48253b
+# ╠═82119d4b-a08a-4c0e-b4ee-6a018e88731e
+# ╠═129135d6-9623-4e4f-812a-fcfe15d1e5f5
+# ╠═dc345279-84ca-4a4e-b37d-74a644e0a83a
+# ╠═74dc8276-35c3-43a1-a92b-b7116fef6bb1
+# ╠═63917a68-597e-40e5-a479-624fc80d7cc6
+# ╟─8d3c9ef3-1dec-4369-aa8c-ecff882ace6b
 # ╠═d8e9ae38-1569-497a-8506-a3e059ffc7ab
+# ╟─11f74d18-1fb4-405f-8923-195a861029f4
 # ╠═195ccd7e-f1ea-4704-9392-ffe596a756f9
 # ╠═f1814dfa-588d-49b8-a68e-bda185f3712f
 # ╠═5fbddde1-3594-43c4-9f56-c0ae258d926f
@@ -1499,6 +2843,23 @@ import Cairo
 # ╠═fdf13c95-6d95-4220-9759-5fea44eea274
 # ╠═669bed15-1c57-401b-bcfb-48b5a1520a58
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
+# ╟─e66e2a67-3dde-49d0-a009-1ef67d679375
+# ╟─1ef52a16-16f9-40c6-b61c-3a00dfa3ce9f
+# ╟─f1bc3f79-5c82-4e4f-b970-81ea33c4493b
+# ╠═0f8d63ac-f677-4889-b033-2a93f62be700
+# ╠═a74105a9-0a55-419b-895b-f3c2c831bffb
+# ╠═1465cd17-94f7-44b9-9179-4d7b39ae8c3a
+# ╠═c09975ac-4387-451d-98e7-800b8b14760c
+# ╟─342685aa-5159-11ec-13fd-fb8954106bca
+# ╟─2bf0685a-42ff-4d73-a009-6b1523ce7f4b
+# ╠═1224f1bc-9835-42eb-9b9c-4e5628575a4c
+# ╟─38cf5a1a-e995-4949-bd4e-deba6500cf00
+# ╟─27ee8d46-710c-48fe-981c-6ab282843741
+# ╠═480e476f-c62e-49e6-b022-4f10c5b42e57
+# ╟─922f19c7-4d2f-48a7-9fff-4c63acb868ba
+# ╠═812aa02f-e8b0-4226-b2ef-5260884b2f09
+# ╠═fe69d633-1da8-4db5-9e30-eb19c4ec392f
+# ╠═23a5b68f-bc93-43a6-9072-7d929f5f62dc
 # ╟─e8201e38-73dc-45d4-b93d-20f063d2ac3a
 # ╠═aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
 # ╠═1e2848d6-252b-4db5-9864-1f1886da9998
@@ -1511,3 +2872,5 @@ import Cairo
 # ╠═c41dc6d8-07ff-42fb-a54a-d1a1cf1cc223
 # ╠═70e85333-26b7-40b8-8fe1-7fb470b5f7b3
 # ╠═28f657cd-8ae7-4572-94fa-813797b59b25
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002
