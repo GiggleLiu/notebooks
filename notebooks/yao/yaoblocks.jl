@@ -15,13 +15,13 @@ macro bind(def, element)
 end
 
 # ╔═╡ 173125da-e761-11ec-25b9-fd328db9847e
-using Yao, YaoPlots, PlutoUI, BenchmarkTools
+using Yao, YaoPlots, PlutoUI, BenchmarkTools, KrylovKit
 
 # ╔═╡ 7eedb3d5-a3b6-40e5-8d2d-94623faf8d92
 TableOfContents()
 
 # ╔═╡ 84705dc3-dd2c-419b-983e-e6c879dd79da
-md"# YaoBlocks"
+md"# YaoBlocks - Hypercubic Linear algebra"
 
 # ╔═╡ caec900e-13fd-4340-8c18-5c1d4ee91a29
 md"## Definition and interfaces
@@ -48,6 +48,9 @@ md"""The only "must have" interface is `mat`."""
 
 # ╔═╡ 63e8fea9-01c7-4f78-a493-acff4f412820
 mat(H)
+
+# ╔═╡ 2cb1a718-c39a-4fa7-bf95-b75ddf8598e3
+mat(shift(0.5))
 
 # ╔═╡ 0afe664a-2ce5-4867-b6c2-8169d492c4bc
 md"""
@@ -108,6 +111,47 @@ vizcircuit(control(3, 3, 1=>shift(π/4)))
 # ╔═╡ f7b9023f-c019-49aa-ba7f-24c5ccf327ee
 mat(control(3, 3, 1=>shift(π/4)))
 
+# ╔═╡ eac02385-a859-4ac7-8fa3-c52798e673af
+md"**Yao blocks are fast**"
+
+# ╔═╡ 799fbfd4-f4a4-47ff-a7c1-9ccbbc4d5de4
+let
+	x = @bind run_benchmark_mat CheckBox()
+	md" $x run the benchmark"
+end
+
+# ╔═╡ 8e517653-4657-4bbf-b606-956276d3b45f
+if run_benchmark_mat
+	@benchmark mat(control(16, 7, 3=>shift(π/4)))
+end
+
+# ╔═╡ 94c62812-6531-4b62-b9fa-6bbdcf37be56
+if run_benchmark_mat
+	@benchmark kron(
+		kron(
+			kron(Diagonal(ones(ComplexF64, 2^9)), Diagonal(mat(ConstGate.P1))),
+				Diagonal(ones(ComplexF64, 2^3))
+		), 
+		kron(mat(ComplexF64, shift(π/4)), Diagonal(ones(ComplexF64, 2^2)))
+	) +
+	kron(
+		kron(Diagonal(ones(ComplexF64, 2^9)), Diagonal(mat(ConstGate.P0))),
+			Diagonal(ones(ComplexF64, 2^6))
+	)
+end
+
+# ╔═╡ 97893414-d701-487e-9af1-09c06279c209
+md"**Yao block is general purposed**"
+
+# ╔═╡ 9be2d678-5557-471c-a78d-a3d38552d384
+multi_control = control(10, (2, -6, 4), (9, 1)=>chain(put(2, 1=>X), rot(kron(X, X), 0.3)))
+
+# ╔═╡ 1213dcc2-535b-4a1a-9582-fce6ef1ae556
+vizcircuit(multi_control)
+
+# ╔═╡ b3508525-ed3a-41f1-8ab8-6ebf2e055ac5
+mat(multi_control)
+
 # ╔═╡ 2d1d8978-90f4-4615-9d70-9c885154c269
 md"""
 `ChainBlock` is a composite block for matrix multiplication (reversed order), it is defined as:
@@ -129,49 +173,29 @@ mat(qft3_first)
 # ╔═╡ 142859a0-0dd1-4481-a250-033382ce71c4
 mat(qft3)
 
-# ╔═╡ f40d944e-0125-4e5f-833c-2189e4ded245
-md"### Reasons to use YaoBlocks"
-
-# ╔═╡ 799fbfd4-f4a4-47ff-a7c1-9ccbbc4d5de4
-let
-	x = @bind run_benchmark_mat CheckBox()
-	md" $x run the benchmark"
-end
-
-# ╔═╡ 8e517653-4657-4bbf-b606-956276d3b45f
-if run_benchmark_mat
-	@benchmark mat(control(16, 7, 3=>H))
-end
-
-# ╔═╡ 94c62812-6531-4b62-b9fa-6bbdcf37be56
-if run_benchmark_mat
-	@benchmark kron(
-		kron(
-			kron(Diagonal(ones(ComplexF64, 2^9)), SparseMatrixCSC(mat(ConstGate.P1))),
-				Diagonal(ones(ComplexF64, 2^3))
-		), 
-		kron(SparseMatrixCSC(mat(ComplexF64, H)), Diagonal(ones(ComplexF64, 2^2)))
-	) +
-	kron(
-		kron(Diagonal(ones(ComplexF64, 2^9)), SparseMatrixCSC(mat(ConstGate.P0))),
-			Diagonal(ones(ComplexF64, 2^6))
-	)
-end
-
-# ╔═╡ 9be2d678-5557-471c-a78d-a3d38552d384
-circuit1 = control(10, (2, -6, 4), (9, 1)=>chain(put(2, 1=>X), rot(kron(X, X), 0.3)))
-
-# ╔═╡ 1213dcc2-535b-4a1a-9582-fce6ef1ae556
-vizcircuit(circuit1)
-
-# ╔═╡ b3508525-ed3a-41f1-8ab8-6ebf2e055ac5
-mat(circuit1)
-
 # ╔═╡ e2020a46-03ac-4459-b7aa-8872ecb8a859
 md"### Use matrix as a block"
 
 # ╔═╡ 5fc34d66-bf11-4f18-80eb-ddc21e313830
+random_gate = matblock(rand_unitary(2); tag="random gate")
 
+# ╔═╡ 5a13c9ea-f20b-4b17-acf3-34502a795ee5
+mat(put(3, 2=>random_gate))
+
+# ╔═╡ 1c38da2b-411d-489e-96c1-ee43e66d60aa
+vizcircuit(put(3, 2=>random_gate))
+
+# ╔═╡ f1ca7769-5f45-49ab-8811-5ece0de21a58
+md"### Blocks for d-level systems"
+
+# ╔═╡ 247ce329-9960-49f6-812f-d537923606f9
+block_3level = matblock(rand_unitary(3); nlevel=3, tag="3 level")
+
+# ╔═╡ bf635286-f17a-43ad-af6d-f1dca4855ff8
+mat(put(4, 2=>block_3level))
+
+# ╔═╡ 12180746-4e54-4857-9fb3-60f60b8772c2
+vizcircuit(put(4, 2=>block_3level))
 
 # ╔═╡ 35bd48f3-a871-429a-bcce-fa7b1837c9cf
 md"### Block properties"
@@ -185,23 +209,50 @@ md"1. Hermitian: ``A^\dagger = A``"
 # ╔═╡ 932f7b94-32ab-4f4a-9dcf-32e7acd52b1d
 ishermitian(X)
 
+# ╔═╡ cbc047b1-c2fa-4777-bb24-3361addd25e6
+md"Only Hermitian operators are allowed in time evolution."
+
+# ╔═╡ 16b49967-d21f-49f3-bdcc-ea0a598e2491
+md"""
+```math
+\texttt{time\_evolve(H, t)} = e^{-iHt}
+```
+"""
+
+# ╔═╡ 14c9e171-9a55-4967-a35c-dae6cebaa509
+time_evolve(ConstGate.S, 0.4)
+
+# ╔═╡ 3c186694-ffa1-490c-9009-74ed2916ce40
+mat(ConstGate.S)  # this is not hermitian
+
+# ╔═╡ 02b9e54f-30ff-4c21-a156-6dc18ea220e1
+md"Hermitian operators are not changed by conjugate transpose"
+
+# ╔═╡ de970766-3803-46d7-9d7c-8a4c5289cb15
+qft3'
+
+# ╔═╡ 29c7a849-fbed-4042-9e7b-2933553d0c01
+vizcircuit(qft3')
+
+# ╔═╡ 051ed1d9-25b2-46be-b484-2310d7e6af30
+md"We can verify the correctness by checking the operator fidelity"
+
+# ╔═╡ e8ffe842-eaa0-4a67-907f-21fe16cfe81a
+operator_fidelity(qft3' * qft3, igate(3))
+
+# ╔═╡ 4fbc0fdc-6eca-4f07-9853-52d9a5c29bb4
+md"Operator fidelity is defined as
+```math
+F(A, B) = \frac{1}{D}|{\rm Tr}(A, B)|
+```
+where ``D`` is the Hiltert space dimension.
+"
+
 # ╔═╡ b6989319-f6aa-4d1c-b9cc-e4438a2eef5c
 md"2. Reflexive: ``A^2 = \mathbb{1}``"
 
 # ╔═╡ 8db5df39-1534-4752-b3af-b84527a4dd43
 isreflexive(X)
-
-# ╔═╡ 05192a51-b578-43d3-a268-ab6bf4a5ffb9
-md"3. Unitary: ``A A^\dagger = \mathbb{1}``"
-
-# ╔═╡ 0b6d30ec-4ab1-4c96-9cd4-31cc30222483
-isunitary(X)
-
-# ╔═╡ 04e1997e-ada3-4caa-8735-511422ab5c99
-md"4. Commutative: ``[A, B] = \mathbb{0}``"
-
-# ╔═╡ 04b12adc-b994-4cd1-8297-8b0fdc0a008b
-iscommute(X, Y)
 
 # ╔═╡ 4b3ef73f-c8b4-43a1-8d98-2346a2d67f1a
 md"""
@@ -210,14 +261,38 @@ md"""
 ```
 """
 
+# ╔═╡ a75b23bc-d3e1-4dba-bede-1f59b0a45af5
+md"``\exp(iG\theta/2) = \uparrow``"
+
 # ╔═╡ c3df22e6-fa28-48e4-bd6e-cab00099d44a
 mat(rot(X, 0.4))
 
-# ╔═╡ 1c73d830-2139-4132-a37c-8d1dc2dc073d
+# ╔═╡ d4c491cd-de37-4c49-bbc7-d4d5db17374a
+md"The Heisenberg Hamiltonian is hermitian"
 
+# ╔═╡ e4b86d19-3d89-4410-99cb-d79feaa96e11
+md"Only reflexive operators are allowed in rotation gate as the generator."
 
 # ╔═╡ a04b4e93-d08a-4105-b27c-d5bee49296ff
 rot(X + Y, 0.5)
+
+# ╔═╡ ff0d1a92-5d70-41e7-a64a-65dc1e9b8e9a
+X + Y
+
+# ╔═╡ 05192a51-b578-43d3-a268-ab6bf4a5ffb9
+md"3. Unitary: ``A A^\dagger = \mathbb{1}``"
+
+# ╔═╡ 0b6d30ec-4ab1-4c96-9cd4-31cc30222483
+isunitary(X)
+
+# ╔═╡ 4c4925a2-2458-4423-858f-f13d819a207e
+md"Unitary is required by the back propagation algorithm (will not be covered today)."
+
+# ╔═╡ 04e1997e-ada3-4caa-8735-511422ab5c99
+md"4. Commutative: ``[A, B] = \mathbb{0}``"
+
+# ╔═╡ 04b12adc-b994-4cd1-8297-8b0fdc0a008b
+iscommute(X, Y)
 
 # ╔═╡ 7b527771-a8d2-4c0f-9987-3a033e4718e7
 md"These properties does not require calling the `mat`, unless it falls back."
@@ -228,49 +303,301 @@ iscommute(put(1000, 4=>X), put(1000, 6=>Y))
 # ╔═╡ 09568a3a-d561-459c-adf4-cf49346f7294
 iscommute(put(1000, 4=>X), put(1000, 4=>Y))
 
-# ╔═╡ 2362a3ae-7aeb-43a4-9707-09f4813dd6c1
-ishermitian(put(1000, 4=>X))
-
-# ╔═╡ bf0d0693-02a8-4ebb-b7c9-d3304fc88bfc
-EasyBuild.heisenberg(3)
-
 # ╔═╡ 98e69c16-63c3-4530-a480-59094f7fd0f6
 ishermitian(EasyBuild.heisenberg(1000))
 
-# ╔═╡ f1ca7769-5f45-49ab-8811-5ece0de21a58
-md"## Blocks for qudits"
-
-# ╔═╡ 247ce329-9960-49f6-812f-d537923606f9
-
+# ╔═╡ bda52396-f087-42f6-8c95-e3ba4b846f98
+EasyBuild.heisenberg(3)
 
 # ╔═╡ 2d43b615-463f-4717-856b-3bef30566622
-md"## Apply a block to a register or density matrix"
+md"## Run a circuit"
+
+# ╔═╡ ef70a6af-56b0-4722-8b3e-039eb40227bc
+md"### Run circuit on register"
 
 # ╔═╡ 119c0675-939b-42be-8508-e077573373cb
-reg = rand_state(3)
+reg = ghz_state(3)
+
+# ╔═╡ 9ac72975-10bc-4f99-aced-5142c2931174
+@with_terminal print_table(reg)
 
 # ╔═╡ 33ddcca2-58af-4163-b6bd-139565d0b245
+reg2 = apply(reg, qft3)
 
+# ╔═╡ 117d2a17-296e-4252-a803-fad86b1496a3
+md"Note: The inplace version `apply!` does not allocate and is faster, but Pluto does not track inplace variables very well."
+
+# ╔═╡ c92bfbd4-2c72-4ce0-9bc7-aa671c05aa76
+@with_terminal print_table(reg2)
+
+# ╔═╡ 7ce66e78-d1d0-4b98-aa28-1ebce3cff27a
+md"##### Run a subroutine"
+
+# ╔═╡ 2ef0d491-f462-44fc-ae50-21901f770046
+reg16 = rand_state(16)
+
+# ╔═╡ d442292e-e6f2-49d3-a1f4-db2d72e27819
+@time apply(reg16, put(16, 1:8=>EasyBuild.qft_circuit(8)))
+
+# ╔═╡ d9e59f9a-4231-48b0-b28b-20fda13db4f2
+@time apply(reg16, subroutine(16, EasyBuild.qft_circuit(8), 1:8))
+
+# ╔═╡ ccf2576a-35a7-4ab3-95ac-c026fba6cc22
+focus!(rand_state(10), (6,2,3)).state
+
+# ╔═╡ f696c385-bcfd-416c-9078-fd74ff0d7a8b
+md"A subroutine is similar to `put`, but runs faster when the sub-circuit size is large. This is because they use different algorithms."
+
+# ╔═╡ 7c7e0ece-26a2-4f1b-a606-5d7d058b686b
+md"### Run circuit on density matrix"
+
+# ╔═╡ 7491bd3d-a212-43ba-8ad2-023468af6cb8
+md"reduced density can be obtained by calling the `density_matrix` method."
+
+# ╔═╡ d23b4fa0-82ba-4f8c-9aa8-5293b7421bfe
+rho = density_matrix(reg, (2,3))
+
+# ╔═╡ a1ba47de-699c-42a1-9d96-990163e21d1a
+rho2 = apply(rho, put(2, 2=>X))
+
+# ╔═╡ 8c12910d-8b97-4d00-956c-bf12253168ba
+md"Density matrix supports unitary channel."
+
+# ╔═╡ a8f7650e-2527-408f-9c44-ff0d67b52655
+channel = unitary_channel([kron(X,Y), kron(Y,Z), kron(Z,X)], [0.4, 0.3, 0.3])
+
+# ╔═╡ 317c4f26-861b-468e-9824-f1e0c3501b85
+apply(rho, channel)
+
+# ╔═╡ 8d7896a5-a452-48a0-8e37-1c58fff53fa8
+md"""
+Here, `kron` is a composite block that defined as
+```math
+\texttt{kron}(G_1, G_2, \ldots, G_n) = G_n \otimes G_{n-1} \otimes \ldots \otimes G_1
+```
+A `unitary_channel` does not have a matrix representation. When applying a unitary channel `unitary_channel(U, p)` to a density matrix, it effectively does
+```math
+\phi(\rho) = \sum_i p_i U_i ρ U_i^\dagger
+```
+"""
 
 # ╔═╡ d861068a-5f1c-4800-9f02-f9d61137f30e
 md"## Manipulate the block tree"
 
+# ╔═╡ cb641f94-671d-4854-a45b-83c83c9dca07
+md"### Recurse over the block tree"
+
+# ╔═╡ 9683320e-07e4-4077-944f-cbbed4e13219
+md"""Yao's block representation (QBIR) defines a tree, its siblings can be accessed with the `subblocks` function."""
+
+# ╔═╡ 2858626d-c734-473e-b21d-66a818a87fb8
+subblocks(qft3)
+
+# ╔═╡ 21046c27-1f21-4fde-8376-8c0567be461c
+subblocks(subblocks(qft3)[1])
+
+# ╔═╡ 45b73eb4-b069-4c9e-906b-4e24702e2186
+subblocks(subblocks(subblocks(qft3)[1])[1])
+
+# ╔═╡ 254f7bc4-8c78-41ed-a7cd-cb24a1ad1397
+subblocks(subblocks(subblocks(subblocks(qft3)[1])[1])[1])
+
+# ╔═╡ cc3f7217-6f9a-43da-9124-e221d5195ba9
+begin
+	decompose(x::HGate)= Rz(0.5π)*Rx(0.5π)*Rz(0.5π)
+	decompose(x::AbstractBlock)= chsubblocks(x, decompose.(subblocks(x)))
+	vizcircuit(decompose(qft3); scale=0.65)
+end
+
+# ╔═╡ 9087fb14-8c2e-4d37-a6c7-12131536921a
+md"Some methods are implemented by searching this tree in depth first order"
+
+# ╔═╡ ad0bdf91-bf3d-4c82-9532-cd880cec3665
+gatecount(qft3)
+
+# ╔═╡ c2c0db82-2b70-41c1-8b04-a11fa3c964d0
+parameters(qft3)
+
+# ╔═╡ d15f73a7-75c2-4d60-8007-c6b492f9b7cd
+dispatch(qft3, [1.0, 2.0, 3.0])
+
+# ╔═╡ f12696ca-4739-4081-ab64-2ac1a8c83fe7
+md"### Simplifying the block tree"
+
+# ╔═╡ 0801fd0a-7216-44b8-a5fd-820db4b742e5
+md"""
+If you feel hard to handle two many types, you can compile away non-essential composite blocks like `repeat` and `kron` to basic types.
+"""
+
+# ╔═╡ fd2049d0-bf49-4f91-8198-fabf948e112a
+Optimise.to_basictypes(kron(6, 1=>X, (2,3)=>SWAP))
+
+# ╔═╡ 3d9d24ec-c7f1-45a1-833c-52942079f290
+kron(6, 1=>X, (2,3)=>SWAP)
+
+# ╔═╡ 790f16b5-ffab-45c9-b778-77f693d6bed5
+Optimise.to_basictypes(repeat(10, X, (5,2)))
+
+# ╔═╡ 50e4ab2e-8735-4176-8098-1955e1061e6a
+md"However, these function does not propagate."
+
+# ╔═╡ 8b209691-41e5-41bd-bb72-b06a0ff745ab
+Optimise.to_basictypes(chain(repeat(10, X, (5,2))))
+
+# ╔═╡ 15cf8e86-60b5-4a73-ac33-4317c2fc4b7b
+md"One apply these functions as the simplification rules repeatedly through the tree"
+
+# ╔═╡ b415cc69-5e54-42a3-9d2f-697fcc355173
+Optimise.simplify(chain(repeat(10, X, (5,2))), rules=[Optimise.to_basictypes])
+
+# ╔═╡ a1e1bf5a-6938-4942-8624-0b6021acf3eb
+md"Apply this rule to the Heisenberg Hamiltonian"
+
+# ╔═╡ 30891f23-c649-4fd7-b06a-68d18806c9d0
+Optimise.simplify(EasyBuild.heisenberg(3), rules=[Optimise.to_basictypes])
+
+# ╔═╡ 6d5ddcad-7e0f-4c5a-b740-0f11e60ff92d
+md"You can also remove nested `ChainBlock` or `Add` block"
+
+# ╔═╡ d24e0ff8-419f-4f14-ab64-aaf5ec02bbdf
+Optimise.simplify(EasyBuild.heisenberg(3), rules=[Optimise.to_basictypes, Optimise.eliminate_nested])
+
+# ╔═╡ 7ab63a69-1415-4772-adf1-d2ad95ea6323
+md"## Play with Hamiltonians"
+
+# ╔═╡ 9661f132-906e-4d48-8f11-00e91d0421bd
+h30 = EasyBuild.heisenberg(30)
+
+# ╔═╡ f371af51-c67e-4d19-90b9-abe3abb8214d
+md"### Block indexing"
+
+# ╔═╡ 6ef05e08-a91f-4a38-81da-09fc11826687
+# j = DitStr{2}(rand(0:1, 30))  # programming way
+# j = dit"0000000000_0000100000_0000000000;2"  # dit string
+j = bit"0000000000_0000100000_0000000000"
+
+# ╔═╡ 16e1e537-e00f-4d01-ac4d-ba088d0c86a1
+h30[j, j]
+
+# ╔═╡ 4f2835ec-1c06-4ba1-be9d-39866878457b
+h30[:, j]
+
+# ╔═╡ 9ad3aa3e-5aa3-4ec3-963d-ea1530e95859
+h30[:, h30[:, j]]
+
+# ╔═╡ d9f499ec-35e8-44c9-9124-20257ab3126e
+let
+	gadget = @bind num_propagate Slider(0:20; show_value=true)
+	md"""num_propagate $gadget"""
+end
+
+# ╔═╡ c73b22d1-a4df-44cb-bbbc-a2b89c41bd06
+let J = EntryTable([j], [1.0+0im])
+	for i=1:num_propagate
+		J = h30[:,J]
+	end
+	J
+end
+
+# ╔═╡ e0402159-f24a-48a4-af52-97ed545207e6
+md"### The ground state"
+
+# ╔═╡ 91c4e3a5-2ae2-4653-984f-1d6c802e04cb
+md"### Time Evolution"
+
+# ╔═╡ 6553204d-9e51-4cfa-8765-35d446889c9d
+h15 = EasyBuild.heisenberg(15);
+
+# ╔═╡ 2f38c792-aa13-41bd-a43e-f5bfdd9978f3
+@time mat(h15)
+
+# ╔═╡ cb934cb3-7703-4637-8c7a-dd5d027c6463
+@time KrylovKit.eigsolve(mat(h15), statevec(rand_state(15)), 1, :SR)
+
+# ╔═╡ 5101fa6a-f27b-405b-ba77-7468e558166c
+@time let
+	reg = rand_state(15)
+	apply(reg, time_evolve(h15, 0.5))
+end
+
+# ╔═╡ 89cb4078-c993-4b26-81ce-2551f8f3c843
+md"For larger Hamiltonian, we prefer storing the Hamiltonian matrix in the memory instead of computing the terms on the fly."
+
+# ╔═╡ 2b38ee10-7110-4306-810e-969c7bfdc0c0
+cache(h15)
+
+# ╔═╡ d3ce1536-bcb5-4a76-b1f3-a7a7aa50dc9a
+@time let
+	reg = rand_state(15)
+	apply(reg, time_evolve(cache(h15), 0.5))
+end
+
+# ╔═╡ 6d9263d5-0ef7-4ee9-a045-7324c4f2a5c9
+md"## Eigen basis and measurement"
+
+# ╔═╡ 4c6b0ade-7662-4c17-8d29-63d3e6f67371
+YaoBlocks.eigenbasis(kron(4, 4=>X, 1=>X))
+
+# ╔═╡ 89137cf0-be2a-417c-a7fb-9b87b01b8601
+let
+	reg = rand_state(4)
+	res = measure!(reg)
+	print_table(reg)
+	res
+end
+
+# ╔═╡ b438d59a-b124-4d64-b006-53492512ee04
+let
+	reg = rand_state(4)
+	res = measure!(kron(4, 4=>X, 1=>X), reg)
+	print_table(apply(reg, kron(4, 4=>H, 1=>H)))  # print on the eigenbasis
+	res  # the state projected to that eigenbasis
+end
+
 # ╔═╡ 70a83f9a-ee22-48da-9294-49e17992531f
 md"## Extend the block system"
 
-# ╔═╡ 9bfe51cf-4cc1-4297-b5c2-52cc684852fc
-md"## Indexing, filter, eigen basis and operator fidelity"
+# ╔═╡ 04c0a186-0466-45ec-8185-82404cc83851
+md"""
+**General purposed**
+* `YaoAPI.mat(T, block) -> AbstractMatrix`, matrix representation
+* `YaoBlocks.unsafe_apply!(reg, block)`, allocation free method to apply a gate (optional)
+* `YaoBlocks.print_block(io, block)`, better printing (optional)
+**Composite blocks**
+* `YaoAPI.occupied_locs(block) -> tuple`
+* `YaoAPI.subblocks(block) -> tuple or vector`
+* `YaoAPI.chsubblocks(block, subblocks)`
+
+**Parameter management API**
+* `setiparams!(block, parameters)`, setter of intrinsic parameters
+* `getiparams(block) -> tuple`, getter of intrinsic parameters
+"""
+
+# ╔═╡ 2ba6c570-fc5e-49a1-b4cd-460b6ab625e0
+md"""
+An exmaple:
+[https://github.com/QuantumBFS/Yao.jl/blob/master/src/EasyBuild/block_extension/FSimGate.jl](https://github.com/QuantumBFS/Yao.jl/blob/master/src/EasyBuild/block_extension/FSimGate.jl)
+"""
+
+# ╔═╡ 4eaa666d-a269-4513-bb28-0c55367e8921
+md"## News
+* Aqua test: [https://github.com/QuantumBFS/Yao.jl/issues/381](https://github.com/QuantumBFS/Yao.jl/issues/381)
+* Next time: Bloqade [https://github.com/QuEraComputing/Bloqade.jl](https://github.com/QuEraComputing/Bloqade.jl)
+* Announce of Bounty issue: [https://github.com/QuantumBFS/Yao.jl/issues/403](https://github.com/QuantumBFS/Yao.jl/issues/403)
+"
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 YaoPlots = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
 
 [compat]
 BenchmarkTools = "~1.3.1"
+KrylovKit = "~0.5.4"
 PlutoUI = "~0.7.39"
 Yao = "~0.8.1"
 YaoPlots = "~0.7.4"
@@ -282,7 +609,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.0-rc1"
 manifest_format = "2.0"
-project_hash = "7c6992c8ed29bae6fb7094d3a71b129a7b157761"
+project_hash = "97ca8d6f76931008405ec0642f5c87492c4f126a"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -528,6 +855,12 @@ git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.3"
 
+[[deps.KrylovKit]]
+deps = ["LinearAlgebra", "Printf"]
+git-tree-sha1 = "49b0c1dd5c292870577b8f58c51072bd558febb9"
+uuid = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
+version = "0.5.4"
+
 [[deps.LLVM]]
 deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
 git-tree-sha1 = "e7e9184b0bf0158ac4e4aa9daf00041b5909bf1a"
@@ -587,9 +920,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LuxurySparse]]
 deps = ["InteractiveUtils", "LinearAlgebra", "Random", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "20a46016f62d84ceece6ae08418df628f5453333"
+git-tree-sha1 = "2ba5b1c20266ff288b0e3ecf718a77be5716ca90"
 uuid = "d05aeea4-b7d4-55ac-b691-9e7fabb07ba2"
-version = "0.6.12"
+version = "0.6.13"
 
 [[deps.MLStyle]]
 git-tree-sha1 = "2041c1fd6833b3720d363c3ea8140bffaf86d9c4"
@@ -876,6 +1209,7 @@ version = "17.4.0+0"
 # ╟─31619f1a-784b-48c4-9755-ff41d273f46f
 # ╟─23a0f167-481e-4de4-b175-b96ee1923d7d
 # ╠═63e8fea9-01c7-4f78-a493-acff4f412820
+# ╠═2cb1a718-c39a-4fa7-bf95-b75ddf8598e3
 # ╟─0afe664a-2ce5-4867-b6c2-8169d492c4bc
 # ╠═f2391ac6-8bc3-40c3-bb08-4604e4fd8dda
 # ╠═221f1d4d-814a-4d51-9aa5-1a963acebf23
@@ -889,47 +1223,131 @@ version = "17.4.0+0"
 # ╠═ef0f8625-55c0-4516-8ad2-d23fcd8ef345
 # ╠═b2506c8a-618b-4c82-8f34-f3ee1dad3159
 # ╠═f7b9023f-c019-49aa-ba7f-24c5ccf327ee
+# ╟─eac02385-a859-4ac7-8fa3-c52798e673af
+# ╟─799fbfd4-f4a4-47ff-a7c1-9ccbbc4d5de4
+# ╠═8e517653-4657-4bbf-b606-956276d3b45f
+# ╠═94c62812-6531-4b62-b9fa-6bbdcf37be56
+# ╟─97893414-d701-487e-9af1-09c06279c209
+# ╠═9be2d678-5557-471c-a78d-a3d38552d384
+# ╠═1213dcc2-535b-4a1a-9582-fce6ef1ae556
+# ╠═b3508525-ed3a-41f1-8ab8-6ebf2e055ac5
 # ╟─2d1d8978-90f4-4615-9d70-9c885154c269
 # ╠═1c2f0105-f482-488c-bafb-c1405c6ca3ee
 # ╠═392a37a5-2ca2-4c58-88e9-a6eafcbdd622
 # ╠═5256b92a-7a5b-4faf-9c0c-d1d8ace35b65
 # ╠═142859a0-0dd1-4481-a250-033382ce71c4
-# ╟─f40d944e-0125-4e5f-833c-2189e4ded245
-# ╟─799fbfd4-f4a4-47ff-a7c1-9ccbbc4d5de4
-# ╠═8e517653-4657-4bbf-b606-956276d3b45f
-# ╠═94c62812-6531-4b62-b9fa-6bbdcf37be56
-# ╠═9be2d678-5557-471c-a78d-a3d38552d384
-# ╠═1213dcc2-535b-4a1a-9582-fce6ef1ae556
-# ╠═b3508525-ed3a-41f1-8ab8-6ebf2e055ac5
 # ╟─e2020a46-03ac-4459-b7aa-8872ecb8a859
 # ╠═5fc34d66-bf11-4f18-80eb-ddc21e313830
+# ╠═5a13c9ea-f20b-4b17-acf3-34502a795ee5
+# ╠═1c38da2b-411d-489e-96c1-ee43e66d60aa
+# ╟─f1ca7769-5f45-49ab-8811-5ece0de21a58
+# ╠═247ce329-9960-49f6-812f-d537923606f9
+# ╠═bf635286-f17a-43ad-af6d-f1dca4855ff8
+# ╠═12180746-4e54-4857-9fb3-60f60b8772c2
 # ╟─35bd48f3-a871-429a-bcce-fa7b1837c9cf
 # ╠═19247c86-4093-4e01-87f4-249b98938ef9
 # ╟─58f78c85-b403-4b61-a228-0876785aa662
 # ╠═932f7b94-32ab-4f4a-9dcf-32e7acd52b1d
+# ╟─cbc047b1-c2fa-4777-bb24-3361addd25e6
+# ╟─16b49967-d21f-49f3-bdcc-ea0a598e2491
+# ╠═14c9e171-9a55-4967-a35c-dae6cebaa509
+# ╠═3c186694-ffa1-490c-9009-74ed2916ce40
+# ╟─02b9e54f-30ff-4c21-a156-6dc18ea220e1
+# ╠═de970766-3803-46d7-9d7c-8a4c5289cb15
+# ╠═29c7a849-fbed-4042-9e7b-2933553d0c01
+# ╟─051ed1d9-25b2-46be-b484-2310d7e6af30
+# ╠═e8ffe842-eaa0-4a67-907f-21fe16cfe81a
+# ╟─4fbc0fdc-6eca-4f07-9853-52d9a5c29bb4
 # ╟─b6989319-f6aa-4d1c-b9cc-e4438a2eef5c
 # ╠═8db5df39-1534-4752-b3af-b84527a4dd43
+# ╟─4b3ef73f-c8b4-43a1-8d98-2346a2d67f1a
+# ╟─a75b23bc-d3e1-4dba-bede-1f59b0a45af5
+# ╠═c3df22e6-fa28-48e4-bd6e-cab00099d44a
+# ╟─d4c491cd-de37-4c49-bbc7-d4d5db17374a
+# ╟─e4b86d19-3d89-4410-99cb-d79feaa96e11
+# ╠═a04b4e93-d08a-4105-b27c-d5bee49296ff
+# ╠═ff0d1a92-5d70-41e7-a64a-65dc1e9b8e9a
 # ╟─05192a51-b578-43d3-a268-ab6bf4a5ffb9
 # ╠═0b6d30ec-4ab1-4c96-9cd4-31cc30222483
+# ╟─4c4925a2-2458-4423-858f-f13d819a207e
 # ╟─04e1997e-ada3-4caa-8735-511422ab5c99
 # ╠═04b12adc-b994-4cd1-8297-8b0fdc0a008b
-# ╟─4b3ef73f-c8b4-43a1-8d98-2346a2d67f1a
-# ╟─c3df22e6-fa28-48e4-bd6e-cab00099d44a
-# ╠═1c73d830-2139-4132-a37c-8d1dc2dc073d
-# ╠═a04b4e93-d08a-4105-b27c-d5bee49296ff
 # ╟─7b527771-a8d2-4c0f-9987-3a033e4718e7
 # ╠═40148613-9d2a-47b2-b696-f2999ec2cf14
 # ╠═09568a3a-d561-459c-adf4-cf49346f7294
-# ╠═2362a3ae-7aeb-43a4-9707-09f4813dd6c1
-# ╠═bf0d0693-02a8-4ebb-b7c9-d3304fc88bfc
 # ╠═98e69c16-63c3-4530-a480-59094f7fd0f6
-# ╟─f1ca7769-5f45-49ab-8811-5ece0de21a58
-# ╠═247ce329-9960-49f6-812f-d537923606f9
+# ╠═bda52396-f087-42f6-8c95-e3ba4b846f98
 # ╟─2d43b615-463f-4717-856b-3bef30566622
+# ╟─ef70a6af-56b0-4722-8b3e-039eb40227bc
 # ╠═119c0675-939b-42be-8508-e077573373cb
+# ╠═9ac72975-10bc-4f99-aced-5142c2931174
 # ╠═33ddcca2-58af-4163-b6bd-139565d0b245
+# ╟─117d2a17-296e-4252-a803-fad86b1496a3
+# ╠═c92bfbd4-2c72-4ce0-9bc7-aa671c05aa76
+# ╟─7ce66e78-d1d0-4b98-aa28-1ebce3cff27a
+# ╠═2ef0d491-f462-44fc-ae50-21901f770046
+# ╠═d442292e-e6f2-49d3-a1f4-db2d72e27819
+# ╠═d9e59f9a-4231-48b0-b28b-20fda13db4f2
+# ╠═ccf2576a-35a7-4ab3-95ac-c026fba6cc22
+# ╟─f696c385-bcfd-416c-9078-fd74ff0d7a8b
+# ╟─7c7e0ece-26a2-4f1b-a606-5d7d058b686b
+# ╟─7491bd3d-a212-43ba-8ad2-023468af6cb8
+# ╠═d23b4fa0-82ba-4f8c-9aa8-5293b7421bfe
+# ╠═a1ba47de-699c-42a1-9d96-990163e21d1a
+# ╟─8c12910d-8b97-4d00-956c-bf12253168ba
+# ╠═a8f7650e-2527-408f-9c44-ff0d67b52655
+# ╠═317c4f26-861b-468e-9824-f1e0c3501b85
+# ╟─8d7896a5-a452-48a0-8e37-1c58fff53fa8
 # ╟─d861068a-5f1c-4800-9f02-f9d61137f30e
+# ╟─cb641f94-671d-4854-a45b-83c83c9dca07
+# ╟─9683320e-07e4-4077-944f-cbbed4e13219
+# ╠═2858626d-c734-473e-b21d-66a818a87fb8
+# ╠═21046c27-1f21-4fde-8376-8c0567be461c
+# ╠═45b73eb4-b069-4c9e-906b-4e24702e2186
+# ╠═254f7bc4-8c78-41ed-a7cd-cb24a1ad1397
+# ╠═cc3f7217-6f9a-43da-9124-e221d5195ba9
+# ╟─9087fb14-8c2e-4d37-a6c7-12131536921a
+# ╠═ad0bdf91-bf3d-4c82-9532-cd880cec3665
+# ╠═c2c0db82-2b70-41c1-8b04-a11fa3c964d0
+# ╠═d15f73a7-75c2-4d60-8007-c6b492f9b7cd
+# ╟─f12696ca-4739-4081-ab64-2ac1a8c83fe7
+# ╟─0801fd0a-7216-44b8-a5fd-820db4b742e5
+# ╠═fd2049d0-bf49-4f91-8198-fabf948e112a
+# ╠═3d9d24ec-c7f1-45a1-833c-52942079f290
+# ╠═790f16b5-ffab-45c9-b778-77f693d6bed5
+# ╟─50e4ab2e-8735-4176-8098-1955e1061e6a
+# ╠═8b209691-41e5-41bd-bb72-b06a0ff745ab
+# ╟─15cf8e86-60b5-4a73-ac33-4317c2fc4b7b
+# ╠═b415cc69-5e54-42a3-9d2f-697fcc355173
+# ╟─a1e1bf5a-6938-4942-8624-0b6021acf3eb
+# ╠═30891f23-c649-4fd7-b06a-68d18806c9d0
+# ╟─6d5ddcad-7e0f-4c5a-b740-0f11e60ff92d
+# ╠═d24e0ff8-419f-4f14-ab64-aaf5ec02bbdf
+# ╟─7ab63a69-1415-4772-adf1-d2ad95ea6323
+# ╠═9661f132-906e-4d48-8f11-00e91d0421bd
+# ╟─f371af51-c67e-4d19-90b9-abe3abb8214d
+# ╠═6ef05e08-a91f-4a38-81da-09fc11826687
+# ╠═16e1e537-e00f-4d01-ac4d-ba088d0c86a1
+# ╠═4f2835ec-1c06-4ba1-be9d-39866878457b
+# ╠═9ad3aa3e-5aa3-4ec3-963d-ea1530e95859
+# ╟─d9f499ec-35e8-44c9-9124-20257ab3126e
+# ╠═c73b22d1-a4df-44cb-bbbc-a2b89c41bd06
+# ╟─e0402159-f24a-48a4-af52-97ed545207e6
+# ╠═2f38c792-aa13-41bd-a43e-f5bfdd9978f3
+# ╠═cb934cb3-7703-4637-8c7a-dd5d027c6463
+# ╟─91c4e3a5-2ae2-4653-984f-1d6c802e04cb
+# ╠═6553204d-9e51-4cfa-8765-35d446889c9d
+# ╠═5101fa6a-f27b-405b-ba77-7468e558166c
+# ╟─89cb4078-c993-4b26-81ce-2551f8f3c843
+# ╠═2b38ee10-7110-4306-810e-969c7bfdc0c0
+# ╠═d3ce1536-bcb5-4a76-b1f3-a7a7aa50dc9a
+# ╟─6d9263d5-0ef7-4ee9-a045-7324c4f2a5c9
+# ╠═4c6b0ade-7662-4c17-8d29-63d3e6f67371
+# ╠═89137cf0-be2a-417c-a7fb-9b87b01b8601
+# ╠═b438d59a-b124-4d64-b006-53492512ee04
 # ╟─70a83f9a-ee22-48da-9294-49e17992531f
-# ╟─9bfe51cf-4cc1-4297-b5c2-52cc684852fc
+# ╟─04c0a186-0466-45ec-8185-82404cc83851
+# ╟─2ba6c570-fc5e-49a1-b4cd-460b6ab625e0
+# ╟─4eaa666d-a269-4513-bb28-0c55367e8921
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
