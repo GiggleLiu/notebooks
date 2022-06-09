@@ -32,6 +32,11 @@ using Yao.ConstGate: P0
 # ╔═╡ 6f131f36-0b4e-4570-8527-620297fae48e
 using YaoToEinsum, OMEinsumContractionOrders, OMEinsum
 
+# ╔═╡ a5d67a93-d84c-41ed-97b5-9485d4cc2f99
+md"""If you are reading the PDF, here is the [notebook version](https://github.com/GiggleLiu/notebooks/blob/master/slides/yaotutorial.jl) version.
+You can download （click "raw", and right click to save the source file, or use `git clone`） and open the file with [Pluto notebook](https://github.com/fonsp/Pluto.jl) to enjoy the interactive notebook.
+"""
+
 # ╔═╡ e6306a69-bd6a-4c01-9c6e-1cb523668019
 begin
 	# left right layout
@@ -921,7 +926,7 @@ function q_adder_with_uncomputing(n)
 end;
 
 # ╔═╡ 63917a68-597e-40e5-a479-624fc80d7cc6
-vizcircuit(q_adder_with_uncomputing(4)[1]; scale=0.3)
+vizcircuit(q_adder_with_uncomputing(4)[1]; scale=0.15)
 
 # ╔═╡ 8d3c9ef3-1dec-4369-aa8c-ecff882ace6b
 md"## Use Deutsch-Jozsa algorithm to solve the balance-constant problem."
@@ -1943,6 +1948,7 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 """
 
 # ╔═╡ Cell order:
+# ╟─a5d67a93-d84c-41ed-97b5-9485d4cc2f99
 # ╟─2a145cba-26b0-43bd-9ab2-13818d246eae
 # ╟─e6306a69-bd6a-4c01-9c6e-1cb523668019
 # ╟─0f099c85-f039-477e-a70d-a3801cbb2656
