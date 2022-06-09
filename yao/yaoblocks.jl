@@ -23,6 +23,16 @@ TableOfContents()
 # ╔═╡ 84705dc3-dd2c-419b-983e-e6c879dd79da
 md"# YaoBlocks - Hypercubic Linear algebra"
 
+# ╔═╡ 1c835e36-299d-41c7-940f-6e8d9fea87f9
+html"""
+<div align="center">
+<a class="Header-link " href="https://github.com/QuantumBFS/Yao.jl" data-hotkey="g d" aria-label="Homepage " data-ga-click="Header, go to dashboard, icon:logo">
+  <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+</a>
+<br>
+<a href="https://raw.githubusercontent.com/GiggleLiu/notebooks/master/notebooks/yao/yaoblocks.jl" target="_blank"> download this notebook </a></div>
+"""
+
 # ╔═╡ caec900e-13fd-4340-8c18-5c1d4ee91a29
 md"## Definition and interfaces
 Unlike most quantum simulators, an Yao's block system is not only for a quantum gate, it implements the **linear algebra on a hypercubic**.
@@ -48,9 +58,6 @@ md"""The only "must have" interface is `mat`."""
 
 # ╔═╡ 63e8fea9-01c7-4f78-a493-acff4f412820
 mat(H)
-
-# ╔═╡ 2cb1a718-c39a-4fa7-bf95-b75ddf8598e3
-mat(shift(0.5))
 
 # ╔═╡ 0afe664a-2ce5-4867-b6c2-8169d492c4bc
 md"""
@@ -1199,9 +1206,10 @@ version = "17.4.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═173125da-e761-11ec-25b9-fd328db9847e
 # ╟─7eedb3d5-a3b6-40e5-8d2d-94623faf8d92
+# ╟─1c835e36-299d-41c7-940f-6e8d9fea87f9
 # ╟─84705dc3-dd2c-419b-983e-e6c879dd79da
+# ╠═173125da-e761-11ec-25b9-fd328db9847e
 # ╟─caec900e-13fd-4340-8c18-5c1d4ee91a29
 # ╠═6b5100df-e813-4ed8-8f7c-c4fa05015ea6
 # ╠═2d7486af-c5e7-465a-b8d9-d8f7b00d4db4
@@ -1209,7 +1217,6 @@ version = "17.4.0+0"
 # ╟─31619f1a-784b-48c4-9755-ff41d273f46f
 # ╟─23a0f167-481e-4de4-b175-b96ee1923d7d
 # ╠═63e8fea9-01c7-4f78-a493-acff4f412820
-# ╠═2cb1a718-c39a-4fa7-bf95-b75ddf8598e3
 # ╟─0afe664a-2ce5-4867-b6c2-8169d492c4bc
 # ╠═f2391ac6-8bc3-40c3-bb08-4604e4fd8dda
 # ╠═221f1d4d-814a-4d51-9aa5-1a963acebf23
