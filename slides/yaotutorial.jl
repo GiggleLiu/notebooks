@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.3
 
 using Markdown
 using InteractiveUtils
@@ -282,6 +282,9 @@ vizcircuit(decompose_toffoli(add_circuit(4)[1]); scale=0.06)
 
 # ╔═╡ 0e11d98d-79c6-444d-8df1-357e8218f233
 gatecount(decompose_toffoli(add_circuit(4)[1]))
+
+# ╔═╡ 861d41c6-c5d0-45cc-9557-5dfce41e68a3
+YaoToEinsum.yao2einsum(decompose_toffoli(add_circuit(4)[1]))
 
 # ╔═╡ ee4186d7-1f93-4b72-a86c-076b136e2eda
 md"## Not gate"
@@ -595,6 +598,9 @@ md"""
 * Solving the sampling problem of the Sycamore quantum supremacy circuits, Feng Pan, Keyang Chen, Pan Zhang (arXiv:2111.03011)
 """
 
+# ╔═╡ e5acf299-875b-44cd-80dc-7dbb20c1c4f3
+
+
 # ╔═╡ d04690ca-390b-462b-8257-e9ebe01b3fd0
 md"""
 ## Discussion
@@ -654,6 +660,7 @@ md"""
 # ╠═008d228b-5d88-44c2-a4bc-c877329349bd
 # ╠═e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
 # ╠═0e11d98d-79c6-444d-8df1-357e8218f233
+# ╠═861d41c6-c5d0-45cc-9557-5dfce41e68a3
 # ╟─ee4186d7-1f93-4b72-a86c-076b136e2eda
 # ╠═57a3616e-49af-40b7-a000-a4ecc81af84e
 # ╠═0f655562-0c18-43a8-83f0-4d11b7eeb068
@@ -747,5 +754,6 @@ md"""
 # ╟─09137c47-1bd0-481b-8b60-ca2abff64afc
 # ╟─62393bfb-5597-40cd-a5e4-c4b10a61d1cf
 # ╠═6f131f36-0b4e-4570-8527-620297fae48e
+# ╠═e5acf299-875b-44cd-80dc-7dbb20c1c4f3
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
 # ╠═e32ba5c5-ad8d-46be-beea-182b9c653af4
