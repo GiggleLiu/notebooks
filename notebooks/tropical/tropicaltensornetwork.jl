@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -7,11 +7,19 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
+
+# ╔═╡ 5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
+using TropicalNumbers,  		# tropical number type
+		LightGraphs,			# graph operations
+		Random,
+		OMEinsum,				# Einstein's summation notation
+    	SimpleTensorNetworks  	# tensor network contraction
 
 # ╔═╡ c456b902-7959-11eb-03ba-dd14a2cd5758
 begin
@@ -173,18 +181,8 @@ table.nohover tr:hover td {
 	PlutoUI.TableOfContents()
 end
 
-# ╔═╡ 5bb40ad6-7b33-11eb-0b31-63d5e47fa0e7
-using TropicalNumbers,  		# tropical number type
-		LightGraphs,			# graph operations
-		Random,
-		OMEinsum,				# Einstein's summation notation
-    	SimpleTensorNetworks  	# tensor network contraction
-
-# ╔═╡ 3674a622-823b-11eb-3991-d5771010237b
-using Pkg; Pkg.status()
-
-# ╔═╡ 94b870d2-8235-11eb-33e7-35bf5132efd6
-using Profile
+# ╔═╡ 674aeeae-6031-4ee2-a8ed-cd476ceaec8c
+using OMEinsumContractionOrders
 
 # ╔═╡ dfa8834c-e8c6-49b4-8bde-0816b573cbee
 html"""
@@ -357,32 +355,6 @@ On the other hand, $0$ acts as the multiplicative identity since $0 \odot x = x$
 
 # ╔═╡ 2868b292-785b-11eb-015e-6b5613bd9e39
 one(Tropical{Float64})
-
-# ╔═╡ 98ae0960-797d-11eb-3646-c5b7e05d3f7c
-md"""
-The tropical $\delta$ tensor (the generalization of identity matrix to tensors) of rank $n$ and dimension $q$ is defined as
-```math
-δ_{s_i s_j\ldots s_n}^{n,q} = \begin{cases}
- 0, & s_i = s_j =\ldots s_n\\
- -\infty, &otherwise
-\end{cases}
-```
-where $s_i,s_j,\ldots s_n \in \{1,2,\ldots q\}$.
-"""
-
-# ╔═╡ ca9a13b8-0272-4557-97d4-9168923d363f
-# The first parameter is for specifying the element type. It is a common design pattern in Julia, please check https://docs.julialang.org/en/v1/manual/methods/#Extracting-the-type-parameter-from-a-super-type
-function δtensor(::Type{T}, q::Int, n::Int) where {T}
-	res = zeros(T, fill(q, n)...)
-	for i=1:q
-		res[fill(i, n)...] = one(T)
-	end
-	res
-end
-
-# ╔═╡ f914a760-7ad2-11eb-17e6-c39cf676196e
-# a `δ` tensor with rank 2 and size 3 × 3
-δtensor(Tropical{Float64}, 3, 2)
 
 # ╔═╡ 86921d00-7a17-11eb-2695-add5f9eeda5b
 md"**Tropical matrix multiplication**
@@ -685,77 +657,25 @@ function ising_bondtensor(::Type{T}, J) where T
 end
 
 # ╔═╡ 05109d30-7a29-11eb-320a-fb0b0d8e2632
-md"where a spin $s_i = 1$ (or $s_i=-1$) is equivalent to $1$ (or $2$) when used in matrix indexing. One can easily check it is the same as the previous negative energy function. The graphical representation is"
-
-# ╔═╡ d0ecd3f2-7a2d-11eb-126d-7dab740d8e1f
-let
-	Compose.set_default_graphic_size(14cm, 7cm)
-	sq = nodestyle(:circle, fill("black"); r=0.02)
-	wb = nodestyle(:circle, fill("black"); r=0.06)
-	eb = bondstyle(:line)
-	tb = textstyle(:default, fontsize(20px), fill("white"))
-	tb2 = textstyle(:default, fontsize(20px), fill("black"), font("times"))
-	tb3 = textstyle(:default, fontsize(15px), fill("green"))
-	x0 = 0.15
-	x1 = 0.65
-	y0 = 0.35
-	y1 = 0.8
-	x3 = 0.9
-	y3 = 0.1
-	a = (x0, y0)
-	b = (x0, y1)
-	c = (x1, y1)
-	d = (x1, y0)
-	e = (x3, y3)
-	img = canvas() do
-		for (edge, label) in [((a, b), "+1"), ((b, c), "-1"), ((c, d), "-1"), ((a, d), "+1"), ((d,e), "+1"), ((c, a), "+1")]
-			eb >> edge
-			wb >> ((edge[1] .+ edge[2]) ./ 2)
-			tb >> ((edge[1] .+ edge[2]) ./ 2, label == "+1" ? "Tₑ" : "Tₑ'")
-		end
-	end
-	Compose.compose(context(.38, 0, .5, 1), img)
-end
-
-# ╔═╡ 9c860e2a-7a2e-11eb-231f-63e9aca1daa0
-md"""This is not a tensor network since indices $s_{1}, s_3$ and $s_{4}$ appears more than twice and inner degree of freedom $s_5$ appears only once, while all indices appears once for open legs or and twice for inner degree of freedoms in a tensor network. However, we can still use `einsum` to contract this graph.
-"""
-
-# ╔═╡ 5efee244-7a2d-11eb-3782-b9d55086d623
-md"`einsum` is a generalization of tensor networks, it allows a same indices appearing for an arbituary times. Its graphical representation is a hypergraph rather than a simple graph. In the above graph, there are three hyperedges of size 3, one hyperedge of size 2 and one hyperedge of size 1."
-
-# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
-# we use the `@ein_str` macro from OMEinsum to perform the contraction
-# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
-ein"ab,bc,cd,ad,de,ac->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]...)[]
-
-# ╔═╡ 023ebf7c-7b36-11eb-1c9f-430773395534
-md"Here, the Einstein summation notation is consistent with [numpy's einsum notation](https://ajcr.net/Basic-guide-to-einsum/)"
-
-# ╔═╡ 96290770-7a20-11eb-0ac8-33a6492c7b12
-md"To map the spin glass problem to a tropical tensor network, we place a tensor $T_v^d$ of rank-d at each vertex, where $d$ is the degree of the vertex."
+md"where a spin $s_i = 1$ (or $s_i=-1$) is equivalent to $1$ (or $2$) when used in matrix indexing. One can easily check it is the same as the previous negative energy function. We can also add a magnetic field at each vertex by placing a tensor $T_v$ of rank-1 at each vertex."
 
 # ╔═╡ c1f90d6c-7a1d-11eb-2843-f971b5f6f3b0
 md"""
 ```math
-T_{v}^{n} = \begin{cases}
- h, & s_i = s_j =\ldots s_n = 0\\
- -h, & s_i = s_j =\ldots s_n = 1\\
- -\infty, &otherwise
-\end{cases}
+T_{v} = \begin{bmatrix}
+ h\\
+ -h
+\end{bmatrix}
 ```
 """
 
-# ╔═╡ 64e08a56-7a36-11eb-29fd-03662b4d6612
-md"for $h=0$, this is equivalent to the δ tensor."
-
 # ╔═╡ b975680f-0b78-4178-861f-5da6d10327e4
-function ising_vertextensor(::Type{T}, n::Int, h) where T
-	res = zeros(T, fill(2, n)...)
-	res[1] = T(h)
-	res[end] = T(-h)
-	return res
+function ising_vertextensor(::Type{T}, h) where T
+	T[h, -h]
 end
+
+# ╔═╡ 37102544-7abf-11eb-3ac4-6702dfc55425
+html"""<p>The graphical representation is as follows, where small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
 
 # ╔═╡ f54119ca-7a1e-11eb-1bec-bf855e34658d
 let
@@ -765,7 +685,7 @@ let
 	eb = bondstyle(:line)
 	tb = textstyle(:default, fontsize(20px), fill("white"))
 	tb2 = textstyle(:default, fontsize(20px), fill("black"), font("times"))
-	tb3 = textstyle(:default, fontsize(15px), fill("green"))
+	#tb3 = textstyle(:default, fontsize(15px), fill("green"))
 	x0 = 0.15
 	x1 = 0.65
 	y0 = 0.35
@@ -787,54 +707,40 @@ let
 			wb >> ((edge[1] .+ edge[2]) ./ 2)
 			tb >> ((edge[1] .+ edge[2]) ./ 2, label == "+1" ? "Tₑ" : "Tₑ'")
 		end
-		for lt in [((0.08, 0.3),"Tᵥ³"), ((0.08,0.75), "Tᵥ²"), ((0.75, 0.35),"Tᵥ³"), ((0.75,0.8), "Tᵥ²"), ((0.97,0.1), "Tᵥ¹")]
+		for lt in [((0.08, 0.3),"Tᵥ"), ((0.08,0.75), "Tᵥ"), ((0.75, 0.35),"Tᵥ"), ((0.75,0.8), "Tᵥ"), ((0.97,0.1), "Tᵥ")]
 			tb2 >> lt
 		end
-		for (i,edge) in enumerate([(a, b), (b, c), (c, d), (a, d), (d,e), (c, a)])
-			tb3 >> (edge[1] .* 0.2 .+ edge[2] .* 0.8, "($i, T)")
-			tb3 >> (edge[1] .* 0.8 .+ edge[2] .* 0.2, "($i, F)")
-		end
+		#for (i,edge) in enumerate([(a, b), (b, c), (c, d), (a, d), (d,e), (c, a)])
+		#	tb3 >> (edge[1] .* 0.2 .+ edge[2] .* 0.8, "($i, T)")
+		#	tb3 >> (edge[1] .* 0.8 .+ edge[2] .* 0.2, "($i, F)")
+		#end
 	end
 	Compose.compose(context(.38, 0, .5, 1), img)
 end
 
-# ╔═╡ 37102544-7abf-11eb-3ac4-6702dfc55425
-html"""<p>Small circles and big circles are for vertex tensors and edge tensors respectively.</p>"""
+# ╔═╡ 9c860e2a-7a2e-11eb-231f-63e9aca1daa0
+md"""This is a generalized tensor network that indices $s_{1}, s_3$ and $s_{4}$ appears more than twice and inner degree of freedom $s_5$ appears only once, while all indices appears once for open legs or and twice for inner degree of freedoms in a tensor network. This generalized tensor network can be represented as an `einsum` notation.
+"""
 
-# ╔═╡ 25553aa4-eef8-40d4-bcf6-0a27f50ab1da
-md"""Then we construct tensor network by assigning labels `(edge index, boolean)` ($(HTML("<span style='color:green'>green</span>")) texts in the graph) to tensors, where the boolean identifies whether this label correspond to the source node or the destination side of the edge. """
+# ╔═╡ 37472f2a-7a2a-11eb-1be3-13513d61fcb2
+# we use the `@ein_str` macro from OMEinsum to perform the contraction
+# Here we use a, b, c, d, e to represent the original vertex labels 1, 2, 3, 4, 5
+ein"ab,bc,cd,ad,de,ac,a,b,c,d,e->"([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]..., fill(ising_vertextensor(Tropical{Float64}, 0.0), 5)...)[]
 
-# ╔═╡ 75764e5b-d2f2-4178-a00f-8f362b59a0b8
-function build_tensornetwork(; vertices, vertex_arrays, edges, edge_arrays)
-	TensorNetwork([
-	# vertex tensors
-	[LabeledTensor(vertex_arrays[i], [(j, v==e[1]) for (j, e) in enumerate(edges) if v ∈ e]) for (i, v) in enumerate(vertices)]...,
-	# bond tensors
-	[LabeledTensor(edge_arrays[j], [(j, true), (j, false)]) for j=1:length(edges)]...
-])
+# ╔═╡ 023ebf7c-7b36-11eb-1c9f-430773395534
+md"""In the `einsum` contraction notation, we use "`->`" to seperate inputs and output (empty for scalar output), "`,`" to seperate different inputs. This notation is consistent with [the one in numpy](https://ajcr.net/Basic-guide-to-einsum/). Its contraction order is not optimized by default, one needs to call the `optimize_code` function in [OMEinsumContractionOrders](https://github.com/TensorBFS/OMEinsumContractionOrders.jl) to get a tensor network with optimized order."""
+
+# ╔═╡ a30f3c27-e154-4b70-bc5e-6ddcaaf88b21
+optimized_tnet = let
+	code = ein"ab,bc,cd,ad,de,ac,a,b,c,d,e->"
+	optimize_code(code, uniformsize(code, 2), TreeSA())
 end
-
-# ╔═╡ 15cf0c36-7a21-11eb-3e14-63950bcce943
-tnet = let
-	T = Tropical{Float64}
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	build_tensornetwork(
-		vertices = 1:5,
-		vertex_arrays = [ising_vertextensor(T, count(e->i ∈ e, edges), 0.0) for i=1:5],
-		edges = edges,
-		edge_arrays = [ising_bondtensor(T, J) for J in [J12, J23, J34, J14, J45, J13]]
-	)
-end;
 
 # ╔═╡ a4bf7de3-7794-4609-88e7-9092f496a7bb
 md"The tensor network is then contracted with the greedy algorithm."
 
 # ╔═╡ a9544e66-7a27-11eb-2b27-1d2124988fb2
-contraction_result = let
-	# trees_greedy returns a tuple of (time complexity, space complexity, contraction tree)
-	tc, sc, trees = trees_greedy(tnet; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tnet, trees[1]).array[]
-end
+contraction_result = optimized_tnet([ising_bondtensor(Tropical{Float64}, J) for J in [J12, J23, J34, J14, J45, J13]]..., fill(ising_vertextensor(Tropical{Float64}, 0.0), 5)...)[]
 
 # ╔═╡ 3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
 md"The mininum energy is $(-Int(contraction_result.n))."
@@ -978,11 +884,7 @@ We define an energy function
 ```math
 E = \sum\limits_{k=1}^{|C|} C_k(s_{i_k}, s_{j_k})
 ```
-where ``C_k(s_{i_k}, s_{j_k})`` is ``+1`` if the ``k``th clause on $i$th and $j$th boolean variable is satisfied, otherwise, it is ``-1``. In the tensor network representation, we use a vertex tensor to represent a boolean variable
-
-```math
-T_{v}^n = \delta^{n,q=2}.
-```
+where ``C_k(s_{i_k}, s_{j_k})`` is ``+1`` if the ``k``th clause on $i$th and $j$th boolean variable is satisfied, otherwise, it is ``-1``. In the tensor network representation, we use ``s_{i_k} \in \{0, 1\}`` to denote the degree of freedom associated with variable ``i_k``.
 """
 
 # ╔═╡ 58f6f6eb-d722-4144-b091-5b6bd7f3e97c
@@ -1048,7 +950,7 @@ H=J\sum _{{i,j \in E}}\cos \left(\theta _{{s_{i}}}-\theta _{{s_{j}}}\right)
 ```
 For $q=3$, we have the edge tensor
 ```math
-T_e = J\left(\begin{matrix}1 & -1/2 & -1/2 \\ -1/2 & 1 & -1/2 \\ -1/2 & -1/2 & 1\end{matrix}\right)
+T_e = J\begin{bmatrix}1 & -1/2 & -1/2 \\ -1/2 & 1 & -1/2 \\ -1/2 & -1/2 & 1\end{bmatrix}
 ```
 """
 
@@ -1063,15 +965,6 @@ function potts_bondtensor(::Type{T}, ::Val{q}, J) where {T, q}
 	end
 	res
 end
-
-# ╔═╡ c4c9caa6-872a-11eb-3c90-3b18e9762253
-md"""and the vertex tensor
-
-$$T_v^n=\delta^{n,q=3}$$
-"""
-
-# ╔═╡ 50c9910f-6b47-4480-9efd-768dae573b92
-potts_vertextensor(T, q, n) = δtensor(T, q, n)
 
 # ╔═╡ 344042b4-793d-11eb-3d6f-43eb2a4db9f4
 md"""
@@ -1118,7 +1011,7 @@ end
 
 # ╔═╡ 5d95a598-7afa-11eb-10eb-db79fa44dd2a
 md"""
-There are different ways to map a MIS problem to tensor networks. 
+To map a MIS problem to a tensor network, we first assign degrees of freedom $s_i,s_j,\ldots s_n \in \{0,1\}$ to vertices.
 """
 
 # ╔═╡ d29470d4-7afa-11eb-0afc-a34e39d49aa5
@@ -1179,43 +1072,23 @@ end
 md"""
 The vertex tensors are for counting the number of vertices
 ```math
-(T_{v}^{n})_{s_i s_j} = \begin{cases}
- 0, & s_i = s_j =\ldots s_n = 0\\
- 1, & s_i = s_j =\ldots s_n = 1\\
- -\infty, &otherwise
-\end{cases}
+T_{v} = \begin{bmatrix}
+0\\
+1
+\end{bmatrix}
 ```
-where $s_i,s_j,\ldots s_n \in \{0,1\}$.
 """
 
 # ╔═╡ 0630d232-2791-4834-8076-3aba6c1deaee
-function mis_vertextensor(::Type{T}, n::Int) where T
-	res = zeros(T, fill(2, n)...)
-	res[1] = one(T)
-	res[end] = T(1)
-	return res
+function mis_vertextensor(::Type{T}) where T
+	T[0, 1]
 end
 
 # ╔═╡ 6800e29e-bee3-4670-b5b5-aaeee9e25046
 md"We can build a tensor tensor network for solving this issue. The tensor network is contracted with a greedy order."
 
 # ╔═╡ 0405f4d8-7afb-11eb-2163-597b2edcf17e
-tensor_network_mis = let
-	T = CountingTropical{Float64}
-	edges = [(1, 2), (2, 3), (3, 4), (1, 4), (4, 5), (1, 3)]
-	build_tensornetwork(
-		vertices = 1:5,
-		vertex_arrays = [mis_vertextensor(T, count(e->i ∈ e, edges)) for i=1:5],
-		edges = edges,
-		edge_arrays = [mis_bondtensor(T) for i=1:6]
-	)
-end;
-
-# ╔═╡ 3a34aaec-7afb-11eb-1fc4-2fbc027753cc
-contraction_result_mis = let
-	tc, sc, trees = trees_greedy(tensor_network_mis; strategy="min_reduce")
-	SimpleTensorNetworks.contract(tensor_network_mis, trees[1]).array[]
-end
+contraction_result_mis = ein"ab,bc,cd,ad,de,ac,a,b,c,d,e->"(fill(mis_bondtensor(CountingTropical{Float64}), 6)..., fill(mis_vertextensor(CountingTropical{Float64}), 5)...)[]
 
 # ╔═╡ 5f4e0fec-7afd-11eb-37c7-11b84027136a
 md"There are 4 possible configurations"
@@ -1262,34 +1135,6 @@ let
 	(context(0.5, 0, 0.25, 1), img3),
 	(context(0.75, 0, 0.25, 1), img4),
 	)
-end
-
-# ╔═╡ 891c39b8-7b1b-11eb-2d70-67fd24021027
-md"Or equivalently, we can transfer the weights on the vertex to bond tensors so that the vertex tensors can become δ tensors.
-```math
-T_{e} = \begin{bmatrix}0 & \frac{1}{w_{j→e}} \\\frac{1}{w_{i→e}} & -\infty\end{bmatrix}
-```
-
-where $i,j$ are source and destination node of $e$, $w_{i→e}$ is the weight transfered from vertex $i$ to $e$ that $\sum\limits_e w_{i\rightarrow e}=1$. Then vertex tensor now is
-```math
-T_{v}^{n} = \delta^{n,q=2}
-```
-"
-
-# ╔═╡ 5caa1b7c-7b21-11eb-394d-379351fe5170
-md"Then one can also get the correct result with einsum."
-
-# ╔═╡ 1b08b3ac-7b1e-11eb-2249-ddd787c549d4
-let
-	T = CountingTropical{Float64}
-	ein"ab,bc,cd,ad,de,ac->"(
-		T.([0 1; 1 -Inf]),  # (1, 2)
-		T.([0 1; 0 -Inf]),	# (2, 3)
-		T.([0 1; 0 -Inf]),	# (3, 4)
-		T.([0 0; 0 -Inf]),	# (1, 4)
-		T.([0 1; 0 -Inf]),	# (4, 5)
-		T.([0 0; 0 -Inf]),	# (1, 3)
-	)[]
 end
 
 # ╔═╡ c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
@@ -1466,61 +1311,58 @@ c60_xy = fullerene();
 
 # ╔═╡ 6f649efc-7b2d-11eb-1e80-53d84ef98c13
 # find edges: vertex pairs with square distance smaller than 5.
-c60_edges = [(i=>j) for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in enumerate(c60_xy) if i<j && (i2-i1)^2+(j2-j1)^2+(k2-k1)^2 < 5.0];
+c60_edges = [[i,j] for (i,(i2,j2,k2)) in enumerate(c60_xy), (j,(i1,j1,k1)) in enumerate(c60_xy) if i<j && (i2-i1)^2+(j2-j1)^2+(k2-k1)^2 < 5.0];
 
 # ╔═╡ 20125640-79fd-11eb-1715-1d071cc6cf6c
 md"The resulting tensor network contains 90 edge tensors and 60 vertex tensors."
 
-# ╔═╡ c26b5bb6-7984-11eb-18fe-2b6a524f5c85
-c60_tnet = let
-	T = CountingTropical{Float64}
-	build_tensornetwork(
-		vertices=1:60,
-		vertex_arrays = [ising_vertextensor(T, 3, 0.0) for j=1:length(c60_xy)],
-		edges = c60_edges,
-		edge_arrays = [ising_bondtensor(T, -1.0) for i = 1:length(c60_edges)]
-	)
-end;
+# ╔═╡ 817b6faf-93d2-4474-8958-ff8ba88fa7c2
+c60_rawcode = EinCode(c60_edges, Int[])  # each edge corresponds to an edge tensor
+
+# ╔═╡ a68a1e7e-230a-4b22-b719-d75ef34a28a2
+c60_code = optimize_code(c60_rawcode, uniformsize(c60_rawcode, 2), TreeSA())
+
+# ╔═╡ c972a4cd-eef4-41c3-a2a0-302c6c2769c6
+c60_tensors = fill(ising_bondtensor(CountingTropical{Float64}, -1.0), length(c60_edges))
 
 # ╔═╡ 698a6dd0-7a0e-11eb-2766-1f0baa1317d2
 md"Then we find a proper contraction order by greedy search"
 
-# ╔═╡ 020cfb20-8228-11eb-2ee9-6de0fc7700b1
-md"Seed for greedy search = $(@bind seed Slider(1:10000; show_value=true, default=42))"
-
-# ╔═╡ ae92d828-7984-11eb-31c8-8b3f9a071c24
-tcs, scs, c60_trees = (Random.seed!(seed); trees_greedy(c60_tnet; strategy="min_reduce"));
-
 # ╔═╡ 2b899624-798c-11eb-20c4-fd5523f7abff
-md"The resulting contraction order produces time complexity = $(round(log2sumexp2(tcs); sigdigits=4)), space complexity = $(round(maximum(scs); sigdigits=4))"
+let
+	tc, sc = timespace_complexity(c60_code, uniformsize(c60_code, 2))
+	md"The resulting contraction order produces time complexity = $tc, space complexity = $sc"
+end
 
 # ╔═╡ 8522456a-823c-11eb-3cc1-fb720f1cc470
-SimpleTensorNetworks.contract(c60_tnet, c60_trees[]).array[]
+c60_code(c60_tensors...)[]
 
 # ╔═╡ 1c4b19d2-7b30-11eb-007b-ab03052b22d2
 md"If you see a 16000 in the counting field, congratuations! The greedy contraction order can be visualized by dragging the slider (if you run it on your local host)"
 
 # ╔═╡ 58e38656-7b2e-11eb-3c70-25a919f9926a
-md"contraction step = $(@bind nstep_c60 Slider(0:length(c60_tnet); show_value=true, default=60))"
+md"contraction step = $(@bind nstep_c60 Slider(0:length(getixsv(c60_code))-1; show_value=true, default=60))"
 
 # ╔═╡ 12740186-7b2f-11eb-35e4-01e6f9ffbb4d
 c60_contraction_masks = let
-	function contraction_mask(tnet, tree)
-		contraction_mask!(tnet, tree, [zeros(Bool, length(tnet))])
+	function contraction_mask(ne::SlicedEinsum)
+		contraction_mask!(ne.eins, [zeros(Bool, length(getixsv(ne)))])
 	end
-	function contraction_mask!(tnet, tree, results)
-		if tree isa Integer
-			res = copy(results[end])
-			@assert res[tree] == false
-			res[tree] = true
-			push!(results, res)
+	# compute the vertex elimination order
+	function contraction_mask!(ne::NestedEinsum, results)
+		if OMEinsum.isleaf(ne)
 		else
-			contraction_mask!(tnet, tree.left, results)
-			contraction_mask!(tnet, tree.right, results)
+			for arg in ne.args
+				contraction_mask!(arg, results)
+			end
+			eliminated_vertices = setdiff(∪(getixsv(ne.eins)...), getiyv(ne.eins))
+			mask = copy(results[end])
+			mask[eliminated_vertices] .= true
+			push!(results, mask)
 		end
 		return results
 	end
-	contraction_mask(c60_tnet, c60_trees[])
+	contraction_mask(c60_code)
 end;
 
 # ╔═╡ c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
@@ -1574,6 +1416,635 @@ The Tropical BLAS project is under the progress,
 - Tropical GEMM for CountingTropical numbers,
 "
 
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+OMEinsum = "ebe7aa44-baf0-506c-a96f-8464559b3922"
+OMEinsumContractionOrders = "6f22d1fd-8eed-4bb7-9776-e7d684900715"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
+SimpleTensorNetworks = "4456351a-5be3-4067-ade9-541926a41e04"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TropicalNumbers = "b3a74e9c-7526-4576-a4eb-79c0d4c32334"
+Viznet = "52a3aca4-6234-47fd-b74a-806bdf78ede9"
+
+[compat]
+Compose = "~0.9.3"
+CoordinateTransformations = "~0.6.2"
+LightGraphs = "~1.3.5"
+OMEinsum = "~0.6.13"
+OMEinsumContractionOrders = "~0.6.8"
+PlutoUI = "~0.7.39"
+Revise = "~3.3.3"
+Rotations = "~1.3.1"
+SimpleTensorNetworks = "~0.2.1"
+StaticArrays = "~1.4.7"
+TropicalNumbers = "~0.5.3"
+Viznet = "~0.3.3"
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.8.0-rc1"
+manifest_format = "2.0"
+project_hash = "22520c68d0f4598ed87bcd52d988c6fa35e5eaa7"
+
+[[deps.AbstractFFTs]]
+deps = ["ChainRulesCore", "LinearAlgebra"]
+git-tree-sha1 = "6f1d9bc1c08f9f4a8fa92e3ea3cb50153a1b40d4"
+uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+version = "1.1.0"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.3.4"
+
+[[deps.Adapt]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "3.3.3"
+
+[[deps.ArgTools]]
+uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
+version = "1.1.1"
+
+[[deps.ArnoldiMethod]]
+deps = ["LinearAlgebra", "Random", "StaticArrays"]
+git-tree-sha1 = "f87e559f87a45bece9c9ed97458d3afe98b1ebb9"
+uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
+version = "0.1.0"
+
+[[deps.Artifacts]]
+uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[deps.BFloat16s]]
+deps = ["LinearAlgebra", "Printf", "Random", "Test"]
+git-tree-sha1 = "a598ecb0d717092b5539dbbe890c98bac842b072"
+uuid = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"
+version = "0.2.0"
+
+[[deps.Base64]]
+uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BatchedRoutines]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "441db9f0399bcfb4eeb8b891a6b03f7acc5dc731"
+uuid = "a9ab73d0-e05c-5df1-8fde-d6a4645b8d8e"
+version = "0.2.2"
+
+[[deps.BetterExp]]
+git-tree-sha1 = "dd3448f3d5b2664db7eceeec5f744535ce6e759b"
+uuid = "7cffe744-45fd-4178-b173-cf893948b8b7"
+version = "0.1.0"
+
+[[deps.CEnum]]
+git-tree-sha1 = "eb4cb44a499229b3b8426dcfb5dd85333951ff90"
+uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+version = "0.4.2"
+
+[[deps.CUDA]]
+deps = ["AbstractFFTs", "Adapt", "BFloat16s", "CEnum", "CompilerSupportLibraries_jll", "ExprTools", "GPUArrays", "GPUCompiler", "LLVM", "LazyArtifacts", "Libdl", "LinearAlgebra", "Logging", "Printf", "Random", "Random123", "RandomNumbers", "Reexport", "Requires", "SparseArrays", "SpecialFunctions", "TimerOutputs"]
+git-tree-sha1 = "925a16b909fdae16920c1319feadecffb6695b9d"
+uuid = "052768ef-5323-5732-b1bb-66c8b64840ba"
+version = "3.10.1"
+
+[[deps.Calculus]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
+uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
+version = "0.5.1"
+
+[[deps.ChainRulesCore]]
+deps = ["Compat", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "9489214b993cd42d17f44c36e359bf6a7c919abf"
+uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+version = "1.15.0"
+
+[[deps.ChangesOfVariables]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
+git-tree-sha1 = "1e315e3f4b0b7ce40feded39c73049692126cf53"
+uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+version = "0.1.3"
+
+[[deps.CodeTracking]]
+deps = ["InteractiveUtils", "UUIDs"]
+git-tree-sha1 = "6d4fa04343a7fc9f9cb9cff9558929f3d2752717"
+uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
+version = "1.0.9"
+
+[[deps.ColorTypes]]
+deps = ["FixedPointNumbers", "Random"]
+git-tree-sha1 = "0f4e115f6f34bbe43c19751c90a38b2f380637b9"
+uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+version = "0.11.3"
+
+[[deps.Colors]]
+deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
+git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
+uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
+version = "0.12.8"
+
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
+[[deps.Compat]]
+deps = ["Dates", "LinearAlgebra", "UUIDs"]
+git-tree-sha1 = "924cdca592bc16f14d2f7006754a621735280b74"
+uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
+version = "4.1.0"
+
+[[deps.CompilerSupportLibraries_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
+version = "0.5.2+0"
+
+[[deps.Compose]]
+deps = ["Base64", "Colors", "DataStructures", "Dates", "IterTools", "JSON", "LinearAlgebra", "Measures", "Printf", "Random", "Requires", "Statistics", "UUIDs"]
+git-tree-sha1 = "9a2695195199f4f20b94898c8a8ac72609e165a4"
+uuid = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+version = "0.9.3"
+
+[[deps.CoordinateTransformations]]
+deps = ["LinearAlgebra", "StaticArrays"]
+git-tree-sha1 = "681ea870b918e7cff7111da58791d7f718067a19"
+uuid = "150eb455-5306-5404-9cee-2592286d6298"
+version = "0.6.2"
+
+[[deps.DataStructures]]
+deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
+git-tree-sha1 = "d1fff3a548102f48987a52a2e0d114fa97d730f0"
+uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+version = "0.18.13"
+
+[[deps.Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+
+[[deps.Dierckx]]
+deps = ["Dierckx_jll"]
+git-tree-sha1 = "633c119fcfddf61fb4c75d77ce3ebab552a44723"
+uuid = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+version = "0.5.2"
+
+[[deps.Dierckx_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "6596b96fe1caff3db36415eeb6e9d3b50bfe40ee"
+uuid = "cd4c43a9-7502-52ba-aa6d-59fb2a88580b"
+version = "0.1.0+0"
+
+[[deps.Distributed]]
+deps = ["Random", "Serialization", "Sockets"]
+uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+
+[[deps.DocStringExtensions]]
+deps = ["LibGit2"]
+git-tree-sha1 = "b19534d1895d702889b219c382a6e18010797f0b"
+uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+version = "0.8.6"
+
+[[deps.Downloads]]
+deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
+uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+version = "1.6.0"
+
+[[deps.DualNumbers]]
+deps = ["Calculus", "NaNMath", "SpecialFunctions"]
+git-tree-sha1 = "5837a837389fccf076445fce071c8ddaea35a566"
+uuid = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
+version = "0.6.8"
+
+[[deps.ExprTools]]
+git-tree-sha1 = "56559bbef6ca5ea0c0818fa5c90320398a6fbf8d"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.8"
+
+[[deps.FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+
+[[deps.FixedPointNumbers]]
+deps = ["Statistics"]
+git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
+uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+version = "0.8.4"
+
+[[deps.GPUArrays]]
+deps = ["Adapt", "LLVM", "LinearAlgebra", "Printf", "Random", "Serialization", "Statistics"]
+git-tree-sha1 = "c783e8883028bf26fb05ed4022c450ef44edd875"
+uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
+version = "8.3.2"
+
+[[deps.GPUCompiler]]
+deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "TimerOutputs", "UUIDs"]
+git-tree-sha1 = "d8c5999631e1dc18d767883f621639c838f8e632"
+uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
+version = "0.15.2"
+
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.4"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
+[[deps.Inflate]]
+git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
+uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
+version = "0.1.2"
+
+[[deps.InteractiveUtils]]
+deps = ["Markdown"]
+uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[deps.InverseFunctions]]
+deps = ["Test"]
+git-tree-sha1 = "b3364212fb5d870f724876ffcd34dd8ec6d98918"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.7"
+
+[[deps.IrrationalConstants]]
+git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
+uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
+version = "0.1.1"
+
+[[deps.IterTools]]
+git-tree-sha1 = "fa6287a4469f5e048d763df38279ee729fbd44e5"
+uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+version = "1.4.0"
+
+[[deps.JLLWrappers]]
+deps = ["Preferences"]
+git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
+uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
+version = "1.4.1"
+
+[[deps.JSON]]
+deps = ["Dates", "Mmap", "Parsers", "Unicode"]
+git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.21.3"
+
+[[deps.JuliaInterpreter]]
+deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
+git-tree-sha1 = "52617c41d2761cc05ed81fe779804d3b7f14fff7"
+uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
+version = "0.9.13"
+
+[[deps.LLVM]]
+deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
+git-tree-sha1 = "e7e9184b0bf0158ac4e4aa9daf00041b5909bf1a"
+uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
+version = "4.14.0"
+
+[[deps.LLVMExtra_jll]]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg", "TOML"]
+git-tree-sha1 = "771bfe376249626d3ca12bcd58ba243d3f961576"
+uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
+version = "0.0.16+0"
+
+[[deps.LazyArtifacts]]
+deps = ["Artifacts", "Pkg"]
+uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
+
+[[deps.LibCURL]]
+deps = ["LibCURL_jll", "MozillaCACerts_jll"]
+uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
+version = "0.6.3"
+
+[[deps.LibCURL_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
+uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
+version = "7.81.0+0"
+
+[[deps.LibGit2]]
+deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
+uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+
+[[deps.LibSSH2_jll]]
+deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
+uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
+version = "1.10.2+0"
+
+[[deps.Libdl]]
+uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[[deps.LightGraphs]]
+deps = ["ArnoldiMethod", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
+git-tree-sha1 = "432428df5f360964040ed60418dd5601ecd240b6"
+uuid = "093fc24a-ae57-5d10-9952-331d41423f4d"
+version = "1.3.5"
+
+[[deps.LinearAlgebra]]
+deps = ["Libdl", "libblastrampoline_jll"]
+uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[deps.LogExpFunctions]]
+deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
+git-tree-sha1 = "09e4b894ce6a976c354a69041a04748180d43637"
+uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+version = "0.3.15"
+
+[[deps.Logging]]
+uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+
+[[deps.LoweredCodeUtils]]
+deps = ["JuliaInterpreter"]
+git-tree-sha1 = "dedbebe234e06e1ddad435f5c6f4b85cd8ce55f7"
+uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
+version = "2.2.2"
+
+[[deps.MacroTools]]
+deps = ["Markdown", "Random"]
+git-tree-sha1 = "3d3e902b31198a27340d0bf00d6ac452866021cf"
+uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+version = "0.5.9"
+
+[[deps.Markdown]]
+deps = ["Base64"]
+uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[[deps.MbedTLS_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+version = "2.28.0+0"
+
+[[deps.Measures]]
+git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
+uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+version = "0.3.1"
+
+[[deps.Mmap]]
+uuid = "a63ad114-7e13-5084-954f-fe012c677804"
+
+[[deps.MozillaCACerts_jll]]
+uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
+version = "2022.2.1"
+
+[[deps.NaNMath]]
+git-tree-sha1 = "737a5957f387b17e74d4ad2f440eb330b39a62c5"
+uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+version = "1.0.0"
+
+[[deps.NetworkOptions]]
+uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
+version = "1.2.0"
+
+[[deps.OMEinsum]]
+deps = ["AbstractTrees", "BatchedRoutines", "CUDA", "ChainRulesCore", "Combinatorics", "LinearAlgebra", "MacroTools", "Requires", "Test", "TupleTools"]
+git-tree-sha1 = "6df6ebcf525360ddb881f1d758c2ef428414b1a2"
+uuid = "ebe7aa44-baf0-506c-a96f-8464559b3922"
+version = "0.6.13"
+
+[[deps.OMEinsumContractionOrders]]
+deps = ["BetterExp", "JSON", "OMEinsum", "Requires", "SparseArrays", "Suppressor"]
+git-tree-sha1 = "a356b675eb0de52c475d49bbf833f08ce49ffe9e"
+uuid = "6f22d1fd-8eed-4bb7-9776-e7d684900715"
+version = "0.6.8"
+
+[[deps.OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
+version = "0.3.20+0"
+
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+version = "0.8.1+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.5+0"
+
+[[deps.OrderedCollections]]
+git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
+uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+version = "1.4.1"
+
+[[deps.Parsers]]
+deps = ["Dates"]
+git-tree-sha1 = "1285416549ccfcdf0c50d4997a94331e88d68413"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.3.1"
+
+[[deps.Pkg]]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+version = "1.8.0"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "8d1f54886b9037091edf146b517989fc4a09efec"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.39"
+
+[[deps.Preferences]]
+deps = ["TOML"]
+git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
+uuid = "21216c6a-2e73-6563-6e65-726566657250"
+version = "1.3.0"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.Quaternions]]
+deps = ["DualNumbers", "LinearAlgebra", "Random"]
+git-tree-sha1 = "b327e4db3f2202a4efafe7569fcbe409106a1f75"
+uuid = "94ee1d12-ae83-5a48-8b1c-48b8ff168ae0"
+version = "0.5.6"
+
+[[deps.REPL]]
+deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
+uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+
+[[deps.Random]]
+deps = ["SHA", "Serialization"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[deps.Random123]]
+deps = ["Random", "RandomNumbers"]
+git-tree-sha1 = "afeacaecf4ed1649555a19cb2cad3c141bbc9474"
+uuid = "74087812-796a-5b5d-8853-05524746bad3"
+version = "1.5.0"
+
+[[deps.RandomNumbers]]
+deps = ["Random", "Requires"]
+git-tree-sha1 = "043da614cc7e95c703498a491e2c21f58a2b8111"
+uuid = "e6cf234a-135c-5ec9-84dd-332b85af5143"
+version = "1.5.3"
+
+[[deps.Reexport]]
+git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
+uuid = "189a3867-3050-52da-a836-e630ba90ab69"
+version = "1.2.2"
+
+[[deps.Requires]]
+deps = ["UUIDs"]
+git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
+uuid = "ae029012-a4dd-5104-9daa-d747884805df"
+version = "1.3.0"
+
+[[deps.Revise]]
+deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
+git-tree-sha1 = "4d4239e93531ac3e7ca7e339f15978d0b5149d03"
+uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
+version = "3.3.3"
+
+[[deps.Rotations]]
+deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays", "Statistics"]
+git-tree-sha1 = "3177100077c68060d63dd71aec209373c3ec339b"
+uuid = "6038ab10-8711-5258-84ad-4b1120ba62dc"
+version = "1.3.1"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+version = "0.7.0"
+
+[[deps.Serialization]]
+uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.SharedArrays]]
+deps = ["Distributed", "Mmap", "Random", "Serialization"]
+uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.SimpleTensorNetworks]]
+deps = ["LightGraphs", "LinearAlgebra", "Requires", "SparseArrays"]
+git-tree-sha1 = "6e23282395631fd2fed63a3347f729cbd4dc6e02"
+uuid = "4456351a-5be3-4067-ade9-541926a41e04"
+version = "0.2.1"
+
+[[deps.SimpleTraits]]
+deps = ["InteractiveUtils", "MacroTools"]
+git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
+uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
+version = "0.9.4"
+
+[[deps.Sockets]]
+uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[[deps.SparseArrays]]
+deps = ["LinearAlgebra", "Random"]
+uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[[deps.SpecialFunctions]]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "a9e798cae4867e3a41cae2dd9eb60c047f1212db"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "2.1.6"
+
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "2bbd9f2e40afd197a1379aef05e0d85dba649951"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "1.4.7"
+
+[[deps.Statistics]]
+deps = ["LinearAlgebra", "SparseArrays"]
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[[deps.Suppressor]]
+git-tree-sha1 = "c6ed566db2fe3931292865b966d6d140b7ef32a9"
+uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
+version = "0.2.1"
+
+[[deps.TOML]]
+deps = ["Dates"]
+uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+version = "1.0.0"
+
+[[deps.Tar]]
+deps = ["ArgTools", "SHA"]
+uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
+version = "1.10.0"
+
+[[deps.Test]]
+deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
+uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[[deps.TimerOutputs]]
+deps = ["ExprTools", "Printf"]
+git-tree-sha1 = "464d64b2510a25e6efe410e7edab14fffdc333df"
+uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+version = "0.5.20"
+
+[[deps.Tricks]]
+git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
+uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+version = "0.1.6"
+
+[[deps.TropicalNumbers]]
+git-tree-sha1 = "f3659ba817a2fdc8665e9bf032d66f1a107a56af"
+uuid = "b3a74e9c-7526-4576-a4eb-79c0d4c32334"
+version = "0.5.3"
+
+[[deps.TupleTools]]
+git-tree-sha1 = "3c712976c47707ff893cf6ba4354aa14db1d8938"
+uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+version = "1.3.0"
+
+[[deps.UUIDs]]
+deps = ["Random", "SHA"]
+uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[[deps.Viznet]]
+deps = ["Compose", "Dierckx"]
+git-tree-sha1 = "7a022ae6ac8b153d47617ed8c196ce60645689f1"
+uuid = "52a3aca4-6234-47fd-b74a-806bdf78ede9"
+version = "0.3.3"
+
+[[deps.Zlib_jll]]
+deps = ["Libdl"]
+uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
+version = "1.2.12+3"
+
+[[deps.libblastrampoline_jll]]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
+version = "5.1.0+0"
+
+[[deps.nghttp2_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
+version = "1.41.0+1"
+
+[[deps.p7zip_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
+version = "17.4.0+0"
+"""
+
 # ╔═╡ Cell order:
 # ╟─c456b902-7959-11eb-03ba-dd14a2cd5758
 # ╟─dfa8834c-e8c6-49b4-8bde-0816b573cbee
@@ -1598,9 +2069,6 @@ The Tropical BLAS project is under the progress,
 # ╠═2173a6cc-785b-11eb-1ab6-7fb875224dd9
 # ╟─518b7d4e-785b-11eb-3b7c-1389065b9cbd
 # ╠═2868b292-785b-11eb-015e-6b5613bd9e39
-# ╟─98ae0960-797d-11eb-3646-c5b7e05d3f7c
-# ╠═ca9a13b8-0272-4557-97d4-9168923d363f
-# ╠═f914a760-7ad2-11eb-17e6-c39cf676196e
 # ╟─86921d00-7a17-11eb-2695-add5f9eeda5b
 # ╟─915e8096-7a17-11eb-177d-a39ffed7ca91
 # ╟─958c489e-7a17-11eb-2be4-cfdb44da7d2f
@@ -1626,20 +2094,15 @@ The Tropical BLAS project is under the progress,
 # ╟─b52ead96-7a2a-11eb-334f-e5e5ff5867e3
 # ╠═624f57db-7f07-4281-a547-d229b9a8413a
 # ╟─05109d30-7a29-11eb-320a-fb0b0d8e2632
-# ╟─d0ecd3f2-7a2d-11eb-126d-7dab740d8e1f
+# ╟─c1f90d6c-7a1d-11eb-2843-f971b5f6f3b0
+# ╠═b975680f-0b78-4178-861f-5da6d10327e4
+# ╟─37102544-7abf-11eb-3ac4-6702dfc55425
+# ╟─f54119ca-7a1e-11eb-1bec-bf855e34658d
 # ╟─9c860e2a-7a2e-11eb-231f-63e9aca1daa0
-# ╟─5efee244-7a2d-11eb-3782-b9d55086d623
 # ╠═37472f2a-7a2a-11eb-1be3-13513d61fcb2
 # ╟─023ebf7c-7b36-11eb-1c9f-430773395534
-# ╟─96290770-7a20-11eb-0ac8-33a6492c7b12
-# ╟─c1f90d6c-7a1d-11eb-2843-f971b5f6f3b0
-# ╟─64e08a56-7a36-11eb-29fd-03662b4d6612
-# ╠═b975680f-0b78-4178-861f-5da6d10327e4
-# ╟─f54119ca-7a1e-11eb-1bec-bf855e34658d
-# ╟─37102544-7abf-11eb-3ac4-6702dfc55425
-# ╟─25553aa4-eef8-40d4-bcf6-0a27f50ab1da
-# ╠═75764e5b-d2f2-4178-a00f-8f362b59a0b8
-# ╠═15cf0c36-7a21-11eb-3e14-63950bcce943
+# ╠═674aeeae-6031-4ee2-a8ed-cd476ceaec8c
+# ╠═a30f3c27-e154-4b70-bc5e-6ddcaaf88b21
 # ╟─a4bf7de3-7794-4609-88e7-9092f496a7bb
 # ╠═a9544e66-7a27-11eb-2b27-1d2124988fb2
 # ╟─3bb2e0c2-7a28-11eb-1ea5-ab03d16bf0b3
@@ -1663,8 +2126,6 @@ The Tropical BLAS project is under the progress,
 # ╟─73f517de-7aed-11eb-03d1-db03dfb01a35
 # ╟─5f2243c4-793d-11eb-1add-392387bb559f
 # ╠═d8daf729-c6fc-4d84-9cf4-bd4f3c6a3c15
-# ╟─c4c9caa6-872a-11eb-3c90-3b18e9762253
-# ╠═50c9910f-6b47-4480-9efd-768dae573b92
 # ╟─344042b4-793d-11eb-3d6f-43eb2a4db9f4
 # ╟─80d764a8-7afd-11eb-3fb8-79169ca56c7e
 # ╟─04d11828-7afa-11eb-3e73-1bbecf566f74
@@ -1676,12 +2137,8 @@ The Tropical BLAS project is under the progress,
 # ╠═0630d232-2791-4834-8076-3aba6c1deaee
 # ╟─6800e29e-bee3-4670-b5b5-aaeee9e25046
 # ╠═0405f4d8-7afb-11eb-2163-597b2edcf17e
-# ╠═3a34aaec-7afb-11eb-1fc4-2fbc027753cc
 # ╟─5f4e0fec-7afd-11eb-37c7-11b84027136a
 # ╟─f13469bc-7afb-11eb-3dab-2b6cdf290f6f
-# ╟─891c39b8-7b1b-11eb-2d70-67fd24021027
-# ╟─5caa1b7c-7b21-11eb-394d-379351fe5170
-# ╠═1b08b3ac-7b1e-11eb-2249-ddd787c549d4
 # ╟─c2f987aa-7a36-11eb-0d03-4b6d328d8fa4
 # ╟─d531c952-7ad9-11eb-1247-dd1913cc4678
 # ╟─541f4062-7b22-11eb-2eb8-17585a3de9c3
@@ -1703,13 +2160,11 @@ The Tropical BLAS project is under the progress,
 # ╠═b6560404-7b2d-11eb-21d7-a1e55609ebf7
 # ╠═6f649efc-7b2d-11eb-1e80-53d84ef98c13
 # ╟─20125640-79fd-11eb-1715-1d071cc6cf6c
-# ╠═c26b5bb6-7984-11eb-18fe-2b6a524f5c85
+# ╠═817b6faf-93d2-4474-8958-ff8ba88fa7c2
+# ╠═a68a1e7e-230a-4b22-b719-d75ef34a28a2
+# ╠═c972a4cd-eef4-41c3-a2a0-302c6c2769c6
 # ╟─698a6dd0-7a0e-11eb-2766-1f0baa1317d2
-# ╟─020cfb20-8228-11eb-2ee9-6de0fc7700b1
-# ╠═ae92d828-7984-11eb-31c8-8b3f9a071c24
 # ╟─2b899624-798c-11eb-20c4-fd5523f7abff
-# ╠═3674a622-823b-11eb-3991-d5771010237b
-# ╠═94b870d2-8235-11eb-33e7-35bf5132efd6
 # ╠═8522456a-823c-11eb-3cc1-fb720f1cc470
 # ╟─1c4b19d2-7b30-11eb-007b-ab03052b22d2
 # ╟─58e38656-7b2e-11eb-3c70-25a919f9926a
@@ -1717,3 +2172,5 @@ The Tropical BLAS project is under the progress,
 # ╟─c1c74e70-7b2c-11eb-2f26-21f54ad00fb2
 # ╟─4c137484-7b30-11eb-2fb1-190d8beebbc3
 # ╟─e302bd1c-7ab5-11eb-03f6-69dcbb817354
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002

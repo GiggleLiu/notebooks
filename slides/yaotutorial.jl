@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.17.2
 
 using Markdown
 using InteractiveUtils
@@ -467,13 +467,6 @@ md"## Balanced or constant?"
 md"""
 ``f: \{0, 1\}^n \rightarrow \{0, 1\}``
 
-<<<<<<< HEAD
-# ╔═╡ 861d41c6-c5d0-45cc-9557-5dfce41e68a3
-YaoToEinsum.yao2einsum(decompose_toffoli(add_circuit(4)[1]))
-
-# ╔═╡ ee4186d7-1f93-4b72-a86c-076b136e2eda
-md"## Not gate"
-=======
 * *Balanced*: $f$ has an equal probability to output vaue 0 and 1.
 * *Constant*: $f$ is a constant function.
 """
@@ -514,7 +507,6 @@ md"""# Summary 1
 * Use a quantum algorithm to solve the "balanced or constant" problem,
 * Tensor network based simulation of quantum circuits,
 """
->>>>>>> 1636c0ca50e7f532eec60625f2ff877ec7aae9c8
 
 # ╔═╡ 0f655562-0c18-43a8-83f0-4d11b7eeb068
 vizcircuit_with_inputs(g, inputs) = vizcircuit(g; show_ending_bar=false, starting_texts=inputs, starting_offset=-0.3, ending_texts=measure!(product_state(bit_literal(inputs...)) |> g), ending_offset=0.3);
@@ -1116,10 +1108,6 @@ md"""
 * Limitations of Linear Cross-Entropy as a Measure for Quantum Advantage, Xun Gao, Marcin Kalinowski, Chi-Ning Chou, Mikhail D. Lukin, Boaz Barak, Soonwon Choi (arXiv:2112.01657)
 """
 
-<<<<<<< HEAD
-# ╔═╡ e5acf299-875b-44cd-80dc-7dbb20c1c4f3
-
-=======
 # ╔═╡ ed4c058f-029b-4162-8d8b-5c323418e8ad
 md"## When tensor network is good."
 
@@ -1157,7 +1145,6 @@ end
 
 # ╔═╡ 669bed15-1c57-401b-bcfb-48b5a1520a58
 timespace_complexity(optcode, uniformsize(optcode, 2))
->>>>>>> 1636c0ca50e7f532eec60625f2ff877ec7aae9c8
 
 # ╔═╡ d04690ca-390b-462b-8257-e9ebe01b3fd0
 md"""
@@ -1987,32 +1974,6 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╟─bded6dc0-bce0-404e-a1f2-36712f26f2d6
 # ╟─beed43ce-b24c-4edd-9da2-30bdd72c9411
 # ╟─0c267c28-967b-4268-8372-00d7b48b7b8e
-<<<<<<< HEAD
-# ╠═f7b8dc5a-c589-41db-b550-d7b4c928dfef
-# ╠═fed37413-c341-4dcf-a637-404d2f186b2b
-# ╠═622fdaac-87dd-4c22-85b9-470510566480
-# ╠═26e5d619-7119-49bc-8907-17ae0db424f5
-# ╠═a7d85b82-a705-4f3b-a371-06a87071335d
-# ╠═617ba29e-a9f9-4ac4-83b6-232b2aff68d7
-# ╠═e2e4ec60-2737-4560-89b1-1e14a35044e8
-# ╠═aea490af-0bdd-4930-9ad2-7d9a13e08c46
-# ╠═c0078012-3d81-4584-a050-9a58802d08a9
-# ╠═aa45acea-e6f7-49fb-a5b6-3ea0f2c1530c
-# ╠═1e2848d6-252b-4db5-9864-1f1886da9998
-# ╠═008d228b-5d88-44c2-a4bc-c877329349bd
-# ╠═e2c3c7a8-0349-4f4c-87a7-3fbe8fc2fe46
-# ╠═0e11d98d-79c6-444d-8df1-357e8218f233
-# ╠═861d41c6-c5d0-45cc-9557-5dfce41e68a3
-# ╟─ee4186d7-1f93-4b72-a86c-076b136e2eda
-# ╠═57a3616e-49af-40b7-a000-a4ecc81af84e
-# ╠═0f655562-0c18-43a8-83f0-4d11b7eeb068
-# ╟─9f402b0e-f6ae-4a2c-960e-5b756a1f6739
-# ╟─8dac807a-445e-477a-8dca-b717277039e0
-# ╠═e188093d-1ef1-4e70-966b-77cc0761a801
-# ╟─02e018b3-2f2e-42b7-b5ab-e06bc72daad4
-# ╟─13fdcd91-4360-4245-8cb6-dbc0b2238976
-# ╠═67ad78c7-930a-48b1-b8d3-d9e549ee7379
-=======
 # ╟─7440555d-685f-4447-a44a-0463b37bd43c
 # ╟─fed37413-c341-4dcf-a637-404d2f186b2b
 # ╟─69d1fc34-3e02-4c4b-83a7-6d05a0d69405
@@ -2023,7 +1984,6 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╟─893baeda-d5b0-43c1-9018-8d18c06486ca
 # ╟─9a5227f6-0db8-43c1-9b79-80897faa86d0
 # ╟─cee8db91-7e84-4728-aef6-ea861c62ff96
->>>>>>> 1636c0ca50e7f532eec60625f2ff877ec7aae9c8
 # ╟─38194214-3bf1-4229-9fe8-37282b30a5ad
 # ╟─4591b3a0-ff3f-46c8-8c8d-ef7c6ba76cc5
 # ╟─7c1cd22b-c478-4dcf-9828-ae6aad3df95a
@@ -2196,16 +2156,12 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╟─ed4c058f-029b-4162-8d8b-5c323418e8ad
 # ╟─a06024c9-49f5-44ab-a3e5-9c06ee68f34c
 # ╠═6f131f36-0b4e-4570-8527-620297fae48e
-<<<<<<< HEAD
-# ╠═e5acf299-875b-44cd-80dc-7dbb20c1c4f3
-=======
 # ╠═7a39257d-b864-460d-bccd-eed9933c4b7c
 # ╠═19c37ef5-fe1d-4061-a5ad-f4b6bd9ecba4
 # ╠═ac82ea9c-be86-4501-95db-04f7eef26bea
 # ╠═b931b25c-508e-4e64-bc3a-ff993643e165
 # ╠═fdf13c95-6d95-4220-9759-5fea44eea274
 # ╠═669bed15-1c57-401b-bcfb-48b5a1520a58
->>>>>>> 1636c0ca50e7f532eec60625f2ff877ec7aae9c8
 # ╟─d04690ca-390b-462b-8257-e9ebe01b3fd0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
