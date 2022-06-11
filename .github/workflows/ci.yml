@@ -21,8 +21,10 @@ jobs:
         run: julia -e 'using Pkg;
             Pkg.activate(".");
             Pkg.instantiate();
-            using PlutoStaticHTML;
-            build_notebooks(BuildOptions("notebooks"))
+            using PlutoSliderServer;
+            for file in readdir("notebooks")
+              endswith(file, ".jl") && PlutoSliderServer.export_notebook(joinpath("notebooks", file))
+            end
             '
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
