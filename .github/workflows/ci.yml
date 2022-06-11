@@ -1,10 +1,10 @@
 name: CI
 on:
-  - push:
+  push:
     branches:
       - main
     tags: '*'
-  - pull_request:
+  pull_request:
   workflow_dispatch:
 jobs:
   docs:
