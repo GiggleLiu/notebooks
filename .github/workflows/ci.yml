@@ -16,8 +16,6 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
-
-      - name: Run Pluto notebooks
       - uses: julia-actions/julia-buildpkg@latest
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
