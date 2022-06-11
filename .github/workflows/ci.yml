@@ -1,11 +1,16 @@
 name: CI
 on:
   - push
+    branches:
+      - main
+    tags: '*'
   - pull_request
+  workflow_dispatch:
 jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
@@ -13,16 +18,7 @@ jobs:
           version: '1'
 
       - name: Run Pluto notebooks
-        run: julia -e 'using Pkg;
-            Pkg.activate(".");
-            Pkg.instantiate();
-            Pkg.add([
-            Pkg.PackageSpec(url="https://github.com/GiggleLiu/PlutoUtils.jl", rev="static-export"),
-            Pkg.PackageSpec(url="https://github.com/fonsp/Pluto.jl", rev="05e5b68"),
-            ]);
-            import PlutoUtils;
-            PlutoUtils.Export.github_action(; notebook_dir=joinpath(@__DIR__, "notebooks"), offer_binder=false, export_dir=@__DIR__, generate_default_index=true, project=@__DIR__)
-            '
+      - uses: julia-actions/julia-buildpkg@latest
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
