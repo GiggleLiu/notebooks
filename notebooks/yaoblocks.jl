@@ -20,9 +20,6 @@ using Yao, YaoPlots, PlutoUI, BenchmarkTools, KrylovKit
 # ╔═╡ 7eedb3d5-a3b6-40e5-8d2d-94623faf8d92
 TableOfContents()
 
-# ╔═╡ 84705dc3-dd2c-419b-983e-e6c879dd79da
-md"# YaoBlocks - Hypercubic Linear algebra"
-
 # ╔═╡ 1c835e36-299d-41c7-940f-6e8d9fea87f9
 html"""
 <div align="center">
@@ -30,8 +27,11 @@ html"""
   <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
 </a>
 <br>
-<a href="https://raw.githubusercontent.com/GiggleLiu/notebooks/master/notebooks/yao/yaoblocks.jl" target="_blank"> download this notebook </a></div>
+<a href="https://raw.githubusercontent.com/GiggleLiu/notebooks/master/notebooks/yaoblocks.jl" target="_blank"> download this notebook </a></div>
 """
+
+# ╔═╡ 84705dc3-dd2c-419b-983e-e6c879dd79da
+md"# YaoBlocks - Hypercubic Linear algebra"
 
 # ╔═╡ caec900e-13fd-4340-8c18-5c1d4ee91a29
 md"## Definition and interfaces
@@ -224,10 +224,12 @@ md"""
 ```math
 \texttt{time\_evolve(H, t)} = e^{-iHt}
 ```
+
+When the input operator is not Hermitian, the block constructor will throw you an error:
 """
 
 # ╔═╡ 14c9e171-9a55-4967-a35c-dae6cebaa509
-time_evolve(ConstGate.S, 0.4)
+# time_evolve(ConstGate.S, 0.4)
 
 # ╔═╡ 3c186694-ffa1-490c-9009-74ed2916ce40
 mat(ConstGate.S)  # this is not hermitian
@@ -278,10 +280,11 @@ mat(rot(X, 0.4))
 md"The Heisenberg Hamiltonian is hermitian"
 
 # ╔═╡ e4b86d19-3d89-4410-99cb-d79feaa96e11
-md"Only reflexive operators are allowed in rotation gate as the generator."
+md"Only reflexive operators are allowed in rotation gate as the generator.
+The following code will error:"
 
 # ╔═╡ a04b4e93-d08a-4105-b27c-d5bee49296ff
-rot(X + Y, 0.5)
+# rot(X + Y, 0.5)
 
 # ╔═╡ ff0d1a92-5d70-41e7-a64a-65dc1e9b8e9a
 X + Y
@@ -606,8 +609,8 @@ YaoPlots = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
 BenchmarkTools = "~1.3.1"
 KrylovKit = "~0.5.4"
 PlutoUI = "~0.7.39"
-Yao = "~0.8.1"
-YaoPlots = "~0.7.4"
+Yao = "~0.8.2"
+YaoPlots = "~0.7.5"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1071,9 +1074,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "383a578bdf6e6721f480e749d503ebc8405a0b22"
+git-tree-sha1 = "2bbd9f2e40afd197a1379aef05e0d85dba649951"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.4.6"
+version = "1.4.7"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1134,14 +1137,14 @@ version = "0.3.3"
 
 [[deps.Yao]]
 deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "Reexport", "YaoAPI", "YaoArrayRegister", "YaoBlocks", "YaoSym"]
-git-tree-sha1 = "d0f9e768783cc473c4c25eb753eceb418051a524"
+git-tree-sha1 = "c23c27ba3186a6558ff8bc3f4b7bc16e5af76c1e"
 uuid = "5872b779-8223-5990-8dd0-5abbb0748c8c"
-version = "0.8.1"
+version = "0.8.2"
 
 [[deps.YaoAPI]]
-git-tree-sha1 = "98cfa822c093a5727f0c9f6b94b9541e0c64a68c"
+git-tree-sha1 = "3244c75eb3fbae41e3a3fb622d1808da1ce83b78"
 uuid = "0843a435-28de-4971-9e8b-a9641b2983a8"
-version = "0.4.0"
+version = "0.4.1"
 
 [[deps.YaoArrayRegister]]
 deps = ["Adapt", "BitBasis", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "SparseArrays", "StaticArrays", "StatsBase", "TupleTools", "YaoAPI"]
@@ -1151,9 +1154,9 @@ version = "0.9.1"
 
 [[deps.YaoBlocks]]
 deps = ["BitBasis", "CacheServers", "ChainRulesCore", "ExponentialUtilities", "InteractiveUtils", "LegibleLambdas", "LinearAlgebra", "LuxurySparse", "MLStyle", "Random", "SparseArrays", "StaticArrays", "StatsBase", "TupleTools", "YaoAPI", "YaoArrayRegister"]
-git-tree-sha1 = "3dc8e5a7ebec4cc7f2854f8a66b5e77c5fc36fc1"
+git-tree-sha1 = "3a09ed20b1113f094d024e2f48f3789e5e22dd40"
 uuid = "418bc28f-b43b-5e0b-a6e7-61bbc1a2c1df"
-version = "0.13.1"
+version = "0.13.2"
 
 [[deps.YaoHIR]]
 deps = ["Expronicon", "MLStyle", "YaoLocations"]
@@ -1168,9 +1171,9 @@ version = "0.1.6"
 
 [[deps.YaoPlots]]
 deps = ["BitBasis", "Colors", "Compose", "GraphPlot", "Graphs", "Multigraphs", "Viznet", "Yao", "ZXCalculus"]
-git-tree-sha1 = "49dd2db39a9c6e28d8d9c732c34619835c44c14c"
+git-tree-sha1 = "4774b334e01e13a14767cd6aec2699942a9d24a6"
 uuid = "32cfe2d9-419e-45f2-8191-2267705d8dbc"
-version = "0.7.4"
+version = "0.7.5"
 
 [[deps.YaoSym]]
 deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "Requires", "SparseArrays", "YaoArrayRegister", "YaoBlocks"]
