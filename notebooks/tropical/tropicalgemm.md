@@ -233,16 +233,16 @@ VectorizationBase.Vec{4, Float64}<1.0, 2.0, 3.0, 4.0>ₜ</pre>
 
 <pre class='language-julia'><code class='language-julia'>v = Tropical.(randn(10))</code></pre>
 <pre id='var-v' class='code-output documenter-example-output'>10-element Vector{TropicalF64}:
-  -0.2945481602054801ₜ
-   1.0190885428336303ₜ
-  -1.4212223893022289ₜ
- -0.11923623603233438ₜ
-  -1.9239096962618185ₜ
-    0.700790066133385ₜ
-  -1.7944285769195838ₜ
- -0.39814213553875527ₜ
-   1.4269238867332714ₜ
-  -0.8852115298016074ₜ</pre>
+  -1.6419821419498775ₜ
+  -0.6999359164580576ₜ
+   1.6424179523692233ₜ
+  -1.4353441224697825ₜ
+   1.1876198614745208ₜ
+  -1.0000445776680105ₜ
+  -0.9710225581888475ₜ
+   0.6348180715559512ₜ
+ -0.47473599321756066ₜ
+  -0.6216712171270768ₜ</pre>
 
 
 <div class="markdown"><ul>
@@ -256,14 +256,14 @@ VectorizationBase.Vec{4, Float64}<1.0, 2.0, 3.0, 4.0>ₜ</pre>
 </div>
 
 <pre class='language-julia'><code class='language-julia'>ptr = VectorizationBase.stridedpointer(v)</code></pre>
-<pre id='var-ptr' class='code-output documenter-example-output'>LayoutPointers.StridedPointer{TropicalF64, 1, 1, 0, (1,), Tuple{StaticInt{8}}, Tuple{StaticInt{1}}}(Ptr{TropicalF64} @0x00007f83b92467a0, ArrayInterface.StrideIndex{1, (1,), 1, Tuple{StaticInt{8}}, Tuple{StaticInt{1}}}((static(8),), (static(1),)))</pre>
+<pre id='var-ptr' class='code-output documenter-example-output'>LayoutPointers.StridedPointer{TropicalF64, 1, 1, 0, (1,), Tuple{StaticInt{8}}, Tuple{StaticInt{1}}}(Ptr{TropicalF64} @0x00007f09ad4baf80, ArrayInterface.StrideIndex{1, (1,), 1, Tuple{StaticInt{8}}, Tuple{StaticInt{1}}}((static(8),), (static(1),)))</pre>
 
 
 <div class="markdown"><p>???</p>
 </div>
 
 <pre class='language-julia'><code class='language-julia'>VectorizationBase.gep(ptr.p, 1)</code></pre>
-<pre id='var-hash829510' class='code-output documenter-example-output'>Ptr{TropicalF64} @0x00007f83b92467a1</pre>
+<pre id='var-hash829510' class='code-output documenter-example-output'>Ptr{TropicalF64} @0x00007f09ad4baf81</pre>
 
 
 <div class="markdown"><ul>
@@ -273,7 +273,7 @@ VectorizationBase.Vec{4, Float64}<1.0, 2.0, 3.0, 4.0>ₜ</pre>
 </div>
 
 <pre class='language-julia'><code class='language-julia'>VectorizationBase.vload(ptr, (3,))</code></pre>
-<pre id='var-hash847646' class='code-output documenter-example-output'>-1.4212223893022289ₜ</pre>
+<pre id='var-hash847646' class='code-output documenter-example-output'>1.6424179523692233ₜ</pre>
 
 
 <div class="markdown"><p>e.g. load data into a 32*8 bit long register, and the offsets are &#40;0, 8, 16, 24&#41; bits, and mask out the first value.</p>
@@ -287,7 +287,7 @@ VectorizationBase.Vec{4, Float64}<1.0, 2.0, 3.0, 4.0>ₜ</pre>
 </div>
 
 <pre class='language-julia'><code class='language-julia'>VectorizationBase.__vload(ptr.p, vi, m, VectorizationBase.StaticBool(false), StaticInt(32))</code></pre>
-<pre id='var-hash173983' class='code-output documenter-example-output'>VectorizationBase.Vec{4, Float64}<0.0, 1.0190885428336303, -1.4212223893022289, -0.11923623603233438>ₜ</pre>
+<pre id='var-hash173983' class='code-output documenter-example-output'>VectorizationBase.Vec{4, Float64}<0.0, -0.6999359164580576, 1.6424179523692233, -1.4353441224697825>ₜ</pre>
 
 
 <div class="markdown"><p>If you want to create some zeros</p>
@@ -349,12 +349,12 @@ VectorizationBase.Vec{4, Float64}<-Inf, -Inf, -Inf, -Inf>ₜ</pre>
     v
 end</code></pre>
 <pre id='var-hash756124' class='code-output documenter-example-output'>6-element Vector{TropicalF64}:
-                 1.0ₜ
-                 2.0ₜ
-                 3.0ₜ
-                 4.0ₜ
-  0.6973826833330837ₜ
- -0.4303812560887033ₜ</pre>
+                1.0ₜ
+                2.0ₜ
+                3.0ₜ
+                4.0ₜ
+ 0.4366547986766843ₜ
+ -1.463339272678213ₜ</pre>
 
 
 <div class="markdown"><ul>

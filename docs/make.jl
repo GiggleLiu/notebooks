@@ -27,6 +27,10 @@ function build()
     return nothing
 end
 
+function mdfile(path...)
+    joinpath(dirname(@__DIR__), "notebooks", path...)
+end
+
 # Build the notebooks; defaults to true.
 if get(ENV, "BUILD_DOCS_NOTEBOOKS", "true") == "true"
     build()
@@ -35,11 +39,11 @@ end
 sitename = "GiggleLiu's notebooks"
 pages = [
     "PlutoStaticHTML" => "index.md",
-    "Yao" => ["YaoBlocks"=>"../notebooks/yao/yaoblocks.md"]
+    "Yao" => ["YaoBlocks"=>mdfile("yao, yaoblocks.md")],
     "Tensor Network" => [
-                         "Tropical Tensors"=>"../notebooks/tropical/tropicaltensornetwork.md",
-                         "Tropical GEMM"=>"../notebooks/tropical/tropicalgemm.md",
-                        ]
+            "Tropical Tensors"=>mdfile("tropical", "tropicaltensornetwork.md"),
+            "Tropical GEMM"=>mdfile("tropical, tropicalgemm.md"),
+        ]
 ]
 
 # Using MathJax3 since Pluto uses that engine too.
