@@ -1219,11 +1219,11 @@ md"**Ising spin glass and Max-2-SAT on random 3-regular graphs**"
 # ╔═╡ e59d7a44-7ae7-11eb-3d93-3bc5cc46bc65
 let
 	function rand_3regular_tn(::Type{T}, n; D=2) where T
-		g = LightGraphs.random_regular_graph(n, 3)
+		g = Graphs.random_regular_graph(n, 3)
 		labels = 1:ne(g)
 		arrays = [rand(T, fill(2, 3)...) for i=1:n]
 		labels = [Int[] for i=1:n]
-		for (k, e) in enumerate(LightGraphs.edges(g))
+		for (k, e) in enumerate(Graphs.edges(g))
 			push!(labels[e.src], k)
 			push!(labels[e.dst], k)
 		end
