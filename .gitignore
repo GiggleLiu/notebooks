@@ -7,4 +7,3 @@ Manifest.toml
 /docs/build/
 /docs/site/
 __pycache__/
-*.html
