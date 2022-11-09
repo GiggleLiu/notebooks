@@ -5,20 +5,26 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ ca8a7622-a420-4adf-9fc9-6094277c3d68
-using NiLang, Optim, Graphs
+using NiLang, Optim
+
+# ╔═╡ 00e6d0b9-755d-45f1-b6c5-8544f3091c4d
+using Graphs
 
 # ╔═╡ 3848fd62-9700-4817-b50c-1fa50e411743
-using Enzyme
+using Enzyme, BenchmarkTools
 
 # ╔═╡ 0f367c00-37d9-4ab5-8a8d-f51a18b0972b
 using LuxorGraphPlot
 
 # ╔═╡ 6e27861f-7f36-46bd-843a-eac598805b36
 function getloc(locs, i)
-    if i==1  # fix one node
+    if i==1  # fix one of the nodes
         x, y = 0.0, 0.0
     else
-        x, y = locs[:,i-1]
+		# correct
+        x, y = locs[1,i-1], locs[2,i-1]
+		# incorrect
+		#x, y = locs[:,i-1]
     end
     return x, y
 end
@@ -45,6 +51,21 @@ function unitdisk_loss(graph::SimpleGraph, locs::AbstractMatrix)
         end
     end
     return loss
+end
+
+# ╔═╡ ebf26ebe-51bd-4acf-b081-922ca86ceadb
+md"## Enzyme"
+
+# ╔═╡ faa66857-b43f-43de-89f6-11213c20965b
+x0 = randn(2, 10)
+
+# ╔═╡ a7b0eb3f-87ce-4e4f-b4ed-1c881b5fe19f
+let
+    graph = smallgraph(:petersen)
+    x0 = ones(2, 9)
+    din = zeros(2, 9)
+    Enzyme.autodiff(unitdisk_loss, Const(graph), Duplicated(x0, din))
+    din
 end
 
 # ╔═╡ 2b2e7066-3039-4063-a4ce-4826944dd501
@@ -136,6 +157,15 @@ end
 # ╔═╡ 58a0462b-bdff-4d9c-a4f7-c210d4e18414
 locs, graph = gadget_batoidea()
 
+# ╔═╡ c0a46484-3209-491c-8234-f8041b637f2a
+unitdisk_loss(graph, x0)
+
+# ╔═╡ 038c415d-e055-48ff-ac2a-3ef93e2b9137
+let
+	din = zeros(2, 10)
+	@benchmark Enzyme.autodiff($unitdisk_loss, Const($graph), Duplicated($x0, $din))
+end
+
 # ╔═╡ 54ce66b9-4d61-4dfe-90b3-8405251aa3ac
 show_graph(graph; locs = [randn(2) for i=1:11])
 
@@ -148,12 +178,19 @@ let
 	end
 end
 
-# ╔═╡ 038c415d-e055-48ff-ac2a-3ef93e2b9137
-Enzyme.autodiff(unitdisk_loss, Const(graph), Duplicated(randn(2, 10), randn(2, 11)))
+# ╔═╡ 4c6eeac1-2f36-44e3-b352-66afff8834e0
+md"## NiLang"
+
+# ╔═╡ 428f63f7-44eb-4d1d-9b99-39b8a80f6c8b
+i_unitdisk_loss(0.0, graph, x0)[1]
+
+# ╔═╡ df885d79-c423-400a-800d-1c07c8a26b93
+@benchmark NiLang.gradient(Val(1), $i_unitdisk_loss, (0.0, $graph, $x0))[3]
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LuxorGraphPlot = "1f49bdf2-22a7-4bc4-978b-948dc219fbbc"
@@ -161,6 +198,7 @@ NiLang = "ab4ef3a6-0b42-11ea-31f6-e34652774712"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 
 [compat]
+BenchmarkTools = "~1.3.2"
 Enzyme = "~0.10.12"
 Graphs = "~1.7.4"
 LuxorGraphPlot = "~0.1.6"
@@ -174,7 +212,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "38d7dd2413bbde120a36d9a31f26d0ac1dbc365e"
+project_hash = "8c622ad4fcc3ee84cff2bb3d2a80f5ad49dbfa7d"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra"]
@@ -203,6 +241,12 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.3.2"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -479,6 +523,12 @@ deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.4.1"
+
+[[deps.JSON]]
+deps = ["Dates", "Mmap", "Parsers", "Unicode"]
+git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.21.3"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -773,6 +823,12 @@ git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
 uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 version = "0.12.3"
 
+[[deps.Parsers]]
+deps = ["Dates", "SnoopPrecompile"]
+git-tree-sha1 = "cceb0257b662528ecdf0b4b4302eb00e767b38e7"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.5.0"
+
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "b4f5d02549a10e20780a24fce72bea96b6329e29"
@@ -851,6 +907,11 @@ deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
+
+[[deps.SnoopPrecompile]]
+git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
+uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
+version = "1.0.1"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -1082,9 +1143,15 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╠═ca8a7622-a420-4adf-9fc9-6094277c3d68
+# ╠═00e6d0b9-755d-45f1-b6c5-8544f3091c4d
 # ╠═06d5dd9a-a46a-48cd-b8cf-ae6c07f0cf7b
 # ╠═6e27861f-7f36-46bd-843a-eac598805b36
+# ╟─ebf26ebe-51bd-4acf-b081-922ca86ceadb
 # ╠═3848fd62-9700-4817-b50c-1fa50e411743
+# ╠═faa66857-b43f-43de-89f6-11213c20965b
+# ╠═c0a46484-3209-491c-8234-f8041b637f2a
+# ╠═038c415d-e055-48ff-ac2a-3ef93e2b9137
+# ╠═a7b0eb3f-87ce-4e4f-b4ed-1c881b5fe19f
 # ╠═b9bbab34-4c6c-4b5b-afc6-b6c07e6122d5
 # ╠═2b2e7066-3039-4063-a4ce-4826944dd501
 # ╠═8524ca57-4ebb-419a-bf69-e37f133f8d31
@@ -1095,6 +1162,8 @@ version = "3.5.0+0"
 # ╠═0f367c00-37d9-4ab5-8a8d-f51a18b0972b
 # ╠═54ce66b9-4d61-4dfe-90b3-8405251aa3ac
 # ╠═97609579-c736-40d3-a36b-0f7f23d92b8e
-# ╠═038c415d-e055-48ff-ac2a-3ef93e2b9137
+# ╟─4c6eeac1-2f36-44e3-b352-66afff8834e0
+# ╠═428f63f7-44eb-4d1d-9b99-39b8a80f6c8b
+# ╠═df885d79-c423-400a-800d-1c07c8a26b93
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
