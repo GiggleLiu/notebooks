@@ -61,9 +61,6 @@ function print_dependency_tree(pkg; maxdepth=5)
 	HTML("<p style='font-family: Consolas; line-height: 1.2em; max-height: 300px;'>" * replace(String(take!(io)), "\n"=>"<br>") * "</p>")
 end
 
-# ╔═╡ a3b55379-b79b-433d-99c6-e617856de0f1
-
-
 # ╔═╡ 9bb41efb-2817-4258-af2b-1fe515b6007a
 macro mermaid_str(str)
 	return HTML("""<script src="https://cdn.bootcss.com/mermaid/8.14.0/mermaid.min.js"></script>
@@ -115,9 +112,9 @@ md"""
 Julia 于2012年在 MIT 诞生， 其的源代码被托管在 [Github 仓库](https://github.com/JuliaLang/julia) 中， 其软件协议为可商用的 MIT 协议。 不仅 Julia 语言如此， 大多 Julia 的软件包系统也依托 Github 管理， 其协议也大多为开源。目的是为了解决两语言问题
 
 * 速度 (🐟): C, C++, Fortran
-* 开发效率 (🐾): Python, Matlab, Mathematica
+* 开发效率 (🐾): Python, $(html"<strike>Matlab （非传统意义的编程语言）</strike>")
 
-为什么拒绝 **Python + C++**?平台移植差，可维护性变差，很多程序抽象发生在底层。
+双语言 **Python + C++** 的问题?平台移植差，可维护性变差，很多程序抽象发生在底层。
 
 ![](https://user-images.githubusercontent.com/6257240/200309092-6a138366-ac52-47e5-a010-47711612632b.png)
 """
@@ -131,7 +128,7 @@ md"静态程序的执行很快，因为类型信息被提前知道就可以被�
 # ╔═╡ 000b93e6-8a1d-4c67-b5da-5013c6421e2c
 mermaid"""
 flowchart LR;
-A("一段静态类型程序") --> | 编译/慢 | B("二进制文件") --> | 执行/快 | C(结果)
+A("一段静态类型程序") --> | 编译/很慢 | B("二进制文件") --> | 执行/快 | C(结果)
 """
 
 # ╔═╡ ef736f15-6180-46ed-ac52-d57ac17429e8
@@ -159,6 +156,15 @@ md"🤔"
 
 # ╔═╡ 922a2063-f516-46a5-95a9-9e0adca018aa
 typemax(Int)
+
+# ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
+let
+	x = 1
+	for i in 1:999
+    	x = x * i
+	end
+	x
+end
 
 # ╔═╡ e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
 md"由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
@@ -492,9 +498,9 @@ uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "0.5.2+0"
 
 [[deps.DataAPI]]
-git-tree-sha1 = "46d2680e618f8abd007bce0c3026cb0c4a8f2032"
+git-tree-sha1 = "e08915633fcb3ea83bf9d6126292e5bc5c739922"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
-version = "1.12.0"
+version = "1.13.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -743,9 +749,9 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
-git-tree-sha1 = "b3363d7460f7d098ca0912c69b082f75625d7508"
+git-tree-sha1 = "a4ada03f999bd01b3a25dcaa30b2d929fe537e00"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
-version = "1.0.1"
+version = "1.1.0"
 
 [[deps.SparseArrays]]
 deps = ["LinearAlgebra", "Random"]
@@ -880,7 +886,6 @@ version = "17.4.0+0"
 # ╠═922071fb-dac2-436e-a343-d0d22bd3c864
 # ╠═d75c0427-12fe-4b2d-9bd1-b08f477966a6
 # ╠═e23b935b-eab0-4256-9983-84fab6ed6632
-# ╠═a3b55379-b79b-433d-99c6-e617856de0f1
 # ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
 # ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
 # ╟─fb09bc52-7282-44c9-b4c1-eb0b02c287df
@@ -893,6 +898,7 @@ version = "17.4.0+0"
 # ╟─9319685e-8d0f-46d3-a21b-38e1c55cc76c
 # ╟─105852eb-8f34-4d52-8ec3-68dff6997efb
 # ╠═922a2063-f516-46a5-95a9-9e0adca018aa
+# ╠═13bcf3d6-2418-46e1-acde-050914064741
 # ╟─e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
