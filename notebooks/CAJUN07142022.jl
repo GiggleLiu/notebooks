@@ -176,6 +176,16 @@ md"NOTE: Please download this notebook and try the following example!"
 	CountingAll()=>"Can you count all possible solutions?",
 ])
 
+# ╔═╡ d34cab43-b1de-443b-af1c-316bd739b6e2
+struct A
+end
+
+# ╔═╡ ff80907e-c1ca-4e2a-a45c-54315a63f74c
+Base.show(io::IO, ::MIME"text/html", ::A) = Base.show(io, MIME"text/html"(), md"$x^2$")
+
+# ╔═╡ 7def1268-d9e6-4aab-a884-29860939d886
+A()
+
 # ╔═╡ 32b46972-13da-4553-9daa-7107439fbf7f
 let
 	p = IndependentSet(graph)
@@ -240,7 +250,7 @@ PlutoUI = "~0.7.39"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.0-rc1"
+julia_version = "1.8.0"
 manifest_format = "2.0"
 project_hash = "08a17d7fd11b760345fae16d6b08ee200182550e"
 
@@ -651,7 +661,7 @@ version = "0.6.3"
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.81.0+0"
+version = "7.84.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -1153,7 +1163,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.0+0"
+version = "5.1.1+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1176,7 +1186,7 @@ version = "1.3.7+1"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.41.0+1"
+version = "1.48.0+0"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1226,6 +1236,9 @@ version = "3.5.0+0"
 # ╟─03c80485-97f2-4c10-913a-4b7930f6c6b6
 # ╟─591036aa-5dde-443f-b95a-53c1bb42c212
 # ╟─bc7caf0d-8f83-417a-b301-9a477d87f30b
+# ╠═d34cab43-b1de-443b-af1c-316bd739b6e2
+# ╠═ff80907e-c1ca-4e2a-a45c-54315a63f74c
+# ╠═7def1268-d9e6-4aab-a884-29860939d886
 # ╟─32b46972-13da-4553-9daa-7107439fbf7f
 # ╟─56a1e8ef-1164-4ec8-8b59-619ce1340cda
 # ╟─9e42d7ef-02ad-42de-adca-ee49b4a5394f

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.14
+# v0.19.15
 
 using Markdown
 using InteractiveUtils
@@ -13,16 +13,28 @@ using PlutoUI
 # ╔═╡ 52c27043-31c2-4e90-b6a5-d858aa7056d4
 using AbstractTrees
 
+# ╔═╡ cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
+using Libdl
+
+# ╔═╡ 9954c036-d4d3-42c9-acbf-22623f84f254
+using PyCall
+
+# ╔═╡ c73baba2-9ec7-461e-b4e7-fd162606e134
+using BenchmarkTools
+
 # ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
 using Yao
 
 # ╔═╡ 713939c6-4fe6-11ed-3e49-6bcc498b82f2
 md"""
-# Julia 语言基础
+# 给 Julia 开发者的入门教程
 """
 
 # ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
 md"## 一些帮助函数"
+
+# ╔═╡ 156a1a62-e131-403f-b2a2-80f49e6a9b33
+html"<button onclick=present()>Present</button>"
 
 # ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
 AbstractTrees.children(x::Type) = subtypes(x)
@@ -94,12 +106,32 @@ table.nohover tr:hover td {
 """)
 	end
 
+# ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
+function livecoding(src)
+	HTML("""
+<link rel="stylesheet" type="text/css" href="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.css" />
+<div id="demo"></div>
+<script src="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.min.js"></script>
+<script>
+AsciinemaPlayer.create('$src', document.getElementById('demo'));
+</script>
+""")
+end
+
+# ╔═╡ 4e054cdc-8004-4e2a-9eb4-e30b52992386
+livecoding("https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/master/clips/yao.cast")
+
 # ╔═╡ fb09bc52-7282-44c9-b4c1-eb0b02c287df
 md"""
 ## 内容
-* Julia 的软件包管理
+* Julia 语言简介
 * Julia 的语言特性
-* Julia 与高性能计算
+* Julia 语言开发者
+"""
+
+# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
+md"""
+[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
 """
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
@@ -109,21 +141,19 @@ md"# Julia 是什么样的语言?"
 md"""
 ## 源代码开放的现代高性能语言
 
-Julia 于2012年在 MIT 诞生， 其的源代码被托管在 [Github 仓库](https://github.com/JuliaLang/julia) 中， 其软件协议为可商用的 MIT 协议。 不仅 Julia 语言如此， 大多 Julia 的软件包系统也依托 Github 管理， 其协议也大多为开源。目的是为了解决两语言问题
+Julia 于2012年在 MIT 诞生。Julia 语言的解释/编译器的源代码是开放的，被托管在 [Github 仓库](https://github.com/JuliaLang/julia) 中，其软件协议为可商用的 MIT 协议。 不仅 Julia 语言如此， 大多 Julia 的软件包系统也依托 Github 管理， 其协议也大多为开源。
 
-* 速度 (🐟): C, C++, Fortran
-* 开发效率 (🐾): Python, $(html"<strike>Matlab （非传统意义的编程语言）</strike>")
+Julia 语言被设计出来的目的是为了兼顾代码执行速度与开发效率.
 
-双语言 **Python + C++** 的问题?平台移植差，可维护性变差，很多程序抽象发生在底层。
-
-![](https://user-images.githubusercontent.com/6257240/200309092-6a138366-ac52-47e5-a010-47711612632b.png)
+* 执行速度: C, C++, Fortran
+* 开发效率: Python, $(html"Matlab")
 """
 
 # ╔═╡ ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
-md"# 快的秘诀"
+md"# 编译语言快的秘诀"
 
 # ╔═╡ fe174dbe-5c4b-4445-b485-5c21cc1e8917
-md"静态程序的执行很快，因为类型信息被提前知道就可以被高效的编译。"
+md"静态类型程序的执行很快，因为类型信息被提前知道就可以被高效的编译。"
 
 # ╔═╡ 000b93e6-8a1d-4c67-b5da-5013c6421e2c
 mermaid"""
@@ -131,43 +161,80 @@ flowchart LR;
 A("一段静态类型程序") --> | 编译/很慢 | B("二进制文件") --> | 执行/快 | C(结果)
 """
 
+# ╔═╡ e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
+const Clib = tempname()
+
+# ╔═╡ 33a43668-4484-47d2-a7a6-09d930232252
+let
+	# prepare the source code
+	source_name = "$Clib.c"
+	open(source_name, "w") do f
+		write(f, """
+#include <stddef.h>
+int c_factorial(size_t n) {
+	int s = 1;
+	for (size_t i=1; i<=n; i++) {
+		s *= i;
+	}
+	return s;
+}
+""")
+	end
+	# compile to a shared library by piping C_code to gcc;
+	# (only works if you have gcc installed)
+	run(`gcc $source_name -fPIC -O3 -msse3 -shared -o $(Clib * "." * Libdl.dlext)`)
+end
+
+# ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
+c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
+
+# ╔═╡ ab045ed0-7cbb-4565-bd7f-239dd94ce99e
+md"# 解释语言方便的秘诀"
+
+# ╔═╡ f3695873-435d-44cb-b9fb-af34dc38bdaa
+md"动态类型的语言它不需要被编译"
+
 # ╔═╡ ef736f15-6180-46ed-ac52-d57ac17429e8
 mermaid"""
 flowchart LR;
 A("一段静态类型程序") --> | 解释执行/慢 | C(结果)
 """
 
-# ╔═╡ 9319685e-8d0f-46d3-a21b-38e1c55cc76c
-md"""
-```ipython
-In [20]: x = 1
-
-In [21]: for i in range(1, 1000):
-    ...:     x = x * i
-    ...: 
-
-In [22]: x
-Out[22]: 402387260077093773543702433923003985719374864210714632543799910429938512398629020592044208486969404800479988610197196058631666872994808558901323829669944590997424504087073759918823627727188732519779505950995276120874975462497043601418278094646496291056393887437886487337119181045825783647849977012476632889835955735432513185323958463075557409114262417474349347553428646576611667797396668820291207379143853719588249808126867838374559731746136085379534524221586593201928090878297308431392844403281231558611036976801357304216168747609675871348312025478589320767169132448426236131412508780208000261683151027341827977704784635868170164365024153691398281264810213092761244896359928705114964975419909342221566832572080821333186116811553615836546984046708975602900950537616475847728421889679646244945160765353408198901385442487984959953319101723355556602139450399736280750137837615307127761926849034352625200015888535147331611702103968175921510907788019393178114194545257223865541461062892187960223838971476088506276862967146674697562911234082439208160153780889893964518263243671616762179168909779911903754031274622289988005195444414282012187361745992642956581746628302955570299024324153181617210465832036786906117260158783520751516284225540265170483304226143974286933061690897968482590125458327168226458066526769958652682272807075781391858178889652208164348344825993266043367660176999612831860788386150279465955131156552036093988180612138558600301435694527224206344631797460594682573103790084024432438465657245014402821885252470935190620929023136493273497565513958720559654228749774011413346962715422845862377387538230483865688976461927383814900140767310446640259899490222221765904339901886018566526485061799702356193897017860040811889729918311021171229845901641921068884387121855646124960798722908519296819372388642614839657382291123125024186649353143970137428531926649875337218940694281434118520158014123344828015051399694290153483077644569099073152433278288269864602789864321139083506217095002597389863554277196742822248757586765752344220207573630569498825087968928162753848863396909959826280956121450994871701244516461260379029309120889086942028510640182154399457156805941872748998094254742173582401063677404595741785160829230135358081840096996372524230560855903700624271243416909004153690105933983835777939410970027753472000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-```
+# ╔═╡ 0f526702-f8e6-492d-bd14-e81874e6fefe
+py"""
+def factorial(n):
+	x = 1
+	for i in range(1, n+1):
+	    x = x * i
+	return x
 """
+
+# ╔═╡ 46cf6881-650e-4ba1-a0dc-bcda67fb367b
+py"factorial"(1000)
+
+# ╔═╡ 922a2063-f516-46a5-95a9-9e0adca018aa
+# `typemax` 可以获取类型的最大值
+typemax(Int)
 
 # ╔═╡ 105852eb-8f34-4d52-8ec3-68dff6997efb
 md"🤔"
 
-# ╔═╡ 922a2063-f516-46a5-95a9-9e0adca018aa
-typemax(Int)
-
-# ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
-let
-	x = 1
-	for i in 1:999
-    	x = x * i
-	end
-	x
-end
-
 # ╔═╡ e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
-md"由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
+md"但由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
+
+# ╔═╡ f7e5304d-7573-4e8c-b516-4c16a7432067
+md"""## 双语言 **Python & C++** 的问题?
+### 可维护性变差
+* 配置 setup 文件更加复杂, 平台移植性变差，
+* 培养新人成本过高,
+
+### 非常适合张量运算, 但很多程序抽象发生在底层
+* 蒙特卡洛 (Monte Carlo) 和模拟退火 (Simulated Annealing) 方法, 频繁多变的随机数生成和采样
+* 范型张量网络 (Generic Tensor Network), 张量中的标量类型的基本元素非实数, 而是 tropical number 或者有限域 (Finite Field Algebra)
+* 组合优化中的分支界定法 (branching)
+
+![](https://user-images.githubusercontent.com/6257240/200309092-6a138366-ac52-47e5-a010-47711612632b.png)
+"""
 
 # ╔═╡ d04b2eca-9662-4518-8bb6-8b1bf07e8984
 mermaid"""
@@ -180,6 +247,66 @@ B -- 是 --> C
 
 # ╔═╡ 3e3a2f23-8098-4d06-b4d1-157c97e4c094
 md"函数实例 (method instance)： 内存中，一个针对特定输入类型的函数被编译后的二进制码。"
+
+# ╔═╡ be4da897-df85-4276-bde1-7c1824cae796
+md"""
+### Julia 函数被编译的过程
+0. 拿到一段 Julia 程序
+1. 在 Julia 的中间表示 (Intermediate Representation) 上推导数据类型
+2. 将带类型的程序编译到 LLVM 中间表示上
+3. LLVM 在这个中间表示的基础上生成高性能的汇编/二进制码
+"""
+
+# ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+
+
+# ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
+function jlfactorial(n)
+	x = 1
+	for i in 1:n
+    	x = x * i
+	end
+	return x
+end
+
+# ╔═╡ 4253af25-41bd-47b6-a11e-c2902c677963
+jlfactorial(1000)
+
+# ╔═╡ db779958-e7d5-4164-87a7-219257ae45f0
+@code_typed jlfactorial(1000)
+
+# ╔═╡ 7b8e9026-6dc1-4d28-a2a7-912399a4fd51
+with_terminal() do
+	@code_native jlfactorial(1000)
+end
+
+# ╔═╡ 01972597-9d31-4972-a15d-51832f0f5910
+@benchmark c_factorial(1000)
+
+# ╔═╡ ec33aba5-28c9-4be9-9804-361f65de1f7a
+@benchmark jlfactorial(1000)
+
+# ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
+@benchmark $(py"factorial")(1000)
+
+# ╔═╡ 917e187d-5eda-49d6-a72a-0ed3f60d82d6
+md"[learn more about calling C code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
+
+# ╔═╡ 2613110d-1ab8-413a-85ce-a2985ee420da
+md"## Julia 语言被编译到了 LLVM"
+
+# ╔═╡ fb53a9ed-df58-410a-8275-e15718514950
+md"""
+LLVM 是很多语言的后端 Julia, Rust, Swift, Kotlin et al.
+"""
+
+# ╔═╡ e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
+with_terminal() do 
+	@code_llvm jlfactorial(10)
+end
+
+# ╔═╡ ff27c9fc-0e55-47dc-b189-534f7a48fd3f
+md"![LLVM](https://upload.wikimedia.org/wikipedia/en/d/dd/LLVM_logo.png)"
 
 # ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 md"""
@@ -395,17 +522,32 @@ md"""## 资源
 ### 这个 notebook
 """
 
+# ╔═╡ daa6c126-c5ea-4f9c-b04d-39da54e3fc4c
+html"""
+<link rel="stylesheet" type="text/css" href="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.css" />
+<div id="demo"></div>
+<script src="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.min.js"></script>
+<script>
+AsciinemaPlayer.create('https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/master/clips/yao.cast', document.getElementById('demo'));
+</script>
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 
 [compat]
 AbstractTrees = "~0.4.3"
+BenchmarkTools = "~1.3.2"
 PlutoUI = "~0.7.48"
+PyCall = "~1.94.1"
 Yao = "~0.8.5"
 """
 
@@ -415,7 +557,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "df9118afe0aa8250f4af6b3ec6f0b50aa37bc7fd"
+project_hash = "8a3ab74d63acc8d27d4daa56dcc44f532108c58f"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -455,6 +597,12 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.3.2"
 
 [[deps.BitBasis]]
 deps = ["LinearAlgebra", "StaticArrays"]
@@ -496,6 +644,12 @@ version = "4.3.0"
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "0.5.2+0"
+
+[[deps.Conda]]
+deps = ["Downloads", "JSON", "VersionParsing"]
+git-tree-sha1 = "6e47d11ea2776bc5627421d59cdcc1296c058071"
+uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+version = "1.7.0"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "e08915633fcb3ea83bf9d6126292e5bc5c739922"
@@ -713,6 +867,16 @@ version = "0.7.48"
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
+[[deps.Profile]]
+deps = ["Printf"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+
+[[deps.PyCall]]
+deps = ["Conda", "Dates", "Libdl", "LinearAlgebra", "MacroTools", "Serialization", "VersionParsing"]
+git-tree-sha1 = "53b8b07b721b77144a0fbbbc2675222ebf40a02d"
+uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+version = "1.94.1"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -824,6 +988,11 @@ uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
+[[deps.VersionParsing]]
+git-tree-sha1 = "58d6e80b4ee071f5efd07fda82cb9fbe17200868"
+uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
+version = "1.3.0"
+
 [[deps.Yao]]
 deps = ["BitBasis", "LinearAlgebra", "LuxurySparse", "Reexport", "YaoAPI", "YaoArrayRegister", "YaoBlocks", "YaoSym"]
 git-tree-sha1 = "58573a875eb3705c752de1ac3e4e228e7cfbc781"
@@ -877,6 +1046,7 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╟─713939c6-4fe6-11ed-3e49-6bcc498b82f2
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
+# ╠═156a1a62-e131-403f-b2a2-80f49e6a9b33
 # ╠═7d242d2a-d190-4a11-b218-60650ba70533
 # ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
 # ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
@@ -888,20 +1058,46 @@ version = "17.4.0+0"
 # ╠═e23b935b-eab0-4256-9983-84fab6ed6632
 # ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
 # ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
+# ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
+# ╠═4e054cdc-8004-4e2a-9eb4-e30b52992386
 # ╟─fb09bc52-7282-44c9-b4c1-eb0b02c287df
+# ╟─1ab95944-524b-43d8-a95e-da345634f4c1
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
 # ╟─73ce1dff-a3ff-431b-9acb-7af6c00b35f6
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
 # ╟─fe174dbe-5c4b-4445-b485-5c21cc1e8917
 # ╟─000b93e6-8a1d-4c67-b5da-5013c6421e2c
+# ╠═e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
+# ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
+# ╠═33a43668-4484-47d2-a7a6-09d930232252
+# ╠═2a22f131-6a99-4744-8914-19c8776700e7
+# ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
+# ╟─f3695873-435d-44cb-b9fb-af34dc38bdaa
 # ╟─ef736f15-6180-46ed-ac52-d57ac17429e8
-# ╟─9319685e-8d0f-46d3-a21b-38e1c55cc76c
-# ╟─105852eb-8f34-4d52-8ec3-68dff6997efb
+# ╠═9954c036-d4d3-42c9-acbf-22623f84f254
+# ╠═0f526702-f8e6-492d-bd14-e81874e6fefe
+# ╠═46cf6881-650e-4ba1-a0dc-bcda67fb367b
 # ╠═922a2063-f516-46a5-95a9-9e0adca018aa
-# ╠═13bcf3d6-2418-46e1-acde-050914064741
+# ╟─105852eb-8f34-4d52-8ec3-68dff6997efb
 # ╟─e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
+# ╟─f7e5304d-7573-4e8c-b516-4c16a7432067
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
+# ╟─be4da897-df85-4276-bde1-7c1824cae796
+# ╠═04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+# ╠═13bcf3d6-2418-46e1-acde-050914064741
+# ╠═4253af25-41bd-47b6-a11e-c2902c677963
+# ╠═db779958-e7d5-4164-87a7-219257ae45f0
+# ╠═7b8e9026-6dc1-4d28-a2a7-912399a4fd51
+# ╠═c73baba2-9ec7-461e-b4e7-fd162606e134
+# ╠═01972597-9d31-4972-a15d-51832f0f5910
+# ╠═ec33aba5-28c9-4be9-9804-361f65de1f7a
+# ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
+# ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
+# ╟─2613110d-1ab8-413a-85ce-a2985ee420da
+# ╟─fb53a9ed-df58-410a-8275-e15718514950
+# ╠═e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
+# ╟─ff27c9fc-0e55-47dc-b189-534f7a48fd3f
 # ╟─8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 # ╠═69fed6cc-030b-4066-a023-0bbf1637fbbc
 # ╠═46cd1ee1-e269-46a7-93d3-72597b53a9a9
@@ -948,5 +1144,6 @@ version = "17.4.0+0"
 # ╟─a177bd10-3941-49b3-bd80-9db1c4597fb2
 # ╠═8846ce25-defc-47ad-8490-595f5090bd8a
 # ╠═34ffecd6-202d-46af-862c-0bf34524aa63
+# ╠═daa6c126-c5ea-4f9c-b04d-39da54e3fc4c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
