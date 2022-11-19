@@ -7,7 +7,10 @@ matmul(A, B) = ein"ij,jk->ik"(A, B);  # define matrix multiplication with einsum
 A = randn(Float64, 100, 100);
 B = randn(Float64, 100, 100);
 
-@time matmul(A, B)  # matrix multiplication, 1st run
+#s output_delay = 1
+@time matmul(A, B);  # matrix multiplication, 1st run
+
+#s output_delay = 0.01
 @time matmul(A, B);  # matrix multiplication, 2nd run
 
 # 看看类型推导有没有成功
@@ -24,7 +27,9 @@ at + bt
 At = Tropical.(A);  # `.` means broadcasting, which is similar to Matlab
 Bt = Tropical.(B);
 
+#s output_delay = 1.5
 @time matmul(At, Bt);  # tropical matrix multiplication, 1st run
+#s output_delay = 0.01
 @time matmul(At, Bt);  # tropical matrix multiplication, 2nd run
 
 # 看看类型推导有没有成功

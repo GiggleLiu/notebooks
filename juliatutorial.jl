@@ -118,9 +118,6 @@ AsciinemaPlayer.create('$src', document.getElementById('demo'));
 """)
 end
 
-# ╔═╡ 4e054cdc-8004-4e2a-9eb4-e30b52992386
-livecoding("https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/master/clips/yao.cast")
-
 # ╔═╡ fb09bc52-7282-44c9-b4c1-eb0b02c287df
 md"""
 ## 内容
@@ -258,7 +255,7 @@ md"""
 """
 
 # ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
-
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/einsum.cast")
 
 # ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
 function jlfactorial(n)
@@ -1059,7 +1056,6 @@ version = "17.4.0+0"
 # ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
 # ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
 # ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
-# ╠═4e054cdc-8004-4e2a-9eb4-e30b52992386
 # ╟─fb09bc52-7282-44c9-b4c1-eb0b02c287df
 # ╟─1ab95944-524b-43d8-a95e-da345634f4c1
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
