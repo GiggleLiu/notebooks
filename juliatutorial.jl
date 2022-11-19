@@ -109,11 +109,13 @@ table.nohover tr:hover td {
 # ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
 function livecoding(src)
 	HTML("""
-<link rel="stylesheet" type="text/css" href="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.css" />
-<div id="demo"></div>
+<div id="demo" class="x"></div>
 <script src="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.min.js"></script>
 <script>
-AsciinemaPlayer.create('$src', document.getElementById('demo'));
+var target = document.getElementById('demo');
+AsciinemaPlayer.create('$src', target);
+target.firstChild.firstChild.firstChild.style.background = "#000000";
+target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
 </script>
 """)
 end
@@ -1080,7 +1082,7 @@ version = "17.4.0+0"
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
 # ╟─be4da897-df85-4276-bde1-7c1824cae796
-# ╠═04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+# ╟─04b5f8fc-32c1-430c-8bec-3e1a06bdda24
 # ╠═13bcf3d6-2418-46e1-acde-050914064741
 # ╠═4253af25-41bd-47b6-a11e-c2902c677963
 # ╠═db779958-e7d5-4164-87a7-219257ae45f0
