@@ -123,7 +123,7 @@ end
 # ╔═╡ fb09bc52-7282-44c9-b4c1-eb0b02c287df
 md"""
 ## 内容
-* Julia 语言简介
+* Julia 语言和生态简介
 * Julia 的语言特性
 * Julia 语言开发者
 """
@@ -272,7 +272,9 @@ end
 jlfactorial(1000)
 
 # ╔═╡ db779958-e7d5-4164-87a7-219257ae45f0
-@code_typed jlfactorial(1000)
+with_terminal() do
+	@code_warntype jlfactorial(1000)
+end
 
 # ╔═╡ 7b8e9026-6dc1-4d28-a2a7-912399a4fd51
 with_terminal() do
@@ -556,7 +558,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "8a3ab74d63acc8d27d4daa56dcc44f532108c58f"
+project_hash = "63818cbcb642d9119637d14e560297fd3d2edc9c"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1081,8 +1083,8 @@ version = "17.4.0+0"
 # ╟─f7e5304d-7573-4e8c-b516-4c16a7432067
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
-# ╟─be4da897-df85-4276-bde1-7c1824cae796
 # ╟─04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+# ╟─be4da897-df85-4276-bde1-7c1824cae796
 # ╠═13bcf3d6-2418-46e1-acde-050914064741
 # ╠═4253af25-41bd-47b6-a11e-c2902c677963
 # ╠═db779958-e7d5-4164-87a7-219257ae45f0
