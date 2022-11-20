@@ -43,7 +43,7 @@ Bt = Tropical.(B);
 
 #s output_delay = 0.6
 @time matmul(At, Bt);  # tropical matrix multiplication, 1st run
-#
+
 # 函数实例的数目 +1
 methodinstances(matmul)
 

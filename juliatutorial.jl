@@ -120,13 +120,8 @@ target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
 """)
 end
 
-# ╔═╡ fb09bc52-7282-44c9-b4c1-eb0b02c287df
-md"""
-## 内容
-* Julia 语言和生态简介
-* Julia 的语言特性
-* Julia 语言开发者
-"""
+# ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
+TableOfContents()
 
 # ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
 md"""
@@ -149,7 +144,7 @@ Julia 语言被设计出来的目的是为了兼顾代码执行速度与开发�
 """
 
 # ╔═╡ ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
-md"# 编译语言快的秘诀"
+md"## 编译语言快的秘诀"
 
 # ╔═╡ fe174dbe-5c4b-4445-b485-5c21cc1e8917
 md"静态类型程序的执行很快，因为类型信息被提前知道就可以被高效的编译。"
@@ -187,8 +182,11 @@ end
 # ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
 c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
 
+# ╔═╡ 917e187d-5eda-49d6-a72a-0ed3f60d82d6
+md"[learn more about calling C code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
+
 # ╔═╡ ab045ed0-7cbb-4565-bd7f-239dd94ce99e
-md"# 解释语言方便的秘诀"
+md"## 解释语言方便的秘诀"
 
 # ╔═╡ f3695873-435d-44cb-b9fb-af34dc38bdaa
 md"动态类型的语言它不需要被编译"
@@ -247,17 +245,14 @@ B -- 是 --> C
 # ╔═╡ 3e3a2f23-8098-4d06-b4d1-157c97e4c094
 md"函数实例 (method instance)： 内存中，一个针对特定输入类型的函数被编译后的二进制码。"
 
+# ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/matmul/main.cast")
+
 # ╔═╡ be4da897-df85-4276-bde1-7c1824cae796
 md"""
-### Julia 函数被编译的过程
-0. 拿到一段 Julia 程序
-1. 在 Julia 的中间表示 (Intermediate Representation) 上推导数据类型
-2. 将带类型的程序编译到 LLVM 中间表示上
-3. LLVM 在这个中间表示的基础上生成高性能的汇编/二进制码
+## Julia 函数被编译的过程
+### 1. 拿到一段 Julia 程序
 """
-
-# ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
-livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/einsum.cast")
 
 # ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
 function jlfactorial(n)
@@ -268,18 +263,42 @@ function jlfactorial(n)
 	return x
 end
 
-# ╔═╡ 4253af25-41bd-47b6-a11e-c2902c677963
-jlfactorial(1000)
+# ╔═╡ 70fc53ba-70c5-4ae4-877c-f8e47569adc4
+md"""
+### 2. 在 Julia 的中间表示 (Intermediate Representation) 上推导数据类型
+"""
 
 # ╔═╡ db779958-e7d5-4164-87a7-219257ae45f0
-with_terminal() do
-	@code_warntype jlfactorial(1000)
+@code_typed jlfactorial(1000)
+
+# ╔═╡ 2f36c4e6-1fc5-42e9-b097-315b28f82d5d
+md"""
+### 3. 将带类型的程序编译到 LLVM 中间表示上
+$(html"<img src='https://upload.wikimedia.org/wikipedia/en/d/dd/LLVM_logo.png' width=200/>")
+"""
+
+# ╔═╡ fb53a9ed-df58-410a-8275-e15718514950
+md"""
+LLVM 是很多语言的后端，如 Julia, Rust, Swift, Kotlin 等.
+"""
+
+# ╔═╡ e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
+with_terminal() do 
+	@code_llvm jlfactorial(10)
 end
+
+# ╔═╡ 8e109ec4-6b21-454b-ad7b-e30cef6d14bd
+md"""
+### 4. LLVM 在这个中间表示的基础上生成高性能的汇编/二进制码
+"""
 
 # ╔═╡ 7b8e9026-6dc1-4d28-a2a7-912399a4fd51
 with_terminal() do
 	@code_native jlfactorial(1000)
 end
+
+# ╔═╡ 4253af25-41bd-47b6-a11e-c2902c677963
+jlfactorial(1000)
 
 # ╔═╡ 01972597-9d31-4972-a15d-51832f0f5910
 @benchmark c_factorial(1000)
@@ -290,28 +309,9 @@ end
 # ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
 @benchmark $(py"factorial")(1000)
 
-# ╔═╡ 917e187d-5eda-49d6-a72a-0ed3f60d82d6
-md"[learn more about calling C code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
-
-# ╔═╡ 2613110d-1ab8-413a-85ce-a2985ee420da
-md"## Julia 语言被编译到了 LLVM"
-
-# ╔═╡ fb53a9ed-df58-410a-8275-e15718514950
-md"""
-LLVM 是很多语言的后端 Julia, Rust, Swift, Kotlin et al.
-"""
-
-# ╔═╡ e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
-with_terminal() do 
-	@code_llvm jlfactorial(10)
-end
-
-# ╔═╡ ff27c9fc-0e55-47dc-b189-534f7a48fd3f
-md"![LLVM](https://upload.wikimedia.org/wikipedia/en/d/dd/LLVM_logo.png)"
-
 # ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 md"""
-## 特别之处
+## 语言特性
 
 Julia 有很多特别之处，在此列举一个其中最重要的一点
 
@@ -388,6 +388,9 @@ md"""## 看教程之前
 
 3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
 """
+
+# ╔═╡ fa446b31-a6e2-4704-a9e3-8b2c96ceca90
+md"## 关于性能"
 
 # ╔═╡ a72f4263-b034-4aa8-8611-d53166cbb718
 md"""
@@ -1047,7 +1050,7 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╟─713939c6-4fe6-11ed-3e49-6bcc498b82f2
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
-# ╠═156a1a62-e131-403f-b2a2-80f49e6a9b33
+# ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
 # ╠═7d242d2a-d190-4a11-b218-60650ba70533
 # ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
 # ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
@@ -1060,8 +1063,7 @@ version = "17.4.0+0"
 # ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
 # ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
 # ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
-# ╟─fb09bc52-7282-44c9-b4c1-eb0b02c287df
-# ╟─1ab95944-524b-43d8-a95e-da345634f4c1
+# ╠═27310322-9276-49d4-bc28-d503b6354ce1
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
 # ╟─73ce1dff-a3ff-431b-9acb-7af6c00b35f6
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
@@ -1071,6 +1073,7 @@ version = "17.4.0+0"
 # ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 # ╠═33a43668-4484-47d2-a7a6-09d930232252
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
+# ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
 # ╟─f3695873-435d-44cb-b9fb-af34dc38bdaa
 # ╟─ef736f15-6180-46ed-ac52-d57ac17429e8
@@ -1086,18 +1089,20 @@ version = "17.4.0+0"
 # ╟─04b5f8fc-32c1-430c-8bec-3e1a06bdda24
 # ╟─be4da897-df85-4276-bde1-7c1824cae796
 # ╠═13bcf3d6-2418-46e1-acde-050914064741
-# ╠═4253af25-41bd-47b6-a11e-c2902c677963
+# ╟─70fc53ba-70c5-4ae4-877c-f8e47569adc4
 # ╠═db779958-e7d5-4164-87a7-219257ae45f0
+# ╟─2f36c4e6-1fc5-42e9-b097-315b28f82d5d
+# ╟─fb53a9ed-df58-410a-8275-e15718514950
+# ╠═e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
+# ╟─8e109ec4-6b21-454b-ad7b-e30cef6d14bd
 # ╠═7b8e9026-6dc1-4d28-a2a7-912399a4fd51
+# ╠═4253af25-41bd-47b6-a11e-c2902c677963
 # ╠═c73baba2-9ec7-461e-b4e7-fd162606e134
 # ╠═01972597-9d31-4972-a15d-51832f0f5910
 # ╠═ec33aba5-28c9-4be9-9804-361f65de1f7a
 # ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
-# ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
-# ╟─2613110d-1ab8-413a-85ce-a2985ee420da
-# ╟─fb53a9ed-df58-410a-8275-e15718514950
-# ╠═e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
-# ╟─ff27c9fc-0e55-47dc-b189-534f7a48fd3f
+# ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
+# ╟─1ab95944-524b-43d8-a95e-da345634f4c1
 # ╟─8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 # ╠═69fed6cc-030b-4066-a023-0bbf1637fbbc
 # ╠═46cd1ee1-e269-46a7-93d3-72597b53a9a9
@@ -1112,7 +1117,7 @@ version = "17.4.0+0"
 # ╠═4b12f0d9-e4e1-4214-9127-40612f38d7a3
 # ╟─9b00810e-8dc8-4602-a185-28e60c027b99
 # ╠═8c683b66-1fb2-49ad-9caf-cb891520f5c6
-# ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
+# ╟─fa446b31-a6e2-4704-a9e3-8b2c96ceca90
 # ╟─a72f4263-b034-4aa8-8611-d53166cbb718
 # ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
 # ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
