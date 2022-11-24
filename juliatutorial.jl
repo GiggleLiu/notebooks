@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.15
+# v0.19.16
 
 using Markdown
 using InteractiveUtils
@@ -109,10 +109,11 @@ table.nohover tr:hover td {
 # ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
 function livecoding(src)
 	HTML("""
-<div id="demo" class="x"></div>
-<script src="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.min.js"></script>
+<div></div>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.css" />
+<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.min.js"></script>
 <script>
-var target = document.getElementById('demo');
+var target = currentScript.parentElement.firstElementChild;
 AsciinemaPlayer.create('$src', target);
 target.firstChild.firstChild.firstChild.style.background = "#000000";
 target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
@@ -122,11 +123,6 @@ end
 
 # ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
 TableOfContents()
-
-# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
-md"""
-[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
-"""
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
 md"# Julia 是什么样的语言?"
@@ -309,6 +305,22 @@ jlfactorial(1000)
 # ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
 @benchmark $(py"factorial")(1000)
 
+# ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
+md"""## 看教程之前
+以下内容不会在教程中涉及，但是看本教程的基础。
+
+1. 你需要[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。
+
+2. 你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
+
+3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
+"""
+
+# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
+md"""
+[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
+"""
+
 # ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 md"""
 ## 语言特性
@@ -378,17 +390,6 @@ md"有时候，难论输赢"
 # ╔═╡ 8c683b66-1fb2-49ad-9caf-cb891520f5c6
 f(Float64(5), Float64(5))
 
-# ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
-md"""## 看教程之前
-以下内容不会在教程中涉及，但是看本教程的基础。
-
-1. 你需要[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。
-
-2. 你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
-
-3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
-"""
-
 # ╔═╡ fa446b31-a6e2-4704-a9e3-8b2c96ceca90
 md"## 关于性能"
 
@@ -433,9 +434,6 @@ md"primitive type and composite type"
 
 # ╔═╡ 3f0c4f16-b6c1-41e1-b4ec-7a1895261d53
 sizeof(Int)
-
-# ╔═╡ 8cef1ad0-f1ff-41f8-988e-297d2b3a223b
-
 
 # ╔═╡ c53bff5e-02d7-4741-a891-897f149acad0
 md"### 首先， 你需要一个类型"
@@ -526,16 +524,6 @@ md"""## 资源
 ### 这个 notebook
 """
 
-# ╔═╡ daa6c126-c5ea-4f9c-b04d-39da54e3fc4c
-html"""
-<link rel="stylesheet" type="text/css" href="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.css" />
-<div id="demo"></div>
-<script src="https://github.com/asciinema/asciinema-player/releases/download/v3.0.1/asciinema-player.min.js"></script>
-<script>
-AsciinemaPlayer.create('https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/master/clips/yao.cast', document.getElementById('demo'));
-</script>
-"""
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -559,7 +547,7 @@ Yao = "~0.8.5"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.2"
+julia_version = "1.8.3"
 manifest_format = "2.0"
 project_hash = "63818cbcb642d9119637d14e560297fd3d2edc9c"
 
@@ -1131,7 +1119,6 @@ version = "17.4.0+0"
 # ╟─a08d00ac-e57d-4ba2-b9ae-77ff2647f0c1
 # ╟─30df0765-c59f-4833-9a1a-3c1c559357df
 # ╠═3f0c4f16-b6c1-41e1-b4ec-7a1895261d53
-# ╠═8cef1ad0-f1ff-41f8-988e-297d2b3a223b
 # ╟─c53bff5e-02d7-4741-a891-897f149acad0
 # ╠═6a4e3859-b33e-4a0f-9b60-57ffbcf477da
 # ╟─380daffe-a1ce-48a4-b56b-c7318a78028b
@@ -1149,6 +1136,5 @@ version = "17.4.0+0"
 # ╟─a177bd10-3941-49b3-bd80-9db1c4597fb2
 # ╠═8846ce25-defc-47ad-8490-595f5090bd8a
 # ╠═34ffecd6-202d-46af-862c-0bf34524aa63
-# ╠═daa6c126-c5ea-4f9c-b04d-39da54e3fc4c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
