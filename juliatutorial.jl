@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.15
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,24 @@ using Yao
 # ╔═╡ 713939c6-4fe6-11ed-3e49-6bcc498b82f2
 md"""
 # 给 Julia 开发者的入门教程
+"""
+
+# ╔═╡ 8225e1a9-ee2f-454d-b4c1-84568b10bb1b
+md"""
+# 元信息
+* 12 月 3 日 - 新手教程
+* 12 月 4 日 - 黑客松 （hackathon）, 香港科技大学广州
+* 12 月 5-9 日晚 - 主题报告
+
+    * 国际之夜（英语）
+    * 语言与编译器之夜
+    * 科学之夜
+    * 量子之夜
+    * 新人之夜
+
+会议网址是： [https://cn.julialang.org/meetup-website/2022/](https://cn.julialang.org/meetup-website/2022/)
+
+$(html"<img src='https://discourse.juliacn.com/uploads/default/original/2X/1/1cf10a356b5bbb37bb20cc765ab72f27d5e1366d.png' style='margin-left:-300px;'/>")
 """
 
 # ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
@@ -123,11 +141,6 @@ end
 # ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
 TableOfContents()
 
-# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
-md"""
-[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
-"""
-
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
 md"# Julia 是什么样的语言?"
 
@@ -156,12 +169,14 @@ A("一段静态类型程序") --> | 编译/很慢 | B("二进制文件") --> | �
 """
 
 # ╔═╡ e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
-const Clib = tempname()
+const Clib = tempname()  # create a temperary file.
 
 # ╔═╡ 33a43668-4484-47d2-a7a6-09d930232252
 let
 	# prepare the source code
 	source_name = "$Clib.c"
+
+	# open a file and write the source code
 	open(source_name, "w") do f
 		write(f, """
 #include <stddef.h>
@@ -174,10 +189,41 @@ int c_factorial(size_t n) {
 }
 """)
 	end
+	
 	# compile to a shared library by piping C_code to gcc;
 	# (only works if you have gcc installed)
 	run(`gcc $source_name -fPIC -O3 -msse3 -shared -o $(Clib * "." * Libdl.dlext)`)
+end;
+
+# ╔═╡ 45dc6e01-51aa-4865-b7f4-f0eeeea725c7
+md"""
+NOTES:
+1. 局域环境
+```julia
+let
+	# do something in local scope
 end
+```
+
+2. 匿名函数的一种构造
+```julia
+f(args...) do x
+	# function body
+end
+```
+等价于
+```julia
+f(x -> # function body, args...)
+```
+
+3. Shell 命令
+```julia
+`...`
+```
+"""
+
+# ╔═╡ 84df4e2a-c8f5-494d-94e7-a231ae757d75
+`ls` |> typeof
 
 # ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
 c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
@@ -309,9 +355,25 @@ jlfactorial(1000)
 # ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
 @benchmark $(py"factorial")(1000)
 
+# ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
+md"""## 看教程之前
+以下内容不会在教程中涉及，但是看本教程的基础。
+
+1. 你需要[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。
+
+2. 你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
+
+3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
+"""
+
+# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
+md"""
+[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
+"""
+
 # ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
 md"""
-## 语言特性
+# 多重派发
 
 Julia 有很多特别之处，在此列举一个其中最重要的一点
 
@@ -378,19 +440,8 @@ md"有时候，难论输赢"
 # ╔═╡ 8c683b66-1fb2-49ad-9caf-cb891520f5c6
 f(Float64(5), Float64(5))
 
-# ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
-md"""## 看教程之前
-以下内容不会在教程中涉及，但是看本教程的基础。
-
-1. 你需要[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。
-
-2. 你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
-
-3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
-"""
-
 # ╔═╡ fa446b31-a6e2-4704-a9e3-8b2c96ceca90
-md"## 关于性能"
+md"# Julia 的性能建议"
 
 # ╔═╡ a72f4263-b034-4aa8-8611-d53166cbb718
 md"""
@@ -1049,6 +1100,7 @@ version = "17.4.0+0"
 
 # ╔═╡ Cell order:
 # ╟─713939c6-4fe6-11ed-3e49-6bcc498b82f2
+# ╟─8225e1a9-ee2f-454d-b4c1-84568b10bb1b
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
 # ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
 # ╠═7d242d2a-d190-4a11-b218-60650ba70533
@@ -1072,6 +1124,8 @@ version = "17.4.0+0"
 # ╠═e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
 # ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 # ╠═33a43668-4484-47d2-a7a6-09d930232252
+# ╟─45dc6e01-51aa-4865-b7f4-f0eeeea725c7
+# ╠═84df4e2a-c8f5-494d-94e7-a231ae757d75
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
 # ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
