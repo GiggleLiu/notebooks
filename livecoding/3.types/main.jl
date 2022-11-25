@@ -77,10 +77,10 @@ isconcretetype(Union{ComplexF64, Float64})
 ############ Define you own types ############
 # Let us create a abstract type for finite field algebra that subtypes Number.
 # An abtract type should not contain any field.
-abstract type AbstractMod <: Number end
+abstract type AbstractMod{N} <: Number end  # GF(N)
 
 # Then we define a concrete type with single field `val`
-struct Mod{N,T} <: AbstractMod
+struct Mod{N,T} <: AbstractMod{N}
     val::T
 end
 # It has two fields, `N` is the modulus, `T` is the type of its storage.
@@ -113,7 +113,7 @@ sizeof(Mod{7, Int})
 
 # The field type can be left unspecified.
 # if you have defined the finite field algebra without content type specification,
-struct DynamicMod{N}
+struct DynamicMod{N} <: AbstractMod{N}
     val
 end
 
@@ -168,7 +168,7 @@ Mod64{7} === Mod{7, Int64}
 
 # A type can be declared as mutable
 # The worse implementation of the finite field algebra type could be
-mutable struct MutableDynamicMod{N}
+mutable struct MutableDynamicMod{N} <: AbstractMod{N}
     val
 end
 
