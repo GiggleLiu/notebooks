@@ -1,4 +1,5 @@
-############  Coding Muscle Training 1: Basic types and control flow  ############
+#s delay = 5
+#########  Coding Muscle Training 1: Basic types and control flow  #########
 # Please place your hand on your keyboard, type with me!
 # Ready?
 # 3

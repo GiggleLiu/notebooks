@@ -1,3 +1,4 @@
+#s delay = 5
 ############  Coding Muscle Training 6: Meta-programming  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?

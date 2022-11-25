@@ -1,3 +1,4 @@
+#s delay = 5
 ############  Coding Muscle Training 2: Array Operations  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?

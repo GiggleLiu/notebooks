@@ -1,3 +1,4 @@
+#s delay = 5
 ############  Coding Muscle Training 4: Functions and multiple dispatch  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?

@@ -1,4 +1,5 @@
-#####################  Coding Muscle Training 3: Data types  ############
+#s delay = 5
+##########  Coding Muscle Training 3: Data types  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?
 # 3
