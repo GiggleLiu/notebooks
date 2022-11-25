@@ -1,3 +1,11 @@
+############  Coding Muscle Training 5: Performance tips  ############
+# Please place your hand on your keyboard, type with me!
+# Ready?
+# 3
+# 2
+# 1
+# GO!
+
 ######### Measure the performance of your code #######
 using BenchmarkTools
 

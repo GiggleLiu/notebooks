@@ -1,3 +1,11 @@
+############  Coding Muscle Training 4: Functions and multiple dispatch  ############
+# Please place your hand on your keyboard, type with me!
+# Ready?
+# 3
+# 2
+# 1
+# GO!
+
 ######### Function definition #########
 # the following definitions are equivalent
 # key word arguments are separated from positionoal arguments by ;

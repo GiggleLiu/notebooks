@@ -1,4 +1,12 @@
-############ Primitive Types ############
+#####################  Coding Muscle Training 3: Data types  ############
+# Please place your hand on your keyboard, type with me!
+# Ready?
+# 3
+# 2
+# 1
+# GO!
+
+### Primitive Types ############
 # Primitive types are building blocks of other types
 isprimitivetype(Float64)
 
