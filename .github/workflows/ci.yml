@@ -26,6 +26,9 @@ jobs:
               endswith(file, ".jl") && PlutoSliderServer.export_notebook(joinpath("notebooks", file))
             end
             '
+      - name: Generate Asciinema
+        run:
+          cd livecoding && source generateall.sh
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:

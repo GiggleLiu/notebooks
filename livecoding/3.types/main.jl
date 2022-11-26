@@ -2,9 +2,9 @@
 ##########  Coding Muscle Training 3: Data types  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?
-# 3
-# 2
-# 1
+# 3. press SPACE to pause.
+# 2. press → to move forward.
+# 1. press ← to move backward.
 # GO!
 
 ### Primitive Types ############
