@@ -18,12 +18,15 @@ sizeof(Bool)
 true && false
 # or
 true || false
-# xor: type with \xor<TAB>
+# xor: type \xor<TAB>
 true ⊻ false
+#+ 10
 
 # integers
 3 isa Int
 0x3 isa UInt8  # 8 bit, unsigned integer
+#+ 3
+# hint: try typing `bits<TAB>(3)`
 bitstring(3)
 bitstring(0x3)
 sizeof(3)
@@ -36,12 +39,16 @@ sizeof(0x3)
 7 >> 1  # bit shift right
 7 | 1  # bit-wise or
 7 & 1  # bit-wise and
-7 ⊻ 1  # bit-wise xor
+7 ⊻ 1  # bit-wise xor: type \xor<TAB>
 
 # floating point numbers and complex numbers
-3.0 isa Float64
-3f0 isa Float32
-3.0 + 3im isa ComplexF64
+3.2 isa Float64
+3.2e2 isa Float64
+3.2f2 isa Float32
+3.2 + 3im isa ComplexF64
+# special note: π (type \pi<TAB>) and ℯ (type \euler<TAB>) are Irrational
+typeof(π)
+typeof(ℯ)
 
 # operations
 3.0 ^ 3   # power
@@ -53,6 +60,7 @@ sizeof(0x3)
 (1, "3.0")[1]   # the first element
 
 (3.0=>"3.0") isa Pair
+#+ 3
 # pair has two fields, `first` and `second`
 (3.0=>"3.0").first
 (3.0=>"3.0").second
@@ -72,7 +80,8 @@ Dict(3.0=>"3.0") isa Dict
 # types can be used for conversion
 UInt64(3) isa UInt64
 Float32(3) isa Float32
-# vectors and tuples can be converted using splatting
+# vectors and tuples can be converted using splatting `some_iterable...`
+# splatting means unpacking an iterable.
 [(1, "3.0")...]
 ([1, 3.0]...,)
 ((3.0=>"3.0")...,)
@@ -124,7 +133,7 @@ let     # let creates a local scope
     x   # the (implicitly) returned value
 end
 
-# BitInt uses arbitary precision, it avoids overflow
+# BigInt uses arbitary precision, it avoids overflow
 let
     x = BigInt(1)
     for i=1:100
@@ -138,7 +147,8 @@ end
 # block statement is trivial, it is just a sequence of operations
 a = 0; a += 1; a+=2; a
 
-begin
+# or equivalently
+begin  # the begin statement does create a local scope.
     a = 0
     a += 1
     a+=2
@@ -148,6 +158,7 @@ end
 # for statement
 # the following two statements are the same
 for i in 1:3
+    # `println` is `print` + <LINEBREAK>
     println(i)
 end
 
@@ -156,12 +167,14 @@ for i = 1:3
 end
 
 # declare a variable without initialization
-let
-    for i = 1:3
+#s output_delay = 3
+let   # the `let` statement creates a local scope
+    for i = 1:3  # the `for` statement creates a local scope
         j = i==1 ? 1 : j + 1   # j is not in the outer scope
     end
-    j
+    j  # can not access variables in a local scope
 end
+#s output_delay = 0.5
 
 let
     local j   # declared without initialization
@@ -193,7 +206,8 @@ global_j
 #
 # if statement
 # we can use if statement to find out all prime numbers
-using Primes
+using Primes  # REPL might require you install this package, type `y` to confirm.
+
 for i=1:typemax(Int8)
     if isprime(i)
         println(i)
@@ -210,13 +224,13 @@ let i=Int8(0)
     end
 end
 
-# to find out all prime numbers, you can also use broadcasting 
-# first create a range
-range = Int8(1):typemax(Int8)
-# then create a boolean vector for indexing using broadcasting
-boolean_mask = isprime.(range)
+# A better approach:
+# create a UnitRange for all positive Int8 numbers.
+ints = Int8(1):typemax(Int8)
+# then create a boolean vector for indexing using broadcasting operation: `.`
+boolean_mask = isprime.(ints)
 # the locations marked with 1 will be collected to a vector
-range[boolean_mask]
+ints[boolean_mask]
 
 # even shorter, you can use list comprehension
 [x for x in Int8(1):typemax(Int8) if isprime(x)]
@@ -241,6 +255,7 @@ end
 
 compare(3, 4)
 
+# Error handling
 # try ... catch ... finally ... end
 try
     x = [1]
