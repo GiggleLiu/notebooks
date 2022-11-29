@@ -12,10 +12,12 @@ using BenchmarkTools
 
 # the first example is about small matrix multiplication
 @benchmark x * x setup=(x=randn(4,4))
+#+ 5
 
 # static immutable small array can be much faster! (at the cost of compiling time)
 using StaticArrays
 @benchmark sx * sx setup=(sx=SMatrix{4,4}(randn(4,4)))
+#+ 5
 
 using Profile
 
@@ -30,6 +32,7 @@ let x = randn(4,4)
         x * x
     end
 end
+#+ 5
 
 # the default printing is tree like, here we omit the lines with less than 10 samples
 # each sample corresponds to 1ms.
@@ -48,6 +51,7 @@ let x = randn(4,4)
         x * x
     end
 end
+#+ 5
 
 # special note: memory allocations can also be profiled!
 # please check: https://www.youtube.com/watch?v=BFvpwC8hEWQ
@@ -65,6 +69,7 @@ function loop_over_global()
     end
     return s
 end
+#+ 5
 
 # type unstable code can be slow.
 @benchmark loop_over_global()
@@ -80,13 +85,16 @@ function loop_over_input(x::AbstractVector{T}) where T
     end
     return s
 end
+#+ 5
 
 @benchmark loop_over_input(x) setup=(x = rand(1000))
+#+ 5
 
 @code_warntype loop_over_input(rand(1000))
 
 # another case that type can be unstable is the use of vector with non-concrete element type.
 @benchmark loop_over_input(x) setup=(x = collect(AbstractFloat, rand(1000)))
+#+ 5
 
 # in some cases, global variables can not be avoided.
 # One can use const to improve its performance.
@@ -104,8 +112,10 @@ function loop_over_const_global()
     end
     return s
 end
+#+ 5
 
 @benchmark loop_over_const_global()
+#+ 5
 
 # an alternative solution is annotate the type to help the compiler know its type
 function loop_over_type_annotated_global()
@@ -115,8 +125,10 @@ function loop_over_type_annotated_global()
     end
     return s
 end
+#+ 5
 
 @benchmark loop_over_type_annotated_global()
+#+ 5
 
 # type declaration can also cause type instability
 abstract type AbstractMod{N} <: Number end  # GF(N)
@@ -133,6 +145,7 @@ struct Mod{N,T<:Integer} <: AbstractMod{N}
         Mod{N,T}(val)
     end
 end
+#+ 5
 # define the + operation
 Base.:(+)(x::Mod{N,T}, y::Mod{N,T}) where {N,T} = Mod{N,T}(x.val + y.val)
 
@@ -141,6 +154,7 @@ Base.zero(::Type{Mod{N,T}}) where {N,T} = Mod{N,T}(zero(T))
 
 # it is lower than type stable floating number operations, but faster than type unstable code
 @benchmark loop_over_input(x) setup=(x = Mod{7}.(rand(1:100, 1000)))
+#+ 5
 
 # this is a type unspecified one
 # special note: In a Julia REPL, one can use `↑` key to retrieve history input.
@@ -150,12 +164,14 @@ struct DynamicMod{N} <: AbstractMod{N}
         new{N}(mod(val, N))
     end
 end
+#+ 5
 # similarly
 Base.:(+)(x::DynamicMod{N}, y::DynamicMod{N}) where {N} = DynamicMod{N}(x.val + y.val)
 Base.zero(::Type{DynamicMod{N}}) where {N} = DynamicMod{N}(0)  # integer content
 
 # oops, it is super slow!
 @benchmark loop_over_input(x) setup=(x = DynamicMod{7}.(rand(1000)))
+#+ 5
 
 # this is a mutable type stable one
 mutable struct MutableMod{N,T<:Integer} <: AbstractMod{N}
@@ -169,6 +185,7 @@ mutable struct MutableMod{N,T<:Integer} <: AbstractMod{N}
         MutableMod{N,T}(val)
     end
 end
+#+ 5
 # define the + operation
 Base.:(+)(x::MutableMod{N,T}, y::MutableMod{N,T}) where {N,T} = MutableMod{N,T}(x.val + y.val)
 
@@ -177,15 +194,18 @@ Base.zero(::Type{MutableMod{N,T}}) where {N,T} = MutableMod{N,T}(zero(T))
 
 # it is slightly slower than immutable type
 @benchmark loop_over_input(x) setup=(x = MutableMod{7}.(rand(1:100, 1000)))
+#+ 5
 
 # In conclution, the more (is mutable? type does not change?) you tell the compiler about your variables, the faster code it can generate.
 
 ########## Array performance ##########
 # indexing over a range allocates!
 @benchmark x[1:length(x)÷2] setup=:(x = randn(1000))
+#+ 5
 
 # taking a view is much faster.
 @benchmark view(x, 1:length(x)÷2) setup=:(x = randn(1000))
+#+ 5
 
 # use the following macros,
 # @inline, inlining a small function can improve performance. `@noinline` means do not automatically inline.
@@ -201,6 +221,7 @@ Base.zero(::Type{MutableMod{N,T}}) where {N,T} = MutableMod{N,T}(zero(T))
     end
     return s
 end
+#+ 5
 
 @noinline function innersimd(x, y)
     s = zero(eltype(x))
@@ -209,14 +230,17 @@ end
     end
     return s
 end
+#+ 5
 
 @benchmark inner(x, y) setup=(n = 1000;
                 x = rand(Float32, n);
                 y = rand(Float32, n))
+#+ 5
 
 @benchmark innersimd(x, y) setup=(n = 1000;
                 x = rand(Float32, n);
                 y = rand(Float32, n))
+#+ 5
 
 # for multi-threading, please check `Base.Threads` module:
 # https://docs.julialang.org/en/v1/manual/multi-threading/
