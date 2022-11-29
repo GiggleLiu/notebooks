@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.14
+# v0.19.16
 
 using Markdown
 using InteractiveUtils
@@ -47,6 +47,7 @@ md"""
 # 元信息
 * 12 月 3 日 - 新手教程
 * 12 月 4 日 - **黑客松 （hackathon）, 香港科技大学广州**
+![](https://cn.julialang.org/meetup-website/assets/hackathon.png)
 * 12 月 5-9 日晚 - 主题报告
 
     * 国际之夜（英语）
@@ -62,24 +63,21 @@ $(html"<img src='https://discourse.juliacn.com/uploads/default/original/2X/1/1cf
 
 # ╔═╡ d34ac2d6-bece-4643-b413-4053441af815
 html"""
-<h3>感谢赞助</h3>
+<h2>感谢赞助</h2>
 <table style="width:80%" class="table-sponsor"> <tbody><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/partner.png"> <div>长期合作伙伴</div> </td><td> <div style="display:inline-block; text-align:center; margin-right:20px;"> <a href="https://swarma.org/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/jizhi.png" style="max-width:150px"></a> </div> <div style="display:inline-block; text-align:center"> <a href="https://www.bytedance.com/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/bytedance.webp" style="max-width:200px"></a> </div> </td></tr><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/gold.jpg"> <div>黄金赞助商</div> </td><td> <div style="display:inline-block; text-align:center"> <a href="https://www.tongyuan.cc/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/tongyuan.png" style="max-width:150px"></a> </div> </td></tr></tbody></table>
 """
 
 # ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
 md"""## 看教程之前
-以下内容不会在教程中涉及，但是看本教程的基础。
+以下内容不会在教程中涉及，但是非常重要。
 
-1. 你需要[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。
+1. 参考[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。 以及王至宏写的中文教程： [配置开发环境](https://discourse.juliacn.com/t/topic/6806)
 
-2. 你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
-
-3. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。
+2. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。 相关资料：[Missing Semester](https://missing.csail.mit.edu/2020/)
 """
 
-# ╔═╡ 1ab95944-524b-43d8-a95e-da345634f4c1
-md"""
-[配置开发环境 - 中文版](https://discourse.juliacn.com/t/topic/6806)
+# ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
+md"""你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
 """
 
 # ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
@@ -91,12 +89,23 @@ html"<button onclick=present()>Present</button>"
 # ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
 AbstractTrees.children(x::Type) = subtypes(x)
 
+# ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
+_typestr(T) = T isa UnionAll ? _typestr(T.body) : T
+
+# ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
+function AbstractTrees.printnode(io::IO, x::Type{T}) where T
+	print(io, _typestr(T))
+end
+
 # ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
 function print_type_tree(T; maxdepth=5)
 	io = IOBuffer()
 	AbstractTrees.print_tree(io, T; maxdepth)
 	Text(String(take!(io)))
 end
+
+# ╔═╡ e4bae9e0-c949-4f1f-8b69-14491246d2a3
+print_type_tree(Number)
 
 # ╔═╡ 26b30265-558b-49e7-b9f5-0b8af30c1273
 pkg_registries = Pkg.Operations.Context().registries;
@@ -436,55 +445,259 @@ $(leftright(
 
 """
 
+# ╔═╡ e34c636f-ae8f-46c3-a043-08c0408b3433
+md"""
+## 函数应不应该属于对象？
+假设我们想在 python 中实现一个加法。
+```python
+class X:
+  def __init__(self, num):
+    self.num = num
+
+  def __add__(self, other_obj):
+    return X(self.num+other_obj.num)
+
+  def __radd__(self, other_obj):
+    return X(other_obj.num + self.num)
+
+  def __str__(self):
+    return "X = " + str(self.num)
+
+class Y:
+  def __init__(self, num):
+    self.num = num
+
+  def __radd__(self, other_obj):
+    return Y(self.num+other_obj.num)
+
+  def __str__(self):
+    return "Y = " + str(self.num)
+
+print(X(3) + Y(5))
+
+
+print(Y(3) + X(5))
+
+```
+"""
+
+# ╔═╡ 5d05964f-ca08-4ef4-91d3-f78f990650b0
+# Julian style
+struct X{T}
+	num::T
+end
+
+# ╔═╡ 8d218a48-de95-4a24-9cc2-f4970013182f
+struct Y{T}
+	num::T
+end
+
+# ╔═╡ 72d0e961-8699-4bd3-b2e1-3e9774536e74
+Base.:(+)(a::X, b::Y) = X(a.num + b.num)
+
+# ╔═╡ 91f32f59-f178-4041-8094-9803e868f674
+Base.:(+)(a::Y, b::X) = X(a.num + b.num)
+
+# ╔═╡ 24f9ad0c-0985-4a6b-bde9-b0a87574e188
+Base.:(+)(a::X, b::X) = X(a.num + b.num)
+
+# ╔═╡ d01b94b5-df3d-4a8f-a611-7d53499e6ee7
+Base.:(+)(a::Y, b::Y) = Y(a.num + b.num)
+
+# ╔═╡ 8c9af74a-f4ec-4b56-b560-2c8a77f5e4d9
+md"""
+现在我把这个函数打包做成了一个package，由个人问我他其实有个C，想拓展这个加法。
+"""
+
+# ╔═╡ 53fb47ff-c48a-41f4-9066-bd2c2af28dfd
+md"""
+```python
+class Z:
+  def __init__(self, num):
+    self.num = num
+
+  def __add__(self, other_obj):
+    return Z(self.num+other_obj.num)
+
+  def __radd__(self, other_obj):
+    return Z(other_obj.num + self.num)
+
+  def __str__(self):
+    return "Z = " + str(self.num)
+
+print(X(3) + Z(5))
+
+print(Z(3) + X(5))
+```
+"""
+
+# ╔═╡ 724e9f4a-7152-4916-8910-9696e8d4fd40
+struct Z{T}
+	num::T
+end
+
+# ╔═╡ 3d255fc3-7098-46f7-a103-d0da8fafff38
+Base.:(+)(a::X, b::Z) = Z(a.num + b.num)
+
+# ╔═╡ 6cfc75fe-569c-45b8-acb6-d757e57730e6
+Base.:(+)(a::Z, b::X) = Z(a.num + b.num)
+
+# ╔═╡ 4e1b7044-ff2b-4eca-a549-a4cd736a93ee
+X(3) + Y(5)
+
+# ╔═╡ 8764fa70-9933-4e6d-a0a6-2567e1219c63
+X(3) + Z(5)
+
+# ╔═╡ 8e019f9b-8c9d-46d7-b10f-3985c46e2a88
+Z(3) + X(5)
+
+# ╔═╡ c13cf4d5-f5a1-466c-b5f5-bc3fe6545e05
+md"""
+### Julia 的函数空间有指数大！
+假如 f 有 m 个参数，类型空间一共定义了t个类型，请问函数空间有多大？
+```jula
+f(x::T1, y::T2, z::T3...)
+```
+"""
+
+# ╔═╡ 36daaa7d-17a8-4523-8721-aad00f71f2e2
+md"""## Julia 的类型系统
+"""
+
+# ╔═╡ 0b88d436-5a20-4936-8ced-a15bf1557ba0
+md"""
+类型分为
+* primitive type: 无法被分解为其它类型的组合。
+* abstract type： 抽象的类型，无法为其分配内存。
+* concrete type： 类型系统中的叶子节点。
+"""
+
+# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
+print_type_tree(Number)
+
+# ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
+md"`A <: B` 表示 A 是 B 的子集。"
+
+# ╔═╡ 260aacc1-811b-495a-8e8c-645b23a97dcf
+md"一个类型包括两个部分，类型名字和类型参数。"
+
+# ╔═╡ fd424566-17a1-435c-bdbf-57f1991aacb2
+# TypeName{type parameters...}
+Complex{Float64}  # 由 64 位浮点数参数化的复数
+
+# ╔═╡ 7a492b1c-4010-4a6d-99f1-ebe0944f7f56
+fieldnames(Complex)
+
+# ╔═╡ 6ef58185-0a33-40ae-b527-f416ec5460dc
+Base.isprimitivetype(Float64)
+
+# ╔═╡ cf83e44f-caf9-4c01-92f9-f31bb99cc1ee
+Base.isabstracttype(AbstractFloat)
+
+# ╔═╡ 00d52720-154f-47a4-a6be-f9ffe23b3aea
+Base.isconcretetype(BigInt)
+
 # ╔═╡ 46cd1ee1-e269-46a7-93d3-72597b53a9a9
 AbstractFloat <: Number
 
+# ╔═╡ d61ab911-70e3-4305-8f21-99d254a39a27
+md"`Any` 是任意类型的 parent"
+
+# ╔═╡ a06e3ad6-baad-4bc6-ae84-8f6402cb4364
+Number <: Any
+
+# ╔═╡ eec8b97e-a8f1-45ed-bc9e-e0c7e4f65a05
+md"提问： Complex 是不是 concrete type?"
+
+# ╔═╡ 1e267a3f-e60d-49df-ba26-268423693c71
+Base.isconcretetype(Complex);
+
+# ╔═╡ ecccde43-c4f1-4a92-bda7-3940d5fd3afd
+Base.isconcretetype(Complex{Float64});
+
+# ╔═╡ c39dd2fb-dd37-40b3-b617-58e231325f9d
+md"那么如何表达浮点数类型的复数？"
+
+# ╔═╡ 61dbc39a-7cd7-4f30-8422-d6afe675f8bd
+Complex{<:AbstractFloat}
+
+# ╔═╡ 1e5acfcf-00e0-4595-a71d-94ad876b63de
+Complex{Float64} <: Complex{<:AbstractFloat}
+
+# ╔═╡ 6970b63a-83f9-4215-9f7a-e8d91593a192
+Complex{Float64} <: Complex{AbstractFloat}
+
+# ╔═╡ cefdbc63-367c-4af8-9bf1-e8999c37e677
+md"猜猜是true还是false？"
+
+# ╔═╡ 3309100b-a8f1-44e5-95d3-53660ea171ec
+isconcretetype(Complex{AbstractFloat});
+
+# ╔═╡ e2be9ff8-3f7f-4497-b8ae-3e5109ea0457
+md"它们的区别很大！"
+
+# ╔═╡ 9552f38a-b3ef-4010-b2b7-8384411f6922
+vany = Any[]
+
+# ╔═╡ 7897e41a-67c9-412f-9d27-eb6e9d8d4004
+vany isa Vector{Any}
+
+# ╔═╡ a6f963d9-2dff-40dc-9c11-a40a17032ce4
+vany isa Vector{<:Any}
+
+# ╔═╡ d1a5d1b1-c8f0-44c7-868c-4079667ee4e3
+push!(vany, "a")
+
+# ╔═╡ bf455f16-35a1-41b9-b39f-e55b57646475
+vfloat64 = Float64[]
+
+# ╔═╡ 948fcf3f-4d00-4849-91fa-bae0d9acefba
+vfloat64 isa Vector{<:Any}
+
+# ╔═╡ 337b770f-d97b-407a-a6c9-f5aa11e364fa
+vfloat64 isa Vector{Any}
+
+# ╔═╡ e9016f62-626e-443e-9166-dba66cdc8051
+push!(vfloat64, "a")
+
+# ╔═╡ f7e69afe-e8f5-4540-ba71-6df36faf4ce3
+md"用 Union 代表两个类型的并集。"
+
+# ╔═╡ 119c21c8-3b99-4de9-9edf-2daa7d1ccfad
+Union{AbstractFloat, Complex} <: Number
+
+# ╔═╡ cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
+Union{AbstractFloat, Complex} <: Real
+
 # ╔═╡ 34d05cb5-a222-4705-9f29-4c902e0fb547
-FloatAndComplex64 = Union{Float64, ComplexF64}
-
-# ╔═╡ 0e6cf095-5249-4660-8d92-1347b143f795
-AbstractFloat <: FloatAndComplex64
-
-# ╔═╡ 3290dfe4-0ec1-490a-92f9-a2b43d0ae344
-FloatAndComplex64 <: Number
+FloatAndComplex{T} = Union{T, Complex{T}} where T<:AbstractFloat
 
 # ╔═╡ 21341609-92c4-4a73-a066-99ebb3b72010
 begin
-	function draw_number!(x, y; textoffset=0, dash=false)
-		setcolor("#6688CC")
-		circle(x, y, 100; action=:fill)
-		setcolor("black")
-		if dash
-			setdash("dashed")
-			circle(x, y, 100; action=:stroke)
-		end
-		text("Number", x, y+textoffset; halign=:center, valign=:center)
-	end
-	function draw_floatandcomplex!(x, y; textoffset=0, dash=false)
-		setcolor("#AACC66")
-		circle(x, y, 50; action=:fill)
-		setcolor("black")
-		if dash
-			setdash("dashed")
-			circle(x, y, 50; action=:stroke)
-		end
-		text("FloatAndComplex64", x, y+textoffset; halign=:center, valign=:center)
-	end
-	function draw_float!(x, y; textoffset=0, dash=false)
-		setcolor("#66FF88")
-		setopacity(0.5)
-		circle(x, y, 50; action=:fill)
+	function drawset!(x, y; textoffset=0, dash=false, bgcolor, r, text, opacity=1.0)
+		setcolor(bgcolor)
+		setopacity(opacity)
+		circle(x, y, r; action=:fill)
 		setopacity(1.0)
 		setcolor("black")
 		if dash
 			setdash("dashed")
-		circle(x, y, 50; action=:stroke)
+			circle(x, y, r; action=:stroke)
 		end
-		text("AbstractFloat", x, y+textoffset; halign=:center, valign=:center)
+		Luxor.text(text, x, y+textoffset; halign=:center, valign=:center)
+	end
+	function draw_number!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#6688CC", r=100, text="Number")
+	end
+	function draw_floatandcomplex!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#AACC66", r=50, text="FloatAndComplex")
+	end
+	function draw_float!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#66FF88", r=50, text="AbstractFloat", opacity=0.5)
 	end
 	function ring3!(x, y)
 		draw_number!(x, y; textoffset=-85)
-		draw_floatandcomplex!(x, y-30; textoffset=0)
+		#draw_floatandcomplex!(x, y-30; textoffset=0)
 		draw_float!(x, y+30; textoffset=0)
 	end
 	@drawsvg begin
@@ -492,8 +705,37 @@ begin
 	end 300 300
 end
 
-# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
-print_type_tree(Real)
+# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	Luxor.text("Any", 100, -110)
+end 300 300
+
+# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
+end 300 300
+
+# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
+	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
+	Luxor.text("Any", 100, -110)
+end 300 300
 
 # ╔═╡ 69fed6cc-030b-4066-a023-0bbf1637fbbc
 begin
@@ -514,10 +756,10 @@ begin
 	#	@info "(::Float64, ::Number)"
 	#	abs(x - y) < 10 * eps(x)
 	#end
-	function roughly_equal(x::FloatAndComplex64, y::Number)
-		@info "(::FloatAndComplex64, ::Number)"
-		abs(x - y) < 10 * eps(x)
-	end
+	#function roughly_equal(x::FloatAndComplex, y::Number)
+	#	@info "(::FloatAndComplex, ::Number)"
+	#	abs(x - y) < 10 * eps(x)
+	#end
 end
 
 # ╔═╡ b3f72d4b-9f1f-46fd-8145-212f96c320f8
@@ -550,6 +792,9 @@ begin
 		end 500 300
 	end
 end
+
+# ╔═╡ 5e276fd0-887e-4de2-b502-359be36e6fb6
+md"最具体的获胜"
 
 # ╔═╡ 2ca96d5e-bc03-4c2a-aeaf-9d35c9ceb8c1
 roughly_equal(3, 3)    # case 2
@@ -587,26 +832,14 @@ let
 	end 500 300
 end
 
-# ╔═╡ 1cf7d604-04d9-4b52-a087-aa73c52093e5
-@which f(5, 5)
-
-# ╔═╡ 5e276fd0-887e-4de2-b502-359be36e6fb6
-md"最具体的获胜"
-
-# ╔═╡ 4b12f0d9-e4e1-4214-9127-40612f38d7a3
-@which f(5, Float64(π))
-
 # ╔═╡ 9b00810e-8dc8-4602-a185-28e60c027b99
 md"有时候，难论输赢"
-
-# ╔═╡ 8c683b66-1fb2-49ad-9caf-cb891520f5c6
-f(Float64(5), Float64(5))
 
 # ╔═╡ ad965d41-ca74-4c3b-a81d-a3f0f1a2b1e4
 md"猜，现在 `f` 有多少个函数实例？"
 
 # ╔═╡ 7bce1278-ac0d-4918-aaea-fa69d8cdcf24
-methodinstances(f);
+methodinstances(roughly_equal);
 
 # ╔═╡ e384ee43-dbeb-401d-a113-e4218d0b9176
 md"## 案例分析： 依然是 Tropical 代数"
@@ -672,109 +905,8 @@ md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂�
 # ╔═╡ e61c0433-58b0-46bf-956d-41caecd70316
 print_dependency_tree(Yao; maxdepth=2)
 
-# ╔═╡ abab335a-011d-4d07-bbd1-6811fa231e01
-md"### 多重派发"
-
-# ╔═╡ c196dcdf-94dd-48e4-88fd-6c7769dc087a
-md"基于多重派发的，动态编译的语言"
-
-# ╔═╡ bdc2b727-6f19-4472-9090-ce998de3363c
-md"### 类型树"
-
-# ╔═╡ 373b8ec5-19f1-4948-ad1f-9f589d1394c9
-print_type_tree(Number)
-
-# ╔═╡ 7d3f8447-0dc9-41b5-bb96-9555d45c23f6
-md"### 深度剖析"
-
-# ╔═╡ a08d00ac-e57d-4ba2-b9ae-77ff2647f0c1
-md"## 100 行实现自己的分子动力学模拟"
-
-# ╔═╡ 30df0765-c59f-4833-9a1a-3c1c559357df
-md"primitive type and composite type"
-
-# ╔═╡ 3f0c4f16-b6c1-41e1-b4ec-7a1895261d53
-sizeof(Int)
-
-# ╔═╡ c53bff5e-02d7-4741-a891-897f149acad0
-md"### 首先， 你需要一个类型"
-
-# ╔═╡ 6a4e3859-b33e-4a0f-9b60-57ffbcf477da
-struct Atom{D, T}
-	location::NTuple{D, T}
-
-	function Atom(location::NTuple{D, T}) where {D, T}
-		return new{D, T}(location)
-	end
-	function Atom(location1::T, locations::T...) where {T<:Number}
-		return Atom((location1, locations...))
-	end
-end
-
-# ╔═╡ 380daffe-a1ce-48a4-b56b-c7318a78028b
-md"""
-知识点： Julia 中一个类型由类型民称和类型参数构成。我们拿数组类型 `Array{N,T}` 来举例。
-"""
-
-# ╔═╡ 696ca377-2c04-43c0-b993-e978873732ef
-dump(Array{3, Float64})
-
-# ╔═╡ aa2c6763-c4b7-4fe8-8baa-42a76a3807b1
-md"重载类型的显示方式， "
-
-# ╔═╡ bc06ee9c-658b-40fe-b1fd-309204baf45d
-Base.show(io::IO, m::Atom) = print(io, "Atom at $(m.location)")
-
-# ╔═╡ 1724c0ae-53b7-4c0f-8f95-12b8a76c1aaa
-Atom((3.0,4.0))
-
-# ╔═╡ 0cf01f1c-b572-4341-beaf-13dea1cd14c6
-Atom(3.0,4.0)
-
-# ╔═╡ fa213a07-a1a9-48c8-a7f1-e18ada33893b
-md"""知识点：
-在 Julia 中， `$` 符号代表取值。
-这里 `"Molecure at $(m.location)"` 等价于 `"Molecure at " * string(m.location)`， 因为 Julia 里面用 `*` 代表 String 的连接。
-"""
-
-# ╔═╡ 42d28e14-9f85-4319-8dc1-f31780e8b4e9
-location(m::Atom) = m.location
-
-# ╔═╡ fb8b1be3-62f7-4875-baf5-135ae8f7de06
-distance(m1::Atom, m2::Atom) = sum(location(m1) .- location(m2))
-
-# ╔═╡ 2d8de79a-b835-40c1-8554-cd505e11be03
-md"问题: 定义函数去访问数据会不会让程序更慢呀？"
-
-# ╔═╡ ccd91e92-3a62-4afb-9933-44a2e1742769
-md"""首先定义库伦相互作用势能函数
-```math
-E_c = \frac{q_1q_2}{|\vec r_1 - \vec r_2|}
-```
-"""
-
-# ╔═╡ 989144bb-1822-415f-8b89-c4a83ec3ca84
-md"""
-范德瓦耳斯力
-
-```math
-E_v = \frac{-A}{|\vec r_1 - \vec r_2|^6}
-```
-"""
-
-# ╔═╡ a177bd10-3941-49b3-bd80-9db1c4597fb2
-md"电子之间的斥力
-
-```math
-E_e = \frac{A'}{|\vec r_1 - \vec r_2|^{12}}
-```
-"
-
-# ╔═╡ 8846ce25-defc-47ad-8490-595f5090bd8a
-coulomb(atom1, atom2) = charge(atom1) * charge(atom2) / distance(atom1, atom2)
-
 # ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
-md"""## 资源
+md"""# 资源
 ### 交流
 * Julia slack
 * Julia discourse
@@ -818,7 +950,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "2c2013d748fa9f74f9bb1fdf2042fbbfb743057d"
+project_hash = "4fa1176f6933205f115249aecb2e5afe3e1bcbf0"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1716,13 +1848,16 @@ version = "3.5.0+0"
 # ╟─8225e1a9-ee2f-454d-b4c1-84568b10bb1b
 # ╟─d34ac2d6-bece-4643-b413-4053441af815
 # ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
-# ╟─1ab95944-524b-43d8-a95e-da345634f4c1
+# ╟─b92957bf-eeb2-4d2a-933d-77baad5c6eef
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
 # ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
 # ╠═7d242d2a-d190-4a11-b218-60650ba70533
 # ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
 # ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
+# ╠═782a555d-caff-4096-a6e6-24e77565a2cf
+# ╠═88a8c21d-e5d3-4b88-a818-58f614d6f64e
 # ╠═d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
+# ╠═e4bae9e0-c949-4f1f-8b69-14491246d2a3
 # ╠═ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
 # ╠═26b30265-558b-49e7-b9f5-0b8af30c1273
 # ╠═922071fb-dac2-436e-a343-d0d22bd3c864
@@ -1779,26 +1914,72 @@ version = "3.5.0+0"
 # ╟─9ccbc920-ae8f-4b65-bf7e-273fce9deb99
 # ╠═3adea2f8-3f59-45d5-9e03-7285c7571c1d
 # ╟─8ea2593c-2f93-47c1-aa7d-918c848f8bfb
+# ╟─e34c636f-ae8f-46c3-a043-08c0408b3433
+# ╠═5d05964f-ca08-4ef4-91d3-f78f990650b0
+# ╠═8d218a48-de95-4a24-9cc2-f4970013182f
+# ╠═72d0e961-8699-4bd3-b2e1-3e9774536e74
+# ╠═91f32f59-f178-4041-8094-9803e868f674
+# ╠═24f9ad0c-0985-4a6b-bde9-b0a87574e188
+# ╠═d01b94b5-df3d-4a8f-a611-7d53499e6ee7
+# ╠═4e1b7044-ff2b-4eca-a549-a4cd736a93ee
+# ╟─8c9af74a-f4ec-4b56-b560-2c8a77f5e4d9
+# ╟─53fb47ff-c48a-41f4-9066-bd2c2af28dfd
+# ╠═724e9f4a-7152-4916-8910-9696e8d4fd40
+# ╠═3d255fc3-7098-46f7-a103-d0da8fafff38
+# ╠═6cfc75fe-569c-45b8-acb6-d757e57730e6
+# ╠═8764fa70-9933-4e6d-a0a6-2567e1219c63
+# ╠═8e019f9b-8c9d-46d7-b10f-3985c46e2a88
+# ╟─c13cf4d5-f5a1-466c-b5f5-bc3fe6545e05
+# ╟─36daaa7d-17a8-4523-8721-aad00f71f2e2
+# ╟─0b88d436-5a20-4936-8ced-a15bf1557ba0
+# ╠═c04c4d58-0469-45cc-a217-444a2b607245
+# ╟─d1b0b145-12e3-4a61-82d8-2a743ce02682
+# ╟─260aacc1-811b-495a-8e8c-645b23a97dcf
+# ╠═fd424566-17a1-435c-bdbf-57f1991aacb2
+# ╠═7a492b1c-4010-4a6d-99f1-ebe0944f7f56
+# ╠═6ef58185-0a33-40ae-b527-f416ec5460dc
+# ╠═cf83e44f-caf9-4c01-92f9-f31bb99cc1ee
+# ╠═00d52720-154f-47a4-a6be-f9ffe23b3aea
+# ╟─8a2b6551-17a1-4566-9a22-e2bcf525c191
 # ╠═46cd1ee1-e269-46a7-93d3-72597b53a9a9
+# ╟─d61ab911-70e3-4305-8f21-99d254a39a27
+# ╠═a06e3ad6-baad-4bc6-ae84-8f6402cb4364
+# ╟─eec8b97e-a8f1-45ed-bc9e-e0c7e4f65a05
+# ╠═1e267a3f-e60d-49df-ba26-268423693c71
+# ╠═ecccde43-c4f1-4a92-bda7-3940d5fd3afd
+# ╟─c39dd2fb-dd37-40b3-b617-58e231325f9d
+# ╠═61dbc39a-7cd7-4f30-8422-d6afe675f8bd
+# ╟─764b68fa-5891-4e0b-a4c9-474cf1fd9861
+# ╠═1e5acfcf-00e0-4595-a71d-94ad876b63de
+# ╠═6970b63a-83f9-4215-9f7a-e8d91593a192
+# ╟─cefdbc63-367c-4af8-9bf1-e8999c37e677
+# ╠═3309100b-a8f1-44e5-95d3-53660ea171ec
+# ╟─e2be9ff8-3f7f-4497-b8ae-3e5109ea0457
+# ╠═9552f38a-b3ef-4010-b2b7-8384411f6922
+# ╠═7897e41a-67c9-412f-9d27-eb6e9d8d4004
+# ╠═a6f963d9-2dff-40dc-9c11-a40a17032ce4
+# ╠═d1a5d1b1-c8f0-44c7-868c-4079667ee4e3
+# ╠═bf455f16-35a1-41b9-b39f-e55b57646475
+# ╠═948fcf3f-4d00-4849-91fa-bae0d9acefba
+# ╠═337b770f-d97b-407a-a6c9-f5aa11e364fa
+# ╠═e9016f62-626e-443e-9166-dba66cdc8051
+# ╟─f7e69afe-e8f5-4540-ba71-6df36faf4ce3
+# ╠═119c21c8-3b99-4de9-9edf-2daa7d1ccfad
+# ╟─8c66252c-9639-4002-9e5b-fdf9dba8c768
+# ╠═cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
 # ╠═34d05cb5-a222-4705-9f29-4c902e0fb547
-# ╠═0e6cf095-5249-4660-8d92-1347b143f795
-# ╠═3290dfe4-0ec1-490a-92f9-a2b43d0ae344
 # ╠═1cc46cad-91c8-4812-95b3-02c9979adbbc
 # ╠═21341609-92c4-4a73-a066-99ebb3b72010
-# ╠═c04c4d58-0469-45cc-a217-444a2b607245
 # ╠═69fed6cc-030b-4066-a023-0bbf1637fbbc
 # ╠═b3f72d4b-9f1f-46fd-8145-212f96c320f8
 # ╠═a79ac986-54ad-44c0-8aa6-077a6f34b6eb
 # ╟─a112da1a-1ffc-41ab-8387-d4340c653ba7
+# ╟─5e276fd0-887e-4de2-b502-359be36e6fb6
 # ╠═2ca96d5e-bc03-4c2a-aeaf-9d35c9ceb8c1
 # ╟─b3d24b7c-44f5-4ca1-9024-a9af75637d30
 # ╠═5ea7d476-1217-4895-9064-b0327c7a3fdc
-# ╠═10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
-# ╠═1cf7d604-04d9-4b52-a087-aa73c52093e5
-# ╟─5e276fd0-887e-4de2-b502-359be36e6fb6
-# ╠═4b12f0d9-e4e1-4214-9127-40612f38d7a3
+# ╟─10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
 # ╟─9b00810e-8dc8-4602-a185-28e60c027b99
-# ╠═8c683b66-1fb2-49ad-9caf-cb891520f5c6
 # ╠═832f83a0-94af-4649-80a0-21dd75d01da7
 # ╟─ad965d41-ca74-4c3b-a81d-a3f0f1a2b1e4
 # ╠═7bce1278-ac0d-4918-aaea-fa69d8cdcf24
@@ -1821,30 +2002,6 @@ version = "3.5.0+0"
 # ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
 # ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
 # ╠═e61c0433-58b0-46bf-956d-41caecd70316
-# ╟─abab335a-011d-4d07-bbd1-6811fa231e01
-# ╟─c196dcdf-94dd-48e4-88fd-6c7769dc087a
-# ╟─bdc2b727-6f19-4472-9090-ce998de3363c
-# ╠═373b8ec5-19f1-4948-ad1f-9f589d1394c9
-# ╟─7d3f8447-0dc9-41b5-bb96-9555d45c23f6
-# ╟─a08d00ac-e57d-4ba2-b9ae-77ff2647f0c1
-# ╟─30df0765-c59f-4833-9a1a-3c1c559357df
-# ╠═3f0c4f16-b6c1-41e1-b4ec-7a1895261d53
-# ╟─c53bff5e-02d7-4741-a891-897f149acad0
-# ╠═6a4e3859-b33e-4a0f-9b60-57ffbcf477da
-# ╟─380daffe-a1ce-48a4-b56b-c7318a78028b
-# ╠═696ca377-2c04-43c0-b993-e978873732ef
-# ╠═aa2c6763-c4b7-4fe8-8baa-42a76a3807b1
-# ╠═bc06ee9c-658b-40fe-b1fd-309204baf45d
-# ╠═1724c0ae-53b7-4c0f-8f95-12b8a76c1aaa
-# ╠═0cf01f1c-b572-4341-beaf-13dea1cd14c6
-# ╟─fa213a07-a1a9-48c8-a7f1-e18ada33893b
-# ╠═42d28e14-9f85-4319-8dc1-f31780e8b4e9
-# ╠═fb8b1be3-62f7-4875-baf5-135ae8f7de06
-# ╟─2d8de79a-b835-40c1-8554-cd505e11be03
-# ╟─ccd91e92-3a62-4afb-9933-44a2e1742769
-# ╟─989144bb-1822-415f-8b89-c4a83ec3ca84
-# ╟─a177bd10-3941-49b3-bd80-9db1c4597fb2
-# ╠═8846ce25-defc-47ad-8490-595f5090bd8a
-# ╠═34ffecd6-202d-46af-862c-0bf34524aa63
+# ╟─34ffecd6-202d-46af-862c-0bf34524aa63
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
