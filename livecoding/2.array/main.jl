@@ -2,9 +2,9 @@
 ############  Coding Muscle Training 2: Array Operations  ############
 # Please place your hand on your keyboard, type with me!
 # Ready?
-# 3
-# 2
-# 1
+# 3. press SPACE to pause.
+# 2. press → to move forward.
+# 1. press ← to move backward.
 # GO!
 
 ####### Part 0: Array Types ######
@@ -14,7 +14,9 @@ using AbstractTrees
 
 AbstractTrees.children(x::Type) = subtypes(x)
 
+#s output_delay = 3.0
 print_tree(AbstractArray)
+#s output_delay = 0.5
 
 # If you dump the concrete type `Array`
 dump(Array)
@@ -30,7 +32,7 @@ ndims(Array{Float64, 4})
 # initialized to zeros
 v_zero = zeros(Float64, 3)
 
-# Vector is an alias of `Array` type
+# Vector is an alias of `Array{T, 1} where T` type
 typeof(v_zero)
 
 # initialized to undefined values
@@ -65,6 +67,7 @@ v[1]
 v[end]
 
 # add an element at the end
+# NOTE: `!` is a part of function name, it is a Julian convention to use `!` to warn users that a function can change inputs directly.
 push!(v, 4)
 
 # insert an element at location 1, with value 0
@@ -91,7 +94,7 @@ v_any = Any[1, 2, 3]
 
 # operating a generic typed vector can be much slower.
 using BenchmarkTools
-@btime sum($v_any)
+@btime sum($v_any) # `$` means evaluate and input in Julia (here we use it to avoid type instability - will be introduced later)
 
 @btime sum($v)
 
@@ -136,12 +139,12 @@ M = randn(100, 100);
 
 @btime (M .^ 2) * 2;
 
-# this is because broadcasting fuses loops and avoids some allocations.
-
+# this is because broadcasting fuses multiple for-loops (doing both `^` and `*`) into one.
+#
 # row vector
 v_row = [1 2]
 
-# it is equivalent to transposing a column vector
+# it is equivalent to transposing a column vector using '
 v_col = [1, 2]
 v_row == v_col'
 
@@ -152,3 +155,6 @@ v_row * m
 m = randn(ComplexF64, 2, 2)
 
 m'
+
+# for transposing a complex number, one just type
+transpose(m)
