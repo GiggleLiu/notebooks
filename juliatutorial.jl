@@ -7,6 +7,9 @@ using InteractiveUtils
 # ╔═╡ ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
 using Pkg
 
+# ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
+using Yao
+
 # ╔═╡ cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 using Libdl
 
@@ -24,9 +27,6 @@ using TropicalNumbers
 
 # ╔═╡ 09d93415-99ba-4e54-b0c3-44883d7c5968
 using Graphs
-
-# ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
-using Yao
 
 # ╔═╡ 7d242d2a-d190-4a11-b218-60650ba70533
 using PlutoUI
@@ -71,13 +71,15 @@ html"""
 md"""## 看教程之前
 以下内容不会在教程中涉及，但是非常重要。
 
-1. 参考[配置 Julia 语言环境](https://github.com/CodingThrust/CodingClub/blob/main/1.julia-setup.md)。 以及王至宏写的中文教程： [配置开发环境](https://discourse.juliacn.com/t/topic/6806)
+1. 如何配置 Julia 语言环境
+    * [英文参考](https://julialang.org/contribute/developing_package/)
+    * 王至宏同学写的[配置开发环境](https://discourse.juliacn.com/t/topic/6806)
 
 2. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。 相关资料：[Missing Semester](https://missing.csail.mit.edu/2020/)
 """
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
-md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
+md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到 JuliaCN Github Org 下面 MeetUpMaterials 仓库下面。
 """
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
@@ -93,6 +95,72 @@ Julia 语言被设计出来的目的是为了兼顾代码执行速度与开发�
 
 * 执行速度: C, C++, Fortran
 * 开发效率: Python, $(html"Matlab")
+"""
+
+# ╔═╡ a72f4263-b034-4aa8-8611-d53166cbb718
+md"""
+# Julia 的软件生态
+"""
+
+# ╔═╡ d1b9aa30-ac64-4653-95b9-ab8695fbf34b
+md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂。"
+
+# ╔═╡ bc2508c7-ec41-4325-9ce0-c7737c99db64
+md"所有的软件包都可以在[JuliaHub](https://juliahub.com/ui/Packages)上找到相关统计。"
+
+# ╔═╡ 706af77e-ce1f-4334-8dbb-d6d5cbcdef18
+md"""
+## 科学计算生态
+"""
+
+# ╔═╡ b109f0d3-4cde-4f41-b26e-e43ed6e048fe
+md"### [SciML](https://github.com/SciML) ecosystem
+微分方程的求解
+[![](https://camo.githubusercontent.com/97bf407cc473d22b3d9ef63c861e8dba6dd3b4579728c342c49be86b48ea180e/687474703a2f2f7777772e73746f636861737469636c6966657374796c652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031392f30382f64655f736f6c7665725f736f6674776172655f636f6d70617273696f6e2d312e706e67)](https://camo.githubusercontent.com/97bf407cc473d22b3d9ef63c861e8dba6dd3b4579728c342c49be86b48ea180e/687474703a2f2f7777772e73746f636861737469636c6966657374796c652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031392f30382f64655f736f6c7665725f736f6674776172655f636f6d70617273696f6e2d312e706e67)
+"
+
+# ╔═╡ f58dbbda-7445-41ba-aa23-5435dbf688c9
+md"""### [JuMP](https://github.com/jump-dev) ecosystem
+Linear Programming, Mixed Integer Programming, Quadratic Programming 等。
+![](https://user-images.githubusercontent.com/6257240/204845810-702108b0-e5db-4b5c-9378-0aa0896af6de.png)
+"""
+
+# ╔═╡ 7a3b16e3-3870-4045-9549-9844698cf3d5
+md"### [Yao](https://github.com/QuantumBFS) ecosystem
+Quantum Computing
+"
+
+# ╔═╡ c5e7337a-85c6-430a-8746-9826325c80d5
+md"""
+![](https://github.com/Roger-luo/quantum-benchmarks/raw/master/images/pcircuit.png)
+"""
+
+# ╔═╡ f1f3f07d-bc38-4d01-b9cb-f843c160cb3f
+md"""
+还有更多有趣的软件生态，包括 [BioJulia](https://github.com/BioJulia),
+[JuliaDynamics](https://github.com/JuliaDynamics),
+[EcoJulia](https://github.com/EcoJulia),
+[JuliaAstro](https://github.com/JuliaAstro),
+[QuantEcon](https://github.com/QuantEcon).
+"""
+
+# ╔═╡ 2b1c00b1-eb58-4b99-829f-5b98689132ad
+md"## 高性能计算生态"
+
+# ╔═╡ 931bb099-60b9-4542-ac53-3757fb269fff
+md"""
+### [CUDA](https://github.com/JuliaGPU/CUDA.jl) ecosystem
+
+![](https://juliagpu.org/assets/img/cuda-performance.png)
+"""
+
+# ╔═╡ 26348f56-c4bf-4ec8-a429-773d60525364
+md"""
+### [LoopVectorization](https://github.com/JuliaSIMD/LoopVectorization.jl) ecosystem
+![](https://raw.githubusercontent.com/JuliaSIMD/LoopVectorization.jl/docsassets/docs/src/assets/bench_dot_v2.svg)
+
+TropicalGEMM: A BLAS for tropical numbers.
+![](https://github.com/TensorBFS/TropicalGEMM.jl/raw/master/benchmarks/benchmark-float64.png)
 """
 
 # ╔═╡ ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
@@ -131,6 +199,9 @@ end;
 # ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
 c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
 
+# ╔═╡ 01972597-9d31-4972-a15d-51832f0f5910
+@benchmark c_factorial(1000)
+
 # ╔═╡ 917e187d-5eda-49d6-a72a-0ed3f60d82d6
 md"[learn more about calling C code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
 
@@ -161,6 +232,9 @@ md"🤔"
 
 # ╔═╡ e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
 md"但由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
+
+# ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
+@benchmark $(py"factorial")(1000)
 
 # ╔═╡ f7e5304d-7573-4e8c-b516-4c16a7432067
 md"""## 双语言 **Python & C++** 的问题?
@@ -211,13 +285,16 @@ ex.head
 # ╔═╡ c966f373-432d-426b-8179-289c94f42da1
 ex.args
 
+# ╔═╡ e94597a7-5fbb-4305-9023-5a4d981f02a7
+@code_lowered jlfactorial(10)
+
 # ╔═╡ 70fc53ba-70c5-4ae4-877c-f8e47569adc4
 md"""
 ### 2. 当遇到调用，在 Julia 的中间表示 (Intermediate Representation) 上推导数据类型
 """
 
 # ╔═╡ db779958-e7d5-4164-87a7-219257ae45f0
-@code_typed jlfactorial(1000)
+@code_typed jlfactorial(10)
 
 # ╔═╡ 2f36c4e6-1fc5-42e9-b097-315b28f82d5d
 md"""
@@ -242,20 +319,14 @@ md"""
 
 # ╔═╡ 7b8e9026-6dc1-4d28-a2a7-912399a4fd51
 with_terminal() do
-	@code_native jlfactorial(1000)
+	@code_native jlfactorial(10)
 end
 
 # ╔═╡ 4253af25-41bd-47b6-a11e-c2902c677963
 jlfactorial(1000)
 
-# ╔═╡ 01972597-9d31-4972-a15d-51832f0f5910
-@benchmark c_factorial(1000)
-
 # ╔═╡ ec33aba5-28c9-4be9-9804-361f65de1f7a
-@benchmark jlfactorial(1000)
-
-# ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
-@benchmark $(py"factorial")(1000)
+@benchmark jlfactorial(x) setup=(x=1000)
 
 # ╔═╡ 0ef8831d-62c3-47b5-9f6e-3d9322da8e16
 md"## 案例分析："
@@ -264,7 +335,7 @@ md"## 案例分析："
 md"函数实例 (method instance)： 内存中，一个针对特定输入类型的函数被编译后的二进制码。"
 
 # ╔═╡ 9ccbc920-ae8f-4b65-bf7e-273fce9deb99
-md"A typical type unstable code"
+md"有时候类型无法在编译期间被完全定下来。"
 
 # ╔═╡ 3adea2f8-3f59-45d5-9e03-7285c7571c1d
 with_terminal() do
@@ -381,7 +452,7 @@ Z(3) + X(5)
 # ╔═╡ c13cf4d5-f5a1-466c-b5f5-bc3fe6545e05
 md"""
 ### Julia 的函数空间有指数大！
-假如 f 有 m 个参数，类型空间一共定义了t个类型，请问函数空间有多大？
+假如 $f$ 有 $k$ 个参数，类型空间一共定义了$t$个类型，请问函数空间有多大？
 ```jula
 f(x::T1, y::T2, z::T3...)
 ```
@@ -395,12 +466,21 @@ md"""## Julia 的类型系统
 md"""
 类型分为
 * primitive type: 无法被分解为其它类型的组合。
-* abstract type： 抽象的类型，无法为其分配内存。
-* concrete type： 类型系统中的叶子节点。
+* abstract type： 抽象的类型，无成员变量。
+* concrete type： 类型系统中的叶子节点，可为其分配内存。
 """
 
 # ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
-md"`A <: B` 表示 A 是 B 的子集。"
+md"`<:`是subtype的意思， `A <: B`表示 A 是 B 的子集。"
+
+# ╔═╡ 46cd1ee1-e269-46a7-93d3-72597b53a9a9
+AbstractFloat <: Number
+
+# ╔═╡ d61ab911-70e3-4305-8f21-99d254a39a27
+md"`Any` 是任意类型的 parent"
+
+# ╔═╡ a06e3ad6-baad-4bc6-ae84-8f6402cb4364
+Number <: Any
 
 # ╔═╡ 260aacc1-811b-495a-8e8c-645b23a97dcf
 md"一个类型包括两个部分，类型名字和类型参数。"
@@ -419,16 +499,7 @@ Base.isprimitivetype(Float64)
 Base.isabstracttype(AbstractFloat)
 
 # ╔═╡ 00d52720-154f-47a4-a6be-f9ffe23b3aea
-Base.isconcretetype(BigInt)
-
-# ╔═╡ 46cd1ee1-e269-46a7-93d3-72597b53a9a9
-AbstractFloat <: Number
-
-# ╔═╡ d61ab911-70e3-4305-8f21-99d254a39a27
-md"`Any` 是任意类型的 parent"
-
-# ╔═╡ a06e3ad6-baad-4bc6-ae84-8f6402cb4364
-Number <: Any
+Base.isconcretetype(Complex{Float64})
 
 # ╔═╡ eec8b97e-a8f1-45ed-bc9e-e0c7e4f65a05
 md"提问： Complex 是不是 concrete type?"
@@ -440,7 +511,7 @@ Base.isconcretetype(Complex);
 Base.isconcretetype(Complex{Float64});
 
 # ╔═╡ c39dd2fb-dd37-40b3-b617-58e231325f9d
-md"那么如何表达浮点数类型的复数？"
+md"那么如何表达一个复数，它的实部和虚部都是浮点数？"
 
 # ╔═╡ 61dbc39a-7cd7-4f30-8422-d6afe675f8bd
 Complex{<:AbstractFloat}
@@ -493,6 +564,9 @@ Union{AbstractFloat, Complex} <: Number
 # ╔═╡ cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
 Union{AbstractFloat, Complex} <: Real
 
+# ╔═╡ 4329a285-c184-4f03-b90d-c8f74c072cd7
+md"给类型起绰号"
+
 # ╔═╡ 34d05cb5-a222-4705-9f29-4c902e0fb547
 FloatAndComplex{T} = Union{T, Complex{T}} where T<:AbstractFloat
 
@@ -504,7 +578,7 @@ begin
 	# fallback
 	function roughly_equal(x::Number, y::Number)
 		@info "(::Number, ::Number)"
-		x ≈ y
+		x ≈ y   # type with \approx<TAB>
 	end
 	function roughly_equal(x::AbstractFloat, y::Number)
 		@info "(::AbstractFloat, ::Number)"
@@ -517,6 +591,7 @@ begin
 end
 
 # ╔═╡ b3f72d4b-9f1f-46fd-8145-212f96c320f8
+# `methods` is different from `methodinstances` in MethodAnalysis. It returns method definitions rather than compiled binaries.
 methods(roughly_equal)
 
 # ╔═╡ a79ac986-54ad-44c0-8aa6-077a6f34b6eb
@@ -532,7 +607,13 @@ roughly_equal(3, 3)    # case 2
 roughly_equal(3.0, 3.0)
 
 # ╔═╡ 9b00810e-8dc8-4602-a185-28e60c027b99
-md"有时候，难论输赢"
+md"""有时候，难论输赢。解决方式就是定义更加具体的实现：
+```julia
+function roughly_equal(x::AbstractFloat, y::AbstractFloat)
+	@info "(::AbstractFloat, ::AbstractFloat)"
+	-10 * eps(y) < x - y < 10 * eps(y)
+end
+```"""
 
 # ╔═╡ ad965d41-ca74-4c3b-a81d-a3f0f1a2b1e4
 md"猜，现在 `f` 有多少个函数实例？"
@@ -545,10 +626,9 @@ md"让类型参数保持一致。"
 
 # ╔═╡ 34494ea7-d50a-48c0-8374-ca9482bc63f3
 begin
-	# fallback
 	function lmul(x::Complex{T1}, y::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}
 		@info "(::Complex{T1}, ::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}"
-		Complex{T2}(x) .* y
+		x .* y
 	end
 	function lmul(x::Complex{T}, y::AbstractArray{<:Complex{T}}) where T<:Real
 		@info "(::Complex{T}, ::AbstractArray{<:Complex{T}}) where T<:Real"
@@ -566,7 +646,7 @@ lmul(3im, randn(ComplexF64, 3, 3))
 md"""
 ## 小结
 * Julia 的多重派发比面向对象提供了更多的抽象的可能（指数大）。
-* 可以利用巧妙的类型系统设计，在指数大的函数空间中定义抽象。
+* 可以利用巧妙的类型系统设计，在指数大的函数空间中写代码。
 """
 
 # ╔═╡ e384ee43-dbeb-401d-a113-e4218d0b9176
@@ -612,17 +692,6 @@ tmat * tmat
 # ╔═╡ a91be952-7ba2-47d6-8aac-4a4e8a3c241d
 g = smallgraph(:petersen)
 
-# ╔═╡ fa446b31-a6e2-4704-a9e3-8b2c96ceca90
-md"# Julia 的性能建议"
-
-# ╔═╡ a72f4263-b034-4aa8-8611-d53166cbb718
-md"""
-# Julia 的软件生态
-"""
-
-# ╔═╡ d1b9aa30-ac64-4653-95b9-ab8695fbf34b
-md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂。"
-
 # ╔═╡ 0efc54a1-3dbb-45ab-bede-77ab4669721d
 md"""
 ## 课后习题
@@ -630,6 +699,7 @@ md"""
 
 # ╔═╡ ee8606f7-6f5d-430a-b111-84843de789d7
 md"""
+在 Julia REPL 中跟随这些视频输入以练习 Julia 的基础。
 这些视频可以在[我的个人网站](https://giggleliu.github.io/code/#muscle_memory_1_basic_types_and_control_flow)
 找到。这个notebook和相关资料将会上传到 JuliaCN org 下面的 Github repo: 
 
@@ -638,7 +708,27 @@ md"""
 
 # ╔═╡ 4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
 md"""
-### 1. Types and control flow
+### 1. Basic types and control flow
+"""
+
+# ╔═╡ 2e124d1f-bdc2-4161-8ce1-9d2b722ab449
+md"""
+### 2. Array operations
+"""
+
+# ╔═╡ ea266c12-7e62-4c77-9682-0cf51c5e6695
+md"""
+### 3. Data types
+"""
+
+# ╔═╡ 05c7bb10-aacc-498a-b42f-52642648f92e
+md"""
+### 4. Function and multiple dispatch
+"""
+
+# ╔═╡ 0596e817-91b6-4a57-9323-8b998115d4ca
+md"""
+### 5. Performance Tips
 """
 
 # ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
@@ -650,11 +740,10 @@ md"""# 资源
 
 ### 学习
 * 安装/升级 Julia, 配置 IDE
-### 这个 notebook
 """
 
 # ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
-md"## 一些帮助函数"
+md"## Pluto notebook 帮助函数"
 
 # ╔═╡ 156a1a62-e131-403f-b2a2-80f49e6a9b33
 html"<button onclick=present()>Present</button>"
@@ -711,6 +800,7 @@ function print_dependency_tree(pkg; maxdepth=5)
 end
 
 # ╔═╡ e61c0433-58b0-46bf-956d-41caecd70316
+# this utility is defined at the end of this notebook
 print_dependency_tree(Yao; maxdepth=2)
 
 # ╔═╡ 9bb41efb-2817-4258-af2b-1fe515b6007a
@@ -729,6 +819,13 @@ macro mermaid_str(str)
 """)
 end
 
+# ╔═╡ 216d9db3-2d4a-47ef-89c6-70edfdd7bd53
+mermaid"""
+graph TD;
+A["安装包命令 pkg> add Yao"] --> B["从 GitHub 更新 registry (如 General)"] --> C["解析依赖关系与版本并生成 Manifest.toml 文件"] --> D["从 GitHub 找到对应的软件仓库"]
+D --> E["下载对应软件包的版本并安装"]
+"""
+
 # ╔═╡ 000b93e6-8a1d-4c67-b5da-5013c6421e2c
 mermaid"""
 flowchart LR;
@@ -744,17 +841,10 @@ A("一段静态类型程序") --> | 解释执行/慢 | C(结果)
 # ╔═╡ d04b2eca-9662-4518-8bb6-8b1bf07e8984
 mermaid"""
 flowchart LR;
-A("一个 Julia 函数") --> B{有函数实例?}
+A("调用 Julia 函数") --> B{有函数实例?}
 B -- 否 --> N[推导数据类型<br>并编译/不快] --> C("内存中的二进制码")
 C --> |执行/快| Z("结果")
 B -- 是 --> C
-"""
-
-# ╔═╡ 216d9db3-2d4a-47ef-89c6-70edfdd7bd53
-mermaid"""
-graph TD;
-A["安装包命令 pkg> add Yao"] --> B["从 GitHub 更新 registry (如 General)"] --> C["解析依赖关系与版本并生成 Manifest.toml 文件"] --> D["从 GitHub 找到对应的软件仓库"]
-D --> E["下载对应软件包的版本并安装"]
 """
 
 # ╔═╡ a9a9f06e-4737-4619-b497-f488ea25fdf3
@@ -808,6 +898,18 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 
 # ╔═╡ e8281692-0a68-4382-956b-cfa61d80f4ae
 livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
+
+# ╔═╡ 4f0a9029-5000-4a63-b387-198c58a7e8f6
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/2.array/main.cast")
+
+# ╔═╡ b13e37b3-8c6a-471c-9d8f-997d20520664
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/3.types/main.cast")
+
+# ╔═╡ e7729331-9750-462e-87ca-69ffca106767
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/4.multipledispatch/main.cast")
+
+# ╔═╡ dad2eb09-06ca-4d96-8f4d-9f1b8770b92d
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/5.performance/main.cast")
 
 # ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
 TableOfContents()
@@ -1866,6 +1968,21 @@ version = "3.5.0+0"
 # ╟─b92957bf-eeb2-4d2a-933d-77baad5c6eef
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
 # ╟─73ce1dff-a3ff-431b-9acb-7af6c00b35f6
+# ╟─a72f4263-b034-4aa8-8611-d53166cbb718
+# ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
+# ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
+# ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
+# ╠═e61c0433-58b0-46bf-956d-41caecd70316
+# ╟─bc2508c7-ec41-4325-9ce0-c7737c99db64
+# ╟─706af77e-ce1f-4334-8dbb-d6d5cbcdef18
+# ╟─b109f0d3-4cde-4f41-b26e-e43ed6e048fe
+# ╟─f58dbbda-7445-41ba-aa23-5435dbf688c9
+# ╟─7a3b16e3-3870-4045-9549-9844698cf3d5
+# ╟─c5e7337a-85c6-430a-8746-9826325c80d5
+# ╟─f1f3f07d-bc38-4d01-b9cb-f843c160cb3f
+# ╟─2b1c00b1-eb58-4b99-829f-5b98689132ad
+# ╟─931bb099-60b9-4542-ac53-3757fb269fff
+# ╟─26348f56-c4bf-4ec8-a429-773d60525364
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
 # ╟─fe174dbe-5c4b-4445-b485-5c21cc1e8917
 # ╟─000b93e6-8a1d-4c67-b5da-5013c6421e2c
@@ -1873,6 +1990,7 @@ version = "3.5.0+0"
 # ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 # ╠═33a43668-4484-47d2-a7a6-09d930232252
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
+# ╠═01972597-9d31-4972-a15d-51832f0f5910
 # ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
 # ╟─f3695873-435d-44cb-b9fb-af34dc38bdaa
@@ -1883,6 +2001,7 @@ version = "3.5.0+0"
 # ╠═922a2063-f516-46a5-95a9-9e0adca018aa
 # ╟─105852eb-8f34-4d52-8ec3-68dff6997efb
 # ╟─e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
+# ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
 # ╟─f7e5304d-7573-4e8c-b516-4c16a7432067
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─be4da897-df85-4276-bde1-7c1824cae796
@@ -1891,6 +2010,7 @@ version = "3.5.0+0"
 # ╠═a6dd79be-ccca-4faf-8f11-ac129981bce8
 # ╠═59ea4880-89a0-497d-ace2-e33d0d8a4d65
 # ╠═c966f373-432d-426b-8179-289c94f42da1
+# ╠═e94597a7-5fbb-4305-9023-5a4d981f02a7
 # ╟─70fc53ba-70c5-4ae4-877c-f8e47569adc4
 # ╠═db779958-e7d5-4164-87a7-219257ae45f0
 # ╟─2f36c4e6-1fc5-42e9-b097-315b28f82d5d
@@ -1900,9 +2020,7 @@ version = "3.5.0+0"
 # ╠═7b8e9026-6dc1-4d28-a2a7-912399a4fd51
 # ╠═4253af25-41bd-47b6-a11e-c2902c677963
 # ╠═c73baba2-9ec7-461e-b4e7-fd162606e134
-# ╠═01972597-9d31-4972-a15d-51832f0f5910
 # ╠═ec33aba5-28c9-4be9-9804-361f65de1f7a
-# ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
 # ╟─0ef8831d-62c3-47b5-9f6e-3d9322da8e16
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
 # ╟─04b5f8fc-32c1-430c-8bec-3e1a06bdda24
@@ -1928,25 +2046,25 @@ version = "3.5.0+0"
 # ╟─36daaa7d-17a8-4523-8721-aad00f71f2e2
 # ╟─0b88d436-5a20-4936-8ced-a15bf1557ba0
 # ╠═c04c4d58-0469-45cc-a217-444a2b607245
+# ╟─8a2b6551-17a1-4566-9a22-e2bcf525c191
 # ╟─d1b0b145-12e3-4a61-82d8-2a743ce02682
+# ╠═46cd1ee1-e269-46a7-93d3-72597b53a9a9
+# ╟─d61ab911-70e3-4305-8f21-99d254a39a27
+# ╠═a06e3ad6-baad-4bc6-ae84-8f6402cb4364
 # ╟─260aacc1-811b-495a-8e8c-645b23a97dcf
 # ╠═fd424566-17a1-435c-bdbf-57f1991aacb2
 # ╠═7a492b1c-4010-4a6d-99f1-ebe0944f7f56
 # ╠═6ef58185-0a33-40ae-b527-f416ec5460dc
 # ╠═cf83e44f-caf9-4c01-92f9-f31bb99cc1ee
 # ╠═00d52720-154f-47a4-a6be-f9ffe23b3aea
-# ╟─8a2b6551-17a1-4566-9a22-e2bcf525c191
-# ╠═46cd1ee1-e269-46a7-93d3-72597b53a9a9
-# ╟─d61ab911-70e3-4305-8f21-99d254a39a27
-# ╠═a06e3ad6-baad-4bc6-ae84-8f6402cb4364
 # ╟─eec8b97e-a8f1-45ed-bc9e-e0c7e4f65a05
 # ╠═1e267a3f-e60d-49df-ba26-268423693c71
 # ╠═ecccde43-c4f1-4a92-bda7-3940d5fd3afd
 # ╟─c39dd2fb-dd37-40b3-b617-58e231325f9d
 # ╠═61dbc39a-7cd7-4f30-8422-d6afe675f8bd
-# ╟─764b68fa-5891-4e0b-a4c9-474cf1fd9861
 # ╠═1e5acfcf-00e0-4595-a71d-94ad876b63de
 # ╠═6970b63a-83f9-4215-9f7a-e8d91593a192
+# ╟─764b68fa-5891-4e0b-a4c9-474cf1fd9861
 # ╟─cefdbc63-367c-4af8-9bf1-e8999c37e677
 # ╠═3309100b-a8f1-44e5-95d3-53660ea171ec
 # ╟─e2be9ff8-3f7f-4497-b8ae-3e5109ea0457
@@ -1960,8 +2078,9 @@ version = "3.5.0+0"
 # ╠═e9016f62-626e-443e-9166-dba66cdc8051
 # ╟─f7e69afe-e8f5-4540-ba71-6df36faf4ce3
 # ╠═119c21c8-3b99-4de9-9edf-2daa7d1ccfad
-# ╟─8c66252c-9639-4002-9e5b-fdf9dba8c768
 # ╠═cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
+# ╟─8c66252c-9639-4002-9e5b-fdf9dba8c768
+# ╟─4329a285-c184-4f03-b90d-c8f74c072cd7
 # ╠═34d05cb5-a222-4705-9f29-4c902e0fb547
 # ╟─85c3160f-962f-4b19-bfba-310054cb7fca
 # ╠═69fed6cc-030b-4066-a023-0bbf1637fbbc
@@ -1995,16 +2114,18 @@ version = "3.5.0+0"
 # ╠═4033d23b-dda6-46d3-8f29-0a34343f46dd
 # ╠═09d93415-99ba-4e54-b0c3-44883d7c5968
 # ╠═a91be952-7ba2-47d6-8aac-4a4e8a3c241d
-# ╟─fa446b31-a6e2-4704-a9e3-8b2c96ceca90
-# ╟─a72f4263-b034-4aa8-8611-d53166cbb718
-# ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
-# ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
-# ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
-# ╠═e61c0433-58b0-46bf-956d-41caecd70316
 # ╟─0efc54a1-3dbb-45ab-bede-77ab4669721d
 # ╟─ee8606f7-6f5d-430a-b111-84843de789d7
 # ╟─4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
-# ╠═e8281692-0a68-4382-956b-cfa61d80f4ae
+# ╟─e8281692-0a68-4382-956b-cfa61d80f4ae
+# ╟─2e124d1f-bdc2-4161-8ce1-9d2b722ab449
+# ╟─4f0a9029-5000-4a63-b387-198c58a7e8f6
+# ╟─ea266c12-7e62-4c77-9682-0cf51c5e6695
+# ╟─b13e37b3-8c6a-471c-9d8f-997d20520664
+# ╟─05c7bb10-aacc-498a-b42f-52642648f92e
+# ╟─e7729331-9750-462e-87ca-69ffca106767
+# ╟─0596e817-91b6-4a57-9323-8b998115d4ca
+# ╟─dad2eb09-06ca-4d96-8f4d-9f1b8770b92d
 # ╟─34ffecd6-202d-46af-862c-0bf34524aa63
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
 # ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
