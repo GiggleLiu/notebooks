@@ -7,12 +7,6 @@ using InteractiveUtils
 # ╔═╡ ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
 using Pkg
 
-# ╔═╡ 7d242d2a-d190-4a11-b218-60650ba70533
-using PlutoUI
-
-# ╔═╡ 52c27043-31c2-4e90-b6a5-d858aa7056d4
-using AbstractTrees
-
 # ╔═╡ cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 using Libdl
 
@@ -21,9 +15,6 @@ using PyCall
 
 # ╔═╡ c73baba2-9ec7-461e-b4e7-fd162606e134
 using BenchmarkTools
-
-# ╔═╡ 1cc46cad-91c8-4812-95b3-02c9979adbbc
-using Luxor
 
 # ╔═╡ 832f83a0-94af-4649-80a0-21dd75d01da7
 using MethodAnalysis
@@ -36,6 +27,15 @@ using Graphs
 
 # ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
 using Yao
+
+# ╔═╡ 7d242d2a-d190-4a11-b218-60650ba70533
+using PlutoUI
+
+# ╔═╡ 52c27043-31c2-4e90-b6a5-d858aa7056d4
+using AbstractTrees
+
+# ╔═╡ 1cc46cad-91c8-4812-95b3-02c9979adbbc
+using Luxor
 
 # ╔═╡ 713939c6-4fe6-11ed-3e49-6bcc498b82f2
 md"""
@@ -77,113 +77,8 @@ md"""## 看教程之前
 """
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
-md"""你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
+md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 您可以通过[此链接]()下载本教程到本地。
 """
-
-# ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
-md"## 一些帮助函数"
-
-# ╔═╡ 156a1a62-e131-403f-b2a2-80f49e6a9b33
-html"<button onclick=present()>Present</button>"
-
-# ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
-AbstractTrees.children(x::Type) = subtypes(x)
-
-# ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
-_typestr(T) = T isa UnionAll ? _typestr(T.body) : T
-
-# ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
-function AbstractTrees.printnode(io::IO, x::Type{T}) where T
-	print(io, _typestr(T))
-end
-
-# ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
-function print_type_tree(T; maxdepth=5)
-	io = IOBuffer()
-	AbstractTrees.print_tree(io, T; maxdepth)
-	Text(String(take!(io)))
-end
-
-# ╔═╡ e4bae9e0-c949-4f1f-8b69-14491246d2a3
-print_type_tree(Number)
-
-# ╔═╡ 26b30265-558b-49e7-b9f5-0b8af30c1273
-pkg_registries = Pkg.Operations.Context().registries;
-
-# ╔═╡ 922071fb-dac2-436e-a343-d0d22bd3c864
-function AbstractTrees.children(uuid::Base.UUID)
-    dep = get(Pkg.dependencies(), uuid, nothing)
-    values(dep.dependencies)
-end
-
-# ╔═╡ d75c0427-12fe-4b2d-9bd1-b08f477966a6
-function AbstractTrees.printnode(io::IO, uuid::Base.UUID)
-    dep = get(Pkg.dependencies(), uuid, nothing)
-	link = collect(Pkg.Operations.find_urls(pkg_registries, uuid))
-	if length(link) > 0
-    	print(io, "<a href=\"$(link[1])\">$(dep.name)</a> (v$(dep.version))")
-	else
-		print(io, "$(dep.name)")
-	end
-end
-
-# ╔═╡ e23b935b-eab0-4256-9983-84fab6ed6632
-function print_dependency_tree(pkg; maxdepth=5)
-	io = IOBuffer()
-	AbstractTrees.print_tree(io, Pkg.project().dependencies[string(pkg)]; maxdepth)
-	HTML("<p style='font-family: Consolas; line-height: 1.2em; max-height: 300px;'>" * replace(String(take!(io)), "\n"=>"<br>") * "</p>")
-end
-
-# ╔═╡ 9bb41efb-2817-4258-af2b-1fe515b6007a
-macro mermaid_str(str)
-	return HTML("""<script src="https://cdn.bootcss.com/mermaid/8.14.0/mermaid.min.js"></script>
-<script>
-  // how to do it correctly?
-  mermaid.init({
-    noteMargin: 10
-  }, ".someClass");
-</script>
-
-<div class="mermaid someClass">
-  $str
-</div>
-""")
-end
-
-# ╔═╡ a9a9f06e-4737-4619-b497-f488ea25fdf3
-	# left right layout
-	function leftright(a, b; width=600)
-		HTML("""
-<style>
-table.nohover tr:hover td {
-   background-color: white !important;
-}</style>
-			
-<table width=$(width)px class="nohover" style="border:none">
-<tr>
-	<td>$(html(a))</td>
-	<td>$(html(b))</td>
-</tr></table>
-""")
-	end
-
-# ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
-function livecoding(src)
-	HTML("""
-<div></div>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.css" />
-<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.min.js"></script>
-<script>
-var target = currentScript.parentElement.firstElementChild;
-AsciinemaPlayer.create('$src', target);
-target.firstChild.firstChild.firstChild.style.background = "#000000";
-target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
-</script>
-""")
-end
-
-# ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
-TableOfContents()
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
 md"# Julia 是什么样的语言?"
@@ -206,17 +101,11 @@ md"## 编译语言快的秘诀"
 # ╔═╡ fe174dbe-5c4b-4445-b485-5c21cc1e8917
 md"静态类型程序的执行很快，因为类型信息被提前知道就可以被高效的编译。"
 
-# ╔═╡ 000b93e6-8a1d-4c67-b5da-5013c6421e2c
-mermaid"""
-flowchart LR;
-A("一段静态类型程序") --> | 编译/很慢 | B("二进制文件") --> | 执行/快 | C(结果)
-"""
-
 # ╔═╡ e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
 const Clib = tempname()  # create a temperary file.
 
 # ╔═╡ 33a43668-4484-47d2-a7a6-09d930232252
-let
+let  # let statement creates a local scope
 	# prepare the source code
 	source_name = "$Clib.c"
 
@@ -239,36 +128,6 @@ int c_factorial(size_t n) {
 	run(`gcc $source_name -fPIC -O3 -msse3 -shared -o $(Clib * "." * Libdl.dlext)`)
 end;
 
-# ╔═╡ 45dc6e01-51aa-4865-b7f4-f0eeeea725c7
-md"""
-NOTES:
-1. 局域环境
-```julia
-let
-	# do something in local scope
-end
-```
-
-2. 匿名函数的一种构造
-```julia
-f(args...) do x
-	# function body
-end
-```
-等价于
-```julia
-f(x -> # function body, args...)
-```
-
-3. Shell 命令
-```julia
-`...`
-```
-"""
-
-# ╔═╡ 84df4e2a-c8f5-494d-94e7-a231ae757d75
-`ls` |> typeof
-
 # ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
 c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
 
@@ -280,12 +139,6 @@ md"## 解释语言方便的秘诀"
 
 # ╔═╡ f3695873-435d-44cb-b9fb-af34dc38bdaa
 md"动态类型的语言它不需要被编译"
-
-# ╔═╡ ef736f15-6180-46ed-ac52-d57ac17429e8
-mermaid"""
-flowchart LR;
-A("一段静态类型程序") --> | 解释执行/慢 | C(结果)
-"""
 
 # ╔═╡ 0f526702-f8e6-492d-bd14-e81874e6fefe
 py"""
@@ -321,15 +174,6 @@ md"""## 双语言 **Python & C++** 的问题?
 * 组合优化中的分支界定法 (branching)
 
 ![](https://user-images.githubusercontent.com/6257240/200309092-6a138366-ac52-47e5-a010-47711612632b.png)
-"""
-
-# ╔═╡ d04b2eca-9662-4518-8bb6-8b1bf07e8984
-mermaid"""
-flowchart LR;
-A("一个 Julia 函数") --> B{有函数实例?}
-B -- 否 --> N[推导数据类型<br>并编译/不快] --> C("内存中的二进制码")
-C --> |执行/快| Z("结果")
-B -- 是 --> C
 """
 
 # ╔═╡ be4da897-df85-4276-bde1-7c1824cae796
@@ -419,9 +263,6 @@ md"## 案例分析："
 # ╔═╡ 3e3a2f23-8098-4d06-b4d1-157c97e4c094
 md"函数实例 (method instance)： 内存中，一个针对特定输入类型的函数被编译后的二进制码。"
 
-# ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
-livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/matmul/main.cast")
-
 # ╔═╡ 9ccbc920-ae8f-4b65-bf7e-273fce9deb99
 md"A typical type unstable code"
 
@@ -430,20 +271,6 @@ with_terminal() do
 	unstable(x) = x > 3 ? 1.0 : 3
 	@code_warntype unstable(4)
 end
-
-# ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
-md"""
-# 多重派发
-
-Julia 有很多特别之处，在此列举一个其中最重要的一点
-
-$(leftright(
-	html"<div style='font-size:40px; text-align: center; padding-right=50px'>Mutliple<br>多重</div>",
-	html"<div style='font-size:40px; text-align: center'> Dispatch<br>派发</div>",
-))
-
-
-"""
 
 # ╔═╡ e34c636f-ae8f-46c3-a043-08c0408b3433
 md"""
@@ -572,9 +399,6 @@ md"""
 * concrete type： 类型系统中的叶子节点。
 """
 
-# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
-print_type_tree(Number)
-
 # ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
 md"`A <: B` 表示 A 是 B 的子集。"
 
@@ -672,70 +496,8 @@ Union{AbstractFloat, Complex} <: Real
 # ╔═╡ 34d05cb5-a222-4705-9f29-4c902e0fb547
 FloatAndComplex{T} = Union{T, Complex{T}} where T<:AbstractFloat
 
-# ╔═╡ 21341609-92c4-4a73-a066-99ebb3b72010
-begin
-	function drawset!(x, y; textoffset=0, dash=false, bgcolor, r, text, opacity=1.0)
-		setcolor(bgcolor)
-		setopacity(opacity)
-		circle(x, y, r; action=:fill)
-		setopacity(1.0)
-		setcolor("black")
-		if dash
-			setdash("dashed")
-			circle(x, y, r; action=:stroke)
-		end
-		Luxor.text(text, x, y+textoffset; halign=:center, valign=:center)
-	end
-	function draw_number!(x, y; textoffset=0, dash=false)
-		drawset!(x, y; textoffset, dash, bgcolor="#6688CC", r=100, text="Number")
-	end
-	function draw_floatandcomplex!(x, y; textoffset=0, dash=false)
-		drawset!(x, y; textoffset, dash, bgcolor="#AACC66", r=50, text="FloatAndComplex")
-	end
-	function draw_float!(x, y; textoffset=0, dash=false)
-		drawset!(x, y; textoffset, dash, bgcolor="#66FF88", r=50, text="AbstractFloat", opacity=0.5)
-	end
-	function ring3!(x, y)
-		draw_number!(x, y; textoffset=-85)
-		#draw_floatandcomplex!(x, y-30; textoffset=0)
-		draw_float!(x, y+30; textoffset=0)
-	end
-	@drawsvg begin
-		ring3!(0, 0)
-	end 300 300
-end
-
-# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	Luxor.text("Any", 100, -110)
-end 300 300
-
-# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
-end 300 300
-
-# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
-	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
-	Luxor.text("Any", 100, -110)
-end 300 300
+# ╔═╡ 85c3160f-962f-4b19-bfba-310054cb7fca
+md"## 如何定义函数"
 
 # ╔═╡ 69fed6cc-030b-4066-a023-0bbf1637fbbc
 begin
@@ -752,14 +514,6 @@ begin
 		@info "(::Number, ::AbstractFloat)"
 		-10 * eps(y) < x - y < 10 * eps(y)
 	end
-	#function roughly_equal(x::Float64, y::Number)
-	#	@info "(::Float64, ::Number)"
-	#	abs(x - y) < 10 * eps(x)
-	#end
-	#function roughly_equal(x::FloatAndComplex, y::Number)
-	#	@info "(::FloatAndComplex, ::Number)"
-	#	abs(x - y) < 10 * eps(x)
-	#end
 end
 
 # ╔═╡ b3f72d4b-9f1f-46fd-8145-212f96c320f8
@@ -768,69 +522,14 @@ methods(roughly_equal)
 # ╔═╡ a79ac986-54ad-44c0-8aa6-077a6f34b6eb
 roughly_equal(3.0, 3)  # case 1
 
-# ╔═╡ a112da1a-1ffc-41ab-8387-d4340c653ba7
-begin
-	function doublering!(dx1, dx2)
-		x1, y1, x2 = -120, 0, 120
-		ring3!(x1, y1)
-		ring3!(x2, y1)
-		setcolor("red")
-		circle(x1+dx1, y1, 5; action=:fill)
-		circle(x2+dx2, y1, 5; action=:fill)
-	end
-	let
-		@drawsvg begin
-			doublering!(0, 85)
-			x1, y1, x2 = -120, 0, 120
-			setcolor("black")
-			text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
-			arrow(Point(-30, 100), Point(x1+70, y1+70))
-			arrow(Point(30, 100), Point(x2-70, y1+70))
-			text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-			arrow(Point(-30, -100), Point(x1+20, y1-15))
-			arrow(Point(30, -100), Point(x2-70, y1-70))
-		end 500 300
-	end
-end
-
 # ╔═╡ 5e276fd0-887e-4de2-b502-359be36e6fb6
 md"最具体的获胜"
 
 # ╔═╡ 2ca96d5e-bc03-4c2a-aeaf-9d35c9ceb8c1
 roughly_equal(3, 3)    # case 2
 
-# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
-let
-	@drawsvg begin
-		doublering!(85, 85)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-70, y1+70))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
-end
-
 # ╔═╡ 5ea7d476-1217-4895-9064-b0327c7a3fdc
 roughly_equal(3.0, 3.0)
-
-# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
-let
-	@drawsvg begin
-		doublering!(0, 0)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-40, y1+55))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
-end
 
 # ╔═╡ 9b00810e-8dc8-4602-a185-28e60c027b99
 md"有时候，难论输赢"
@@ -840,6 +539,35 @@ md"猜，现在 `f` 有多少个函数实例？"
 
 # ╔═╡ 7bce1278-ac0d-4918-aaea-fa69d8cdcf24
 methodinstances(roughly_equal);
+
+# ╔═╡ a94c8b67-94c8-4ba1-99fd-db891a805006
+md"让类型参数保持一致。"
+
+# ╔═╡ 34494ea7-d50a-48c0-8374-ca9482bc63f3
+begin
+	# fallback
+	function lmul(x::Complex{T1}, y::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}
+		@info "(::Complex{T1}, ::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}"
+		Complex{T2}(x) .* y
+	end
+	function lmul(x::Complex{T}, y::AbstractArray{<:Complex{T}}) where T<:Real
+		@info "(::Complex{T}, ::AbstractArray{<:Complex{T}}) where T<:Real"
+		x .* y
+	end
+end
+
+# ╔═╡ 8cebd10b-8af7-4806-999a-204823c56eea
+lmul(3.0im, randn(ComplexF64, 3, 3))
+
+# ╔═╡ 6bccd6b6-0de1-4e4e-b6b4-99ed90580af7
+lmul(3im, randn(ComplexF64, 3, 3))
+
+# ╔═╡ 5736fc36-4e81-4672-99d2-7a23f212269c
+md"""
+## 小结
+* Julia 的多重派发比面向对象提供了更多的抽象的可能（指数大）。
+* 可以利用巧妙的类型系统设计，在指数大的函数空间中定义抽象。
+"""
 
 # ╔═╡ e384ee43-dbeb-401d-a113-e4218d0b9176
 md"## 案例分析： 依然是 Tropical 代数"
@@ -892,18 +620,26 @@ md"""
 # Julia 的软件生态
 """
 
-# ╔═╡ 216d9db3-2d4a-47ef-89c6-70edfdd7bd53
-mermaid"""
-graph TD;
-A["安装包命令 pkg> add Yao"] --> B["从 GitHub 更新 registry (如 General)"] --> C["解析依赖关系与版本并生成 Manifest.toml 文件"] --> D["从 GitHub 找到对应的软件仓库"]
-D --> E["下载对应软件包的版本并安装"]
-"""
-
 # ╔═╡ d1b9aa30-ac64-4653-95b9-ab8695fbf34b
 md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂。"
 
-# ╔═╡ e61c0433-58b0-46bf-956d-41caecd70316
-print_dependency_tree(Yao; maxdepth=2)
+# ╔═╡ 0efc54a1-3dbb-45ab-bede-77ab4669721d
+md"""
+## 课后习题
+"""
+
+# ╔═╡ ee8606f7-6f5d-430a-b111-84843de789d7
+md"""
+这些视频可以在[我的个人网站](https://giggleliu.github.io/code/#muscle_memory_1_basic_types_and_control_flow)
+找到。这个notebook和相关资料将会上传到 JuliaCN org 下面的 Github repo: 
+
+[https://github.com/JuliaCN/MeetUpMaterials](https://github.com/JuliaCN/MeetUpMaterials)
+"""
+
+# ╔═╡ 4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
+md"""
+### 1. Types and control flow
+"""
 
 # ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
 md"""# 资源
@@ -916,6 +652,285 @@ md"""# 资源
 * 安装/升级 Julia, 配置 IDE
 ### 这个 notebook
 """
+
+# ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
+md"## 一些帮助函数"
+
+# ╔═╡ 156a1a62-e131-403f-b2a2-80f49e6a9b33
+html"<button onclick=present()>Present</button>"
+
+# ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
+AbstractTrees.children(x::Type) = subtypes(x)
+
+# ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
+_typestr(T) = T isa UnionAll ? _typestr(T.body) : T
+
+# ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
+function AbstractTrees.printnode(io::IO, x::Type{T}) where T
+	print(io, _typestr(T))
+end
+
+# ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
+function print_type_tree(T; maxdepth=5)
+	io = IOBuffer()
+	AbstractTrees.print_tree(io, T; maxdepth)
+	Text(String(take!(io)))
+end
+
+# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
+print_type_tree(Number)
+
+# ╔═╡ e4bae9e0-c949-4f1f-8b69-14491246d2a3
+print_type_tree(Number)
+
+# ╔═╡ 26b30265-558b-49e7-b9f5-0b8af30c1273
+pkg_registries = Pkg.Operations.Context().registries;
+
+# ╔═╡ 922071fb-dac2-436e-a343-d0d22bd3c864
+function AbstractTrees.children(uuid::Base.UUID)
+    dep = get(Pkg.dependencies(), uuid, nothing)
+    values(dep.dependencies)
+end
+
+# ╔═╡ d75c0427-12fe-4b2d-9bd1-b08f477966a6
+function AbstractTrees.printnode(io::IO, uuid::Base.UUID)
+    dep = get(Pkg.dependencies(), uuid, nothing)
+	link = collect(Pkg.Operations.find_urls(pkg_registries, uuid))
+	if length(link) > 0
+    	print(io, "<a href=\"$(link[1])\">$(dep.name)</a> (v$(dep.version))")
+	else
+		print(io, "$(dep.name)")
+	end
+end
+
+# ╔═╡ e23b935b-eab0-4256-9983-84fab6ed6632
+function print_dependency_tree(pkg; maxdepth=5)
+	io = IOBuffer()
+	AbstractTrees.print_tree(io, Pkg.project().dependencies[string(pkg)]; maxdepth)
+	HTML("<p style='font-family: Consolas; line-height: 1.2em; max-height: 300px;'>" * replace(String(take!(io)), "\n"=>"<br>") * "</p>")
+end
+
+# ╔═╡ e61c0433-58b0-46bf-956d-41caecd70316
+print_dependency_tree(Yao; maxdepth=2)
+
+# ╔═╡ 9bb41efb-2817-4258-af2b-1fe515b6007a
+macro mermaid_str(str)
+	return HTML("""<script src="https://cdn.bootcss.com/mermaid/8.14.0/mermaid.min.js"></script>
+<script>
+  // how to do it correctly?
+  mermaid.init({
+    noteMargin: 10
+  }, ".someClass");
+</script>
+
+<div class="mermaid someClass">
+  $str
+</div>
+""")
+end
+
+# ╔═╡ 000b93e6-8a1d-4c67-b5da-5013c6421e2c
+mermaid"""
+flowchart LR;
+A("一段静态类型程序") --> | 编译/很慢 | B("二进制文件") --> | 执行/快 | C(结果)
+"""
+
+# ╔═╡ ef736f15-6180-46ed-ac52-d57ac17429e8
+mermaid"""
+flowchart LR;
+A("一段静态类型程序") --> | 解释执行/慢 | C(结果)
+"""
+
+# ╔═╡ d04b2eca-9662-4518-8bb6-8b1bf07e8984
+mermaid"""
+flowchart LR;
+A("一个 Julia 函数") --> B{有函数实例?}
+B -- 否 --> N[推导数据类型<br>并编译/不快] --> C("内存中的二进制码")
+C --> |执行/快| Z("结果")
+B -- 是 --> C
+"""
+
+# ╔═╡ 216d9db3-2d4a-47ef-89c6-70edfdd7bd53
+mermaid"""
+graph TD;
+A["安装包命令 pkg> add Yao"] --> B["从 GitHub 更新 registry (如 General)"] --> C["解析依赖关系与版本并生成 Manifest.toml 文件"] --> D["从 GitHub 找到对应的软件仓库"]
+D --> E["下载对应软件包的版本并安装"]
+"""
+
+# ╔═╡ a9a9f06e-4737-4619-b497-f488ea25fdf3
+	# left right layout
+	function leftright(a, b; width=600)
+		HTML("""
+<style>
+table.nohover tr:hover td {
+   background-color: white !important;
+}</style>
+			
+<table width=$(width)px class="nohover" style="border:none">
+<tr>
+	<td>$(html(a))</td>
+	<td>$(html(b))</td>
+</tr></table>
+""")
+	end
+
+# ╔═╡ 8ea2593c-2f93-47c1-aa7d-918c848f8bfb
+md"""
+# 多重派发
+
+Julia 有很多特别之处，在此列举一个其中最重要的一点
+
+$(leftright(
+	html"<div style='font-size:40px; text-align: center; padding-right=50px'>Mutliple<br>多重</div>",
+	html"<div style='font-size:40px; text-align: center'> Dispatch<br>派发</div>",
+))
+
+
+"""
+
+# ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
+function livecoding(src)
+	HTML("""
+<div></div>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.css" />
+<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.min.js"></script>
+<script>
+var target = currentScript.parentElement.firstElementChild;
+AsciinemaPlayer.create('$src', target);
+target.firstChild.firstChild.firstChild.style.background = "#000000";
+target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
+</script>
+""")
+end
+
+# ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/matmul/main.cast")
+
+# ╔═╡ e8281692-0a68-4382-956b-cfa61d80f4ae
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
+
+# ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
+TableOfContents()
+
+# ╔═╡ 21341609-92c4-4a73-a066-99ebb3b72010
+begin
+	function drawset!(x, y; textoffset=0, dash=false, bgcolor, r, text, opacity=1.0)
+		setcolor(bgcolor)
+		setopacity(opacity)
+		circle(x, y, r; action=:fill)
+		setopacity(1.0)
+		setcolor("black")
+		if dash
+			setdash("dashed")
+			circle(x, y, r; action=:stroke)
+		end
+		Luxor.text(text, x, y+textoffset; halign=:center, valign=:center)
+	end
+	function draw_number!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#6688CC", r=100, text="Number")
+	end
+	function draw_floatandcomplex!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#AACC66", r=50, text="FloatAndComplex")
+	end
+	function draw_float!(x, y; textoffset=0, dash=false)
+		drawset!(x, y; textoffset, dash, bgcolor="#66FF88", r=50, text="AbstractFloat", opacity=0.5)
+	end
+	function ring3!(x, y)
+		draw_number!(x, y; textoffset=-85)
+		#draw_floatandcomplex!(x, y-30; textoffset=0)
+		draw_float!(x, y+30; textoffset=0)
+	end
+	@drawsvg begin
+		ring3!(0, 0)
+	end 300 300
+			end;
+
+# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	Luxor.text("Any", 100, -110)
+end 300 300
+
+# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
+end 300 300
+
+# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
+	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
+	Luxor.text("Any", 100, -110)
+end 300 300
+
+# ╔═╡ a112da1a-1ffc-41ab-8387-d4340c653ba7
+begin
+	function doublering!(dx1, dx2)
+		x1, y1, x2 = -120, 0, 120
+		ring3!(x1, y1)
+		ring3!(x2, y1)
+		setcolor("red")
+		circle(x1+dx1, y1, 5; action=:fill)
+		circle(x2+dx2, y1, 5; action=:fill)
+	end
+	let
+		@drawsvg begin
+			doublering!(0, 85)
+			x1, y1, x2 = -120, 0, 120
+			setcolor("black")
+			text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
+			arrow(Point(-30, 100), Point(x1+70, y1+70))
+			arrow(Point(30, 100), Point(x2-70, y1+70))
+			text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+			arrow(Point(-30, -100), Point(x1+20, y1-15))
+			arrow(Point(30, -100), Point(x2-70, y1-70))
+		end 500 300
+	end
+end
+
+# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
+let
+	@drawsvg begin
+		doublering!(85, 85)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-70, y1+70))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
+end
+
+# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
+let
+	@drawsvg begin
+		doublering!(0, 0)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-40, y1+55))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1849,24 +1864,6 @@ version = "3.5.0+0"
 # ╟─d34ac2d6-bece-4643-b413-4053441af815
 # ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
 # ╟─b92957bf-eeb2-4d2a-933d-77baad5c6eef
-# ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
-# ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
-# ╠═7d242d2a-d190-4a11-b218-60650ba70533
-# ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
-# ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
-# ╠═782a555d-caff-4096-a6e6-24e77565a2cf
-# ╠═88a8c21d-e5d3-4b88-a818-58f614d6f64e
-# ╠═d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
-# ╠═e4bae9e0-c949-4f1f-8b69-14491246d2a3
-# ╠═ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
-# ╠═26b30265-558b-49e7-b9f5-0b8af30c1273
-# ╠═922071fb-dac2-436e-a343-d0d22bd3c864
-# ╠═d75c0427-12fe-4b2d-9bd1-b08f477966a6
-# ╠═e23b935b-eab0-4256-9983-84fab6ed6632
-# ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
-# ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
-# ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
-# ╠═27310322-9276-49d4-bc28-d503b6354ce1
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
 # ╟─73ce1dff-a3ff-431b-9acb-7af6c00b35f6
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
@@ -1875,8 +1872,6 @@ version = "3.5.0+0"
 # ╠═e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
 # ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 # ╠═33a43668-4484-47d2-a7a6-09d930232252
-# ╟─45dc6e01-51aa-4865-b7f4-f0eeeea725c7
-# ╠═84df4e2a-c8f5-494d-94e7-a231ae757d75
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
 # ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
@@ -1910,7 +1905,7 @@ version = "3.5.0+0"
 # ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
 # ╟─0ef8831d-62c3-47b5-9f6e-3d9322da8e16
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
-# ╠═04b5f8fc-32c1-430c-8bec-3e1a06bdda24
+# ╟─04b5f8fc-32c1-430c-8bec-3e1a06bdda24
 # ╟─9ccbc920-ae8f-4b65-bf7e-273fce9deb99
 # ╠═3adea2f8-3f59-45d5-9e03-7285c7571c1d
 # ╟─8ea2593c-2f93-47c1-aa7d-918c848f8bfb
@@ -1968,8 +1963,7 @@ version = "3.5.0+0"
 # ╟─8c66252c-9639-4002-9e5b-fdf9dba8c768
 # ╠═cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
 # ╠═34d05cb5-a222-4705-9f29-4c902e0fb547
-# ╠═1cc46cad-91c8-4812-95b3-02c9979adbbc
-# ╠═21341609-92c4-4a73-a066-99ebb3b72010
+# ╟─85c3160f-962f-4b19-bfba-310054cb7fca
 # ╠═69fed6cc-030b-4066-a023-0bbf1637fbbc
 # ╠═b3f72d4b-9f1f-46fd-8145-212f96c320f8
 # ╠═a79ac986-54ad-44c0-8aa6-077a6f34b6eb
@@ -1983,6 +1977,11 @@ version = "3.5.0+0"
 # ╠═832f83a0-94af-4649-80a0-21dd75d01da7
 # ╟─ad965d41-ca74-4c3b-a81d-a3f0f1a2b1e4
 # ╠═7bce1278-ac0d-4918-aaea-fa69d8cdcf24
+# ╟─a94c8b67-94c8-4ba1-99fd-db891a805006
+# ╠═34494ea7-d50a-48c0-8374-ca9482bc63f3
+# ╠═8cebd10b-8af7-4806-999a-204823c56eea
+# ╠═6bccd6b6-0de1-4e4e-b6b4-99ed90580af7
+# ╟─5736fc36-4e81-4672-99d2-7a23f212269c
 # ╟─e384ee43-dbeb-401d-a113-e4218d0b9176
 # ╟─289c723b-99e5-440b-b1ae-a8bf69a34c1b
 # ╠═182f39d4-361e-4324-b4a2-775488911606
@@ -2002,6 +2001,30 @@ version = "3.5.0+0"
 # ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
 # ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
 # ╠═e61c0433-58b0-46bf-956d-41caecd70316
+# ╟─0efc54a1-3dbb-45ab-bede-77ab4669721d
+# ╟─ee8606f7-6f5d-430a-b111-84843de789d7
+# ╟─4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
+# ╠═e8281692-0a68-4382-956b-cfa61d80f4ae
 # ╟─34ffecd6-202d-46af-862c-0bf34524aa63
+# ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
+# ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
+# ╠═7d242d2a-d190-4a11-b218-60650ba70533
+# ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
+# ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
+# ╠═782a555d-caff-4096-a6e6-24e77565a2cf
+# ╠═88a8c21d-e5d3-4b88-a818-58f614d6f64e
+# ╠═d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
+# ╠═e4bae9e0-c949-4f1f-8b69-14491246d2a3
+# ╠═ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
+# ╠═26b30265-558b-49e7-b9f5-0b8af30c1273
+# ╠═922071fb-dac2-436e-a343-d0d22bd3c864
+# ╠═d75c0427-12fe-4b2d-9bd1-b08f477966a6
+# ╠═e23b935b-eab0-4256-9983-84fab6ed6632
+# ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
+# ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
+# ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
+# ╠═27310322-9276-49d4-bc28-d503b6354ce1
+# ╠═1cc46cad-91c8-4812-95b3-02c9979adbbc
+# ╠═21341609-92c4-4a73-a066-99ebb3b72010
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
