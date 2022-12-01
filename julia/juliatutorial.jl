@@ -19,17 +19,17 @@ using BenchmarkTools
 # ╔═╡ 832f83a0-94af-4649-80a0-21dd75d01da7
 using MethodAnalysis
 
-# ╔═╡ 182f39d4-361e-4324-b4a2-775488911606
-using TropicalNumbers
-
-# ╔═╡ 09d93415-99ba-4e54-b0c3-44883d7c5968
-using Graphs
-
 # ╔═╡ 9cc6445c-cc12-4a75-8415-9591c5491e6e
 using Test
 
 # ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
 using Yao
+
+# ╔═╡ 182f39d4-361e-4324-b4a2-775488911606
+using TropicalNumbers
+
+# ╔═╡ 09d93415-99ba-4e54-b0c3-44883d7c5968
+using Graphs
 
 # ╔═╡ 7d242d2a-d190-4a11-b218-60650ba70533
 using PlutoUI
@@ -74,15 +74,15 @@ html"""
 md"""## 看教程之前
 以下内容不会在教程中涉及，但是非常重要。
 
-1. 如何配置 Julia 语言环境
-    * [英文参考](https://julialang.org/contribute/developing_package/)
-    * 王至宏同学写的[配置开发环境](https://discourse.juliacn.com/t/topic/6806)
+1. 如何配置 Julia 语言环境 (Julia, VSCode, Revise, 软件源)
+    * [How to develop a Julia package](https://julialang.org/contribute/developing_package/) - Chris Rackauchas
+    * [Julia 模块-远程开发](https://discourse.juliacn.com/t/topic/6806) - 王至宏
 
 2. 您最好对 Git 和 [GitHub](https://github.com/) 有基本的了解， 以便理解 Julia 的软件包管理系统。 相关资料：[Missing Semester](https://missing.csail.mit.edu/2020/)
 """
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
-md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到 JuliaCN Github Org 下面 MeetUpMaterials 仓库下面。
+md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到 JuliaCN Github Org 下面 [MeetUpMaterials](https://github.com/JuliaCN/MeetUpMaterials) 仓库下面。
 """
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
@@ -150,6 +150,7 @@ md"## 高性能计算生态"
 # ╔═╡ 931bb099-60b9-4542-ac53-3757fb269fff
 md"""
 ### [CUDA](https://github.com/JuliaGPU/CUDA.jl) ecosystem
+CUDA programming in Julia.
 
 ![](https://juliagpu.org/assets/img/cuda-performance.png)
 """
@@ -157,6 +158,7 @@ md"""
 # ╔═╡ 26348f56-c4bf-4ec8-a429-773d60525364
 md"""
 ### [LoopVectorization](https://github.com/JuliaSIMD/LoopVectorization.jl) ecosystem
+Macro(s) for vectorizing loops (SIMD).
 ![](https://raw.githubusercontent.com/JuliaSIMD/LoopVectorization.jl/docsassets/docs/src/assets/bench_dot_v2.svg)
 
 TropicalGEMM: A BLAS for tropical numbers.
@@ -169,49 +171,34 @@ md"## 编译语言快的秘诀"
 # ╔═╡ fe174dbe-5c4b-4445-b485-5c21cc1e8917
 md"静态类型程序的执行很快，因为类型信息被提前知道就可以被高效的编译。"
 
-# ╔═╡ e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
-const Clib = tempname()  # create a temperary file.
-
 # ╔═╡ 33a43668-4484-47d2-a7a6-09d930232252
-let  # let statement creates a local scope
-	# prepare the source code
-	source_name = "$Clib.c"
-
-	# open a file and write the source code
-	open(source_name, "w") do f
-		write(f, """
-#include <stddef.h>
-int c_factorial(size_t n) {
-	int s = 1;
-	for (size_t i=1; i<=n; i++) {
-		s *= i;
-	}
-	return s;
-}
-""")
-	end
-	
-	# compile to a shared library by piping C_code to gcc;
-	# (only works if you have gcc installed)
-	run(`gcc $source_name -fPIC -O3 -msse3 -shared -o $(Clib * "." * Libdl.dlext)`)
-end;
+# compile to a shared library by piping C_code to gcc;
+# (only works if you have gcc installed)
+run(`gcc clib/demo.c -fPIC -O3 -msse3 -shared -o clib/demo.so`)
 
 # ╔═╡ 2a22f131-6a99-4744-8914-19c8776700e7
-c_factorial(x) = @ccall Clib.c_factorial(x::Csize_t)::Int
+c_factorial(x) = Libdl.@ccall "clib/demo".c_factorial(x::Csize_t)::Int
+
+# ╔═╡ a9c2ff4c-a32b-4bb5-aef3-cf378453587a
+c_factorial(10)
+
+# ╔═╡ 25534efa-c0f1-4c7f-9575-f0c7c8dbf634
+c_factorial(1000)
 
 # ╔═╡ 01972597-9d31-4972-a15d-51832f0f5910
 @benchmark c_factorial(1000)
 
 # ╔═╡ 917e187d-5eda-49d6-a72a-0ed3f60d82d6
-md"[learn more about calling C code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
+md"[learn more about calling C code in Julia](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
 
 # ╔═╡ ab045ed0-7cbb-4565-bd7f-239dd94ce99e
 md"## 解释语言方便的秘诀"
 
 # ╔═╡ f3695873-435d-44cb-b9fb-af34dc38bdaa
-md"动态类型的语言它不需要被编译"
+md"动态类型的语言不需要被编译"
 
 # ╔═╡ 0f526702-f8e6-492d-bd14-e81874e6fefe
+# py"..." is a string literal, it is defined as a special macro: @py_str
 py"""
 def factorial(n):
 	x = 1
@@ -265,36 +252,15 @@ function jlfactorial(n)
 	return x
 end
 
-# ╔═╡ f43de1bd-1e3a-4a99-81c0-721ce32cc761
-md"convert it to an abstract syntax tree"
-
-# ╔═╡ a6dd79be-ccca-4faf-8f11-ac129981bce8
-ex = (quote
-function jlfactorial(n)
-	x = 1
-	for i in 1:n
-    	x = x * i
-	end
-	return x
-end
-end).args[2]
-
-# ╔═╡ 59ea4880-89a0-497d-ace2-e33d0d8a4d65
-ex.head
-
-# ╔═╡ c966f373-432d-426b-8179-289c94f42da1
-ex.args
-
-# ╔═╡ e94597a7-5fbb-4305-9023-5a4d981f02a7
-@code_lowered jlfactorial(10)
-
 # ╔═╡ 70fc53ba-70c5-4ae4-877c-f8e47569adc4
 md"""
 ### 2. 当遇到调用，在 Julia 的中间表示 (Intermediate Representation) 上推导数据类型
 """
 
-# ╔═╡ db779958-e7d5-4164-87a7-219257ae45f0
-@code_typed jlfactorial(10)
+# ╔═╡ 5b5e337e-c7e2-4c90-966e-62dc48a9cf28
+with_terminal() do
+	@code_warntype jlfactorial(10)
+end
 
 # ╔═╡ 2f36c4e6-1fc5-42e9-b097-315b28f82d5d
 md"""
@@ -329,7 +295,7 @@ jlfactorial(1000)
 @benchmark jlfactorial(x) setup=(x=1000)
 
 # ╔═╡ 0ef8831d-62c3-47b5-9f6e-3d9322da8e16
-md"## 案例分析："
+md"## 案例分析： 查看 Method instances"
 
 # ╔═╡ 3e3a2f23-8098-4d06-b4d1-157c97e4c094
 md"函数实例 (method instance)： 内存中，一个针对特定输入类型的函数被编译后的二进制码。"
@@ -404,7 +370,7 @@ Base.:(+)(a::Y, b::Y) = Y(a.num + b.num)
 
 # ╔═╡ 8c9af74a-f4ec-4b56-b560-2c8a77f5e4d9
 md"""
-现在我把这个函数打包做成了一个package，由个人问我他其实有个C，想拓展这个加法。
+现在我把这些代码打包做成了一个package，由个人问我他其实有个C，想拓展这个加法。
 """
 
 # ╔═╡ 53fb47ff-c48a-41f4-9066-bd2c2af28dfd
@@ -440,21 +406,58 @@ Base.:(+)(a::X, b::Z) = Z(a.num + b.num)
 # ╔═╡ 6cfc75fe-569c-45b8-acb6-d757e57730e6
 Base.:(+)(a::Z, b::X) = Z(a.num + b.num)
 
+# ╔═╡ 7ef00148-1628-4066-b0c2-efe1c38afb67
+Base.:(+)(a::Y, b::Z) = Z(a.num + b.num)
+
+# ╔═╡ fb183df1-a578-44e2-94bc-7d04b5fe8ebb
+Base.:(+)(a::Z, b::Y) = Z(a.num + b.num)
+
+# ╔═╡ 30a44089-656a-4277-ab28-45610c329325
+Base.:(+)(a::Z, b::Z) = Z(a.num + b.num)
+
+# ╔═╡ 06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
+@drawsvg begin
+	x0 = -50
+	for i=1:4
+		y0 = 40 * i - 100
+		box(Point(x0, y0), 50, 40; action=:stroke)
+		box(Point(x0+50, y0), 50, 40; action=:stroke)
+		setcolor("#88CC66")
+		circle(Point(x0+120, y0), 15; action=:fill)
+		setcolor("black")
+		text("type", Point(x0, y0); halign=:center, valign=:center)
+		text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
+		text("data", Point(x0+120, y0); halign=:center, valign=:middle)
+		arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
+	end
+end 200 200
+
 # ╔═╡ 4e1b7044-ff2b-4eca-a549-a4cd736a93ee
 X(3) + Y(5)
+
+# ╔═╡ 17071f7d-e730-4248-8b0a-a3e7067ef1e1
+Y(3) + X(5)
 
 # ╔═╡ 8764fa70-9933-4e6d-a0a6-2567e1219c63
 X(3) + Z(5)
 
 # ╔═╡ 8e019f9b-8c9d-46d7-b10f-3985c46e2a88
-Z(3) + X(5)
+Z(3) + Y(5)
 
 # ╔═╡ c13cf4d5-f5a1-466c-b5f5-bc3fe6545e05
 md"""
-### Julia 的函数空间有指数大！
+## Julia 的函数空间有指数大！
 假如 $f$ 有 $k$ 个参数，类型空间一共定义了$t$个类型，请问函数空间有多大？
 ```jula
 f(x::T1, y::T2, z::T3...)
+```
+
+如果是 Python 呢？
+```python
+class T1:
+    def f(self, y, z, ...):
+        self.num = num
+
 ```
 """
 
@@ -468,6 +471,27 @@ md"""
 * primitive type: 无法被分解为其它类型的组合。
 * abstract type： 抽象的类型，无成员变量。
 * concrete type： 类型系统中的叶子节点，可为其分配内存。
+"""
+
+# ╔═╡ a8e1722b-89c3-46be-9488-33aa595c3126
+md"""
+例子：
+"""
+
+# ╔═╡ 30d83360-4d86-4df4-8543-8870841c45cc
+# the definition of an abstract type
+abstract type A end
+
+# ╔═╡ 6e9f119e-e7c7-4549-81fb-9b85f6736b18
+# the definition of a concrete type
+struct C <: A
+	member1::Float64
+	member2::Int
+end
+
+# ╔═╡ fc0fdc48-db4c-40c7-9c45-e539512f5ee6
+md"""
+### Numbers
 """
 
 # ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
@@ -649,6 +673,80 @@ md"""
 * 可以利用巧妙的类型系统设计，在指数大的函数空间中写代码。
 """
 
+# ╔═╡ b7d2319f-3d14-4a12-ad2e-3d7845d919b8
+md"""
+# Julia的软件包开发
+"""
+
+# ╔═╡ 6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
+md"一个软件包的文件结构"
+
+# ╔═╡ f8896020-c076-4373-895b-4332b3631380
+project_folder = dirname(dirname(pathof(TropicalNumbers)))
+
+# ╔═╡ 9447d362-04a4-4dc0-b215-4cbdbdaec9b3
+md"""
+## Unit Test
+"""
+
+# ╔═╡ 0223205c-2e44-4787-bf84-90abecd11542
+let
+	function circ(x0, text, r)
+		setcolor("#88CC66")
+		circle(x0, 0, r; action=:fill)
+		setcolor("black")
+		Luxor.text(text, x0, 0; halign=:center, valign=:middle)
+	end
+	@drawsvg begin
+		circ(-150, "Correctness", 40)
+		circ(-25, "Speed", 30)
+		circ(100, "Others", 20)
+		fontsize(30)
+		text(">", -87, 0; halign=:center, valign=:middle)
+		text(">", 37, 0; halign=:center, valign=:middle)
+	end 400 100
+end
+
+# ╔═╡ 39c3a673-787e-4f00-ac71-f0279e0c9be7
+@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
+
+# ╔═╡ bfc1690a-f5ec-4173-a9eb-ab0b1905b59c
+@test_throws BoundsError [1][2]
+
+# ╔═╡ c42d7cae-2d09-46cf-bb22-a09d17dd7bca
+@test_broken 3 == 2
+
+# ╔═╡ 4e8bbc37-5e4e-4669-ab13-0c88ae177490
+@testset "Tropical Number addition" begin
+	@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
+	@test_throws BoundsError [1][2]
+	@test_broken 3 == 2
+end
+
+# ╔═╡ 56e8cee2-7a4e-4a9a-b297-b7c08b865db8
+with_terminal() do
+	Pkg.test("TropicalNumbers")
+end
+
+# ╔═╡ a008446c-079a-4571-a66b-c156eec72188
+md"[了解更多](https://docs.julialang.org/en/v1/stdlib/Test/)"
+
+# ╔═╡ fa78b65e-e3a2-49a8-b846-9827787de23e
+md"""
+## 版本控制与依赖
+"""
+
+# ╔═╡ d1b9aa30-ac64-4653-95b9-ab8695fbf34b
+md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂。"
+
+# ╔═╡ 5dbe18d9-e3a2-4997-a984-e13c70f34746
+md"## PkgTemplates
+"
+
+# ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
+md"""# 资源
+"""
+
 # ╔═╡ e384ee43-dbeb-401d-a113-e4218d0b9176
 md"## 案例分析： 依然是 Tropical 代数"
 
@@ -674,9 +772,6 @@ end
 # ╔═╡ 548f68e9-190d-4926-ad98-0ef8baddac44
 filename = joinpath(dirname(pathof(TropicalNumbers)), "tropical.jl")
 
-# ╔═╡ 022cc3a3-4cff-4e65-99bf-24ea7dfa1e06
-@macroexpand md"s"
-
 # ╔═╡ 1f92c679-ad25-48fa-ab2a-3b920d900595
 Tropical(3.0)
 
@@ -692,47 +787,11 @@ tmat * tmat
 # ╔═╡ a91be952-7ba2-47d6-8aac-4a4e8a3c241d
 g = smallgraph(:petersen)
 
-# ╔═╡ b7d2319f-3d14-4a12-ad2e-3d7845d919b8
-md"""
-# Julia的软件包开发
-## Unit Test
-"""
+# ╔═╡ 54b050c9-6ead-43d3-adc3-74ba62aaa93a
+m = adjacency_matrix(g)
 
-# ╔═╡ 39c3a673-787e-4f00-ac71-f0279e0c9be7
-@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
-
-# ╔═╡ 4e8bbc37-5e4e-4669-ab13-0c88ae177490
-@testset "Tropical Number addition" begin
-	@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
-end
-
-# ╔═╡ f8896020-c076-4373-895b-4332b3631380
-project_folder = dirname(dirname(pathof(TropicalNumbers)))
-
-# ╔═╡ 6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
-md"一个软件包的文件结构"
-
-# ╔═╡ a008446c-079a-4571-a66b-c156eec72188
-md"[了解更多](https://docs.julialang.org/en/v1/stdlib/Test/)"
-
-# ╔═╡ fa78b65e-e3a2-49a8-b846-9827787de23e
-md"""
-## 版本控制与依赖
-"""
-
-# ╔═╡ d1b9aa30-ac64-4653-95b9-ab8695fbf34b
-md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂。"
-
-# ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
-md"""# 资源
-### 交流
-* Julia slack
-* Julia discourse
-* JuliaCN discourse
-
-### 学习
-* 安装/升级 Julia, 配置 IDE
-"""
+# ╔═╡ 14676602-bf80-4a16-a9ec-62bad6d5a10d
+SparseMatrixCSC(m.m, m.n, m.colptr, m.rowval, TropicalF64.(m.nzval))
 
 # ╔═╡ 0efc54a1-3dbb-45ab-bede-77ab4669721d
 md"""
@@ -776,11 +835,41 @@ md"""
 # ╔═╡ 0919dfcc-b344-4e4c-abfa-9c3914e2850b
 md"## Pluto notebook 帮助函数"
 
+# ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
+TableOfContents()
+
 # ╔═╡ 156a1a62-e131-403f-b2a2-80f49e6a9b33
 html"<button onclick=present()>Present</button>"
 
+# ╔═╡ d0a8e05f-f147-45c7-b9b3-4a3f5bbe6dff
+md"### print type tree"
+
 # ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
 AbstractTrees.children(x::Type) = subtypes(x)
+
+# ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
+_typestr(T) = T isa UnionAll ? _typestr(T.body) : T
+
+# ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
+function AbstractTrees.printnode(io::IO, x::Type{T}) where T
+	print(io, _typestr(T))
+end
+
+# ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
+function print_type_tree(T; maxdepth=5)
+	io = IOBuffer()
+	AbstractTrees.print_tree(io, T; maxdepth)
+	Text(String(take!(io)))
+end
+
+# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
+print_type_tree(Number)
+
+# ╔═╡ e4bae9e0-c949-4f1f-8b69-14491246d2a3
+print_type_tree(Number)
+
+# ╔═╡ f1c77c14-81e7-4566-9b35-96e578e7c16d
+md"### print directory tree"
 
 # ╔═╡ 38340e67-5418-4570-a9af-d466c972ef9c
 function AbstractTrees.children(path::Pair{String, String})
@@ -788,6 +877,11 @@ function AbstractTrees.children(path::Pair{String, String})
 	full = joinpath(base, fname)
 	isdir(full) || return Pair{String, String}[]
     return [base=>joinpath(fname, f) for f in readdir(full) if f !== ".git"]
+end
+
+# ╔═╡ 9f2e0149-9558-41f0-bc84-3ccb09786714
+function AbstractTrees.printnode(io::IO, path::Pair{String, String})
+	print(io, startswith(path.second, "./") ? path.second[3:end] : path.second)
 end
 
 # ╔═╡ 920ca137-4474-4c4d-96f7-2164b5386be3
@@ -803,31 +897,8 @@ print_dir_tree(project_folder)
 # ╔═╡ 904364df-125e-4ea5-a7a3-cb5221022927
 print_dir_tree("$(homedir())/.julia/dev/OMEinsum")
 
-# ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
-_typestr(T) = T isa UnionAll ? _typestr(T.body) : T
-
-# ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
-begin
-	function AbstractTrees.printnode(io::IO, x::Type{T}) where T
-		print(io, _typestr(T))
-	end
-	function AbstractTrees.printnode(io::IO, path::Pair{String, String})
-		print(io, startswith(path.second, "./") ? path.second[3:end] : path.second)
-	end
-end
-
-# ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
-function print_type_tree(T; maxdepth=5)
-	io = IOBuffer()
-	AbstractTrees.print_tree(io, T; maxdepth)
-	Text(String(take!(io)))
-end
-
-# ╔═╡ c04c4d58-0469-45cc-a217-444a2b607245
-print_type_tree(Number)
-
-# ╔═╡ e4bae9e0-c949-4f1f-8b69-14491246d2a3
-print_type_tree(Number)
+# ╔═╡ 40acbc0c-e92c-4183-b297-2ace43aa6042
+md"### print dependency tree"
 
 # ╔═╡ 26b30265-558b-49e7-b9f5-0b8af30c1273
 pkg_registries = Pkg.Operations.Context().registries;
@@ -859,6 +930,9 @@ end
 # ╔═╡ e61c0433-58b0-46bf-956d-41caecd70316
 # this utility is defined at the end of this notebook
 print_dependency_tree(Yao; maxdepth=2)
+
+# ╔═╡ 37e55165-6128-4a2a-ae2a-078e7d4016d1
+md"### Mermaid diagram"
 
 # ╔═╡ 9bb41efb-2817-4258-af2b-1fe515b6007a
 macro mermaid_str(str)
@@ -904,6 +978,9 @@ A["安装包命令 pkg> add Yao"] --> B["从 GitHub 更新 registry (如 General
 D --> E["下载对应软件包的版本并安装"]
 """
 
+# ╔═╡ 51906d13-0c53-4dce-9861-56e53fa23f63
+md"### Layout"
+
 # ╔═╡ a9a9f06e-4737-4619-b497-f488ea25fdf3
 	# left right layout
 	function leftright(a, b; width=600)
@@ -935,6 +1012,9 @@ $(leftright(
 
 """
 
+# ╔═╡ 2bd08f69-02e9-4b49-b707-e30abe269229
+md"### Live coding"
+
 # ╔═╡ bb346eb2-e070-4522-a991-1bfd0c2b05dc
 function livecoding(src)
 	HTML("""
@@ -953,6 +1033,9 @@ end
 # ╔═╡ 04b5f8fc-32c1-430c-8bec-3e1a06bdda24
 livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/matmul/main.cast")
 
+# ╔═╡ 2a5e9979-76d4-4a14-8242-ac7bd1f66d51
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/6.pkgdev/main.cast")
+
 # ╔═╡ e8281692-0a68-4382-956b-cfa61d80f4ae
 livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
 
@@ -968,8 +1051,8 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╔═╡ dad2eb09-06ca-4d96-8f4d-9f1b8770b92d
 livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/5.performance/main.cast")
 
-# ╔═╡ 27310322-9276-49d4-bc28-d503b6354ce1
-TableOfContents()
+# ╔═╡ f213af72-6f38-417e-b20e-5a6118f4572f
+md"### Luxor plot utilities"
 
 # ╔═╡ 21341609-92c4-4a73-a066-99ebb3b72010
 begin
@@ -1002,7 +1085,7 @@ begin
 	@drawsvg begin
 		ring3!(0, 0)
 	end 300 300
-			end;
+end;
 
 # ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
 @drawsvg begin
@@ -1091,13 +1174,24 @@ let
 	end 500 300
 end
 
+# ╔═╡ 007f4b4c-da06-4bbf-960f-60fa4166d38e
+md"### display a file"
+
 # ╔═╡ c6a89ef4-4f9b-4f43-bade-e6d22d5aa493
 function showfile(filename)
-	Text("Content of file: $filename\n"* ("-"^80) * "\n" * read(filename, String) * "\n")
+	Text("FILE: $filename\n"* ("-"^80) * "\n" * read(filename, String) * "\n")
 end
+
+# ╔═╡ 99491901-8397-47da-9423-f4e07cbbc8ea
+showfile("clib/demo.c")
 
 # ╔═╡ f97538e2-ee58-4923-8ac1-d5c9131db6a4
 showfile(joinpath(project_folder, "test", "runtests.jl"))
+
+# ╔═╡ 25c66e78-9326-4471-ab3b-005201cb03ce
+let project_folder = dirname(dirname(pathof(Yao)))
+	showfile(joinpath(project_folder, "Project.toml"))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2048,10 +2142,12 @@ version = "3.5.0+0"
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
 # ╟─fe174dbe-5c4b-4445-b485-5c21cc1e8917
 # ╟─000b93e6-8a1d-4c67-b5da-5013c6421e2c
-# ╠═e4c3c93b-f2a7-4e0d-acb2-2a2d40b90385
-# ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
+# ╠═99491901-8397-47da-9423-f4e07cbbc8ea
 # ╠═33a43668-4484-47d2-a7a6-09d930232252
+# ╠═cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
+# ╠═a9c2ff4c-a32b-4bb5-aef3-cf378453587a
+# ╠═25534efa-c0f1-4c7f-9575-f0c7c8dbf634
 # ╠═01972597-9d31-4972-a15d-51832f0f5910
 # ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
@@ -2063,18 +2159,14 @@ version = "3.5.0+0"
 # ╠═922a2063-f516-46a5-95a9-9e0adca018aa
 # ╟─105852eb-8f34-4d52-8ec3-68dff6997efb
 # ╟─e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
+# ╟─06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
 # ╠═79e3c220-c281-4ab0-988a-39e1b0a39d64
 # ╟─f7e5304d-7573-4e8c-b516-4c16a7432067
 # ╟─d04b2eca-9662-4518-8bb6-8b1bf07e8984
 # ╟─be4da897-df85-4276-bde1-7c1824cae796
 # ╠═13bcf3d6-2418-46e1-acde-050914064741
-# ╟─f43de1bd-1e3a-4a99-81c0-721ce32cc761
-# ╠═a6dd79be-ccca-4faf-8f11-ac129981bce8
-# ╠═59ea4880-89a0-497d-ace2-e33d0d8a4d65
-# ╠═c966f373-432d-426b-8179-289c94f42da1
-# ╠═e94597a7-5fbb-4305-9023-5a4d981f02a7
 # ╟─70fc53ba-70c5-4ae4-877c-f8e47569adc4
-# ╠═db779958-e7d5-4164-87a7-219257ae45f0
+# ╠═5b5e337e-c7e2-4c90-966e-62dc48a9cf28
 # ╟─2f36c4e6-1fc5-42e9-b097-315b28f82d5d
 # ╟─fb53a9ed-df58-410a-8275-e15718514950
 # ╠═e5b59cc9-0d14-4d8a-bb25-738540e7ebf9
@@ -2097,16 +2189,24 @@ version = "3.5.0+0"
 # ╠═24f9ad0c-0985-4a6b-bde9-b0a87574e188
 # ╠═d01b94b5-df3d-4a8f-a611-7d53499e6ee7
 # ╠═4e1b7044-ff2b-4eca-a549-a4cd736a93ee
+# ╠═17071f7d-e730-4248-8b0a-a3e7067ef1e1
 # ╟─8c9af74a-f4ec-4b56-b560-2c8a77f5e4d9
 # ╟─53fb47ff-c48a-41f4-9066-bd2c2af28dfd
 # ╠═724e9f4a-7152-4916-8910-9696e8d4fd40
 # ╠═3d255fc3-7098-46f7-a103-d0da8fafff38
 # ╠═6cfc75fe-569c-45b8-acb6-d757e57730e6
+# ╠═7ef00148-1628-4066-b0c2-efe1c38afb67
+# ╠═fb183df1-a578-44e2-94bc-7d04b5fe8ebb
+# ╠═30a44089-656a-4277-ab28-45610c329325
 # ╠═8764fa70-9933-4e6d-a0a6-2567e1219c63
 # ╠═8e019f9b-8c9d-46d7-b10f-3985c46e2a88
 # ╟─c13cf4d5-f5a1-466c-b5f5-bc3fe6545e05
 # ╟─36daaa7d-17a8-4523-8721-aad00f71f2e2
 # ╟─0b88d436-5a20-4936-8ced-a15bf1557ba0
+# ╟─a8e1722b-89c3-46be-9488-33aa595c3126
+# ╠═30d83360-4d86-4df4-8543-8870841c45cc
+# ╠═6e9f119e-e7c7-4549-81fb-9b85f6736b18
+# ╟─fc0fdc48-db4c-40c7-9c45-e539512f5ee6
 # ╠═c04c4d58-0469-45cc-a217-444a2b607245
 # ╟─8a2b6551-17a1-4566-9a22-e2bcf525c191
 # ╟─d1b0b145-12e3-4a61-82d8-2a743ce02682
@@ -2163,34 +2263,43 @@ version = "3.5.0+0"
 # ╠═8cebd10b-8af7-4806-999a-204823c56eea
 # ╠═6bccd6b6-0de1-4e4e-b6b4-99ed90580af7
 # ╟─5736fc36-4e81-4672-99d2-7a23f212269c
+# ╟─b7d2319f-3d14-4a12-ad2e-3d7845d919b8
+# ╟─6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
+# ╠═f8896020-c076-4373-895b-4332b3631380
+# ╠═75763b2b-d00f-46c0-b99e-257292c6bb96
+# ╟─9447d362-04a4-4dc0-b215-4cbdbdaec9b3
+# ╟─0223205c-2e44-4787-bf84-90abecd11542
+# ╠═9cc6445c-cc12-4a75-8415-9591c5491e6e
+# ╠═39c3a673-787e-4f00-ac71-f0279e0c9be7
+# ╠═bfc1690a-f5ec-4173-a9eb-ab0b1905b59c
+# ╠═c42d7cae-2d09-46cf-bb22-a09d17dd7bca
+# ╠═4e8bbc37-5e4e-4669-ab13-0c88ae177490
+# ╠═f97538e2-ee58-4923-8ac1-d5c9131db6a4
+# ╠═56e8cee2-7a4e-4a9a-b297-b7c08b865db8
+# ╟─a008446c-079a-4571-a66b-c156eec72188
+# ╟─fa78b65e-e3a2-49a8-b846-9827787de23e
+# ╠═25c66e78-9326-4471-ab3b-005201cb03ce
+# ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
+# ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
+# ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
+# ╠═e61c0433-58b0-46bf-956d-41caecd70316
+# ╟─5dbe18d9-e3a2-4997-a984-e13c70f34746
+# ╟─2a5e9979-76d4-4a14-8242-ac7bd1f66d51
+# ╟─34ffecd6-202d-46af-862c-0bf34524aa63
 # ╟─e384ee43-dbeb-401d-a113-e4218d0b9176
 # ╟─289c723b-99e5-440b-b1ae-a8bf69a34c1b
 # ╠═182f39d4-361e-4324-b4a2-775488911606
 # ╠═969ddd66-7de9-4c5e-8c2c-421385660a6a
 # ╠═022558d8-a455-4a19-bd32-debf3d1c45ba
 # ╠═548f68e9-190d-4926-ad98-0ef8baddac44
-# ╠═022cc3a3-4cff-4e65-99bf-24ea7dfa1e06
 # ╠═1f92c679-ad25-48fa-ab2a-3b920d900595
 # ╠═93906bbc-fcad-45c2-b789-b968f0bd59e2
 # ╠═9d8056e5-50e7-49de-9a3f-8bfb1c442880
 # ╠═4033d23b-dda6-46d3-8f29-0a34343f46dd
 # ╠═09d93415-99ba-4e54-b0c3-44883d7c5968
 # ╠═a91be952-7ba2-47d6-8aac-4a4e8a3c241d
-# ╟─b7d2319f-3d14-4a12-ad2e-3d7845d919b8
-# ╠═9cc6445c-cc12-4a75-8415-9591c5491e6e
-# ╠═39c3a673-787e-4f00-ac71-f0279e0c9be7
-# ╠═4e8bbc37-5e4e-4669-ab13-0c88ae177490
-# ╠═f8896020-c076-4373-895b-4332b3631380
-# ╟─6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
-# ╠═75763b2b-d00f-46c0-b99e-257292c6bb96
-# ╠═f97538e2-ee58-4923-8ac1-d5c9131db6a4
-# ╟─a008446c-079a-4571-a66b-c156eec72188
-# ╠═fa78b65e-e3a2-49a8-b846-9827787de23e
-# ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
-# ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
-# ╠═d5d44e77-934f-4f0c-af1b-d89f0778142d
-# ╠═e61c0433-58b0-46bf-956d-41caecd70316
-# ╟─34ffecd6-202d-46af-862c-0bf34524aa63
+# ╠═54b050c9-6ead-43d3-adc3-74ba62aaa93a
+# ╠═14676602-bf80-4a16-a9ec-62bad6d5a10d
 # ╟─0efc54a1-3dbb-45ab-bede-77ab4669721d
 # ╟─ee8606f7-6f5d-430a-b111-84843de789d7
 # ╟─4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
@@ -2204,28 +2313,37 @@ version = "3.5.0+0"
 # ╟─0596e817-91b6-4a57-9323-8b998115d4ca
 # ╟─dad2eb09-06ca-4d96-8f4d-9f1b8770b92d
 # ╟─0919dfcc-b344-4e4c-abfa-9c3914e2850b
-# ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
 # ╠═7d242d2a-d190-4a11-b218-60650ba70533
+# ╠═27310322-9276-49d4-bc28-d503b6354ce1
+# ╟─156a1a62-e131-403f-b2a2-80f49e6a9b33
+# ╟─d0a8e05f-f147-45c7-b9b3-4a3f5bbe6dff
 # ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
 # ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
 # ╠═782a555d-caff-4096-a6e6-24e77565a2cf
-# ╠═38340e67-5418-4570-a9af-d466c972ef9c
-# ╠═920ca137-4474-4c4d-96f7-2164b5386be3
-# ╠═904364df-125e-4ea5-a7a3-cb5221022927
 # ╠═88a8c21d-e5d3-4b88-a818-58f614d6f64e
 # ╠═d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
 # ╠═e4bae9e0-c949-4f1f-8b69-14491246d2a3
+# ╟─f1c77c14-81e7-4566-9b35-96e578e7c16d
+# ╠═38340e67-5418-4570-a9af-d466c972ef9c
+# ╠═9f2e0149-9558-41f0-bc84-3ccb09786714
+# ╠═920ca137-4474-4c4d-96f7-2164b5386be3
+# ╠═904364df-125e-4ea5-a7a3-cb5221022927
+# ╟─40acbc0c-e92c-4183-b297-2ace43aa6042
 # ╠═ee916ff8-c4f8-4dfb-83c5-12d1ab95f111
 # ╠═26b30265-558b-49e7-b9f5-0b8af30c1273
 # ╠═922071fb-dac2-436e-a343-d0d22bd3c864
 # ╠═d75c0427-12fe-4b2d-9bd1-b08f477966a6
 # ╠═e23b935b-eab0-4256-9983-84fab6ed6632
+# ╟─37e55165-6128-4a2a-ae2a-078e7d4016d1
 # ╠═9bb41efb-2817-4258-af2b-1fe515b6007a
+# ╟─51906d13-0c53-4dce-9861-56e53fa23f63
 # ╠═a9a9f06e-4737-4619-b497-f488ea25fdf3
+# ╟─2bd08f69-02e9-4b49-b707-e30abe269229
 # ╠═bb346eb2-e070-4522-a991-1bfd0c2b05dc
-# ╠═27310322-9276-49d4-bc28-d503b6354ce1
+# ╟─f213af72-6f38-417e-b20e-5a6118f4572f
 # ╠═1cc46cad-91c8-4812-95b3-02c9979adbbc
 # ╠═21341609-92c4-4a73-a066-99ebb3b72010
+# ╟─007f4b4c-da06-4bbf-960f-60fa4166d38e
 # ╠═c6a89ef4-4f9b-4f43-bade-e6d22d5aa493
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
