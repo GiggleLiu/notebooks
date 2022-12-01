@@ -25,6 +25,9 @@ using TropicalNumbers
 # ╔═╡ 09d93415-99ba-4e54-b0c3-44883d7c5968
 using Graphs
 
+# ╔═╡ 9cc6445c-cc12-4a75-8415-9591c5491e6e
+using Test
+
 # ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
 using Yao
 
@@ -695,8 +698,22 @@ md"""
 ## Unit Test
 """
 
-# ╔═╡ a5109a14-21df-4f3b-9812-0865f93814c7
-readdir()
+# ╔═╡ 39c3a673-787e-4f00-ac71-f0279e0c9be7
+@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
+
+# ╔═╡ 4e8bbc37-5e4e-4669-ab13-0c88ae177490
+@testset "Tropical Number addition" begin
+	@test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
+end
+
+# ╔═╡ f8896020-c076-4373-895b-4332b3631380
+project_folder = dirname(dirname(pathof(TropicalNumbers)))
+
+# ╔═╡ 6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
+md"一个软件包的文件结构"
+
+# ╔═╡ a008446c-079a-4571-a66b-c156eec72188
+md"[了解更多](https://docs.julialang.org/en/v1/stdlib/Test/)"
 
 # ╔═╡ fa78b65e-e3a2-49a8-b846-9827787de23e
 md"""
@@ -765,12 +782,38 @@ html"<button onclick=present()>Present</button>"
 # ╔═╡ 012b69d8-6304-4e91-9c0f-07fe3ad9980f
 AbstractTrees.children(x::Type) = subtypes(x)
 
+# ╔═╡ 38340e67-5418-4570-a9af-d466c972ef9c
+function AbstractTrees.children(path::Pair{String, String})
+	base, fname = path
+	full = joinpath(base, fname)
+	isdir(full) || return Pair{String, String}[]
+    return [base=>joinpath(fname, f) for f in readdir(full) if f !== ".git"]
+end
+
+# ╔═╡ 920ca137-4474-4c4d-96f7-2164b5386be3
+function print_dir_tree(dir; maxdepth=5)
+	io = IOBuffer()
+	AbstractTrees.print_tree(io, dir=>"."; maxdepth)
+	Text(String(take!(io)))
+end
+
+# ╔═╡ 75763b2b-d00f-46c0-b99e-257292c6bb96
+print_dir_tree(project_folder)
+
+# ╔═╡ 904364df-125e-4ea5-a7a3-cb5221022927
+print_dir_tree("$(homedir())/.julia/dev/OMEinsum")
+
 # ╔═╡ 88a8c21d-e5d3-4b88-a818-58f614d6f64e
 _typestr(T) = T isa UnionAll ? _typestr(T.body) : T
 
 # ╔═╡ 782a555d-caff-4096-a6e6-24e77565a2cf
-function AbstractTrees.printnode(io::IO, x::Type{T}) where T
-	print(io, _typestr(T))
+begin
+	function AbstractTrees.printnode(io::IO, x::Type{T}) where T
+		print(io, _typestr(T))
+	end
+	function AbstractTrees.printnode(io::IO, path::Pair{String, String})
+		print(io, startswith(path.second, "./") ? path.second[3:end] : path.second)
+	end
 end
 
 # ╔═╡ d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
@@ -1048,6 +1091,14 @@ let
 	end 500 300
 end
 
+# ╔═╡ c6a89ef4-4f9b-4f43-bade-e6d22d5aa493
+function showfile(filename)
+	Text("Content of file: $filename\n"* ("-"^80) * "\n" * read(filename, String) * "\n")
+end
+
+# ╔═╡ f97538e2-ee58-4923-8ac1-d5c9131db6a4
+showfile(joinpath(project_folder, "test", "runtests.jl"))
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1060,6 +1111,7 @@ MethodAnalysis = "85b6ec6f-f7df-4429-9514-a64bcd9ee824"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TropicalNumbers = "b3a74e9c-7526-4576-a4eb-79c0d4c32334"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 
@@ -1081,7 +1133,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "4fa1176f6933205f115249aecb2e5afe3e1bcbf0"
+project_hash = "81b8a980392914b5a86492a856d6caa637fd1d59"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -2124,8 +2176,15 @@ version = "3.5.0+0"
 # ╠═4033d23b-dda6-46d3-8f29-0a34343f46dd
 # ╠═09d93415-99ba-4e54-b0c3-44883d7c5968
 # ╠═a91be952-7ba2-47d6-8aac-4a4e8a3c241d
-# ╠═b7d2319f-3d14-4a12-ad2e-3d7845d919b8
-# ╠═a5109a14-21df-4f3b-9812-0865f93814c7
+# ╟─b7d2319f-3d14-4a12-ad2e-3d7845d919b8
+# ╠═9cc6445c-cc12-4a75-8415-9591c5491e6e
+# ╠═39c3a673-787e-4f00-ac71-f0279e0c9be7
+# ╠═4e8bbc37-5e4e-4669-ab13-0c88ae177490
+# ╠═f8896020-c076-4373-895b-4332b3631380
+# ╟─6850c93c-9bb9-49fe-8546-f3b0f45dc0f5
+# ╠═75763b2b-d00f-46c0-b99e-257292c6bb96
+# ╠═f97538e2-ee58-4923-8ac1-d5c9131db6a4
+# ╟─a008446c-079a-4571-a66b-c156eec72188
 # ╠═fa78b65e-e3a2-49a8-b846-9827787de23e
 # ╟─216d9db3-2d4a-47ef-89c6-70edfdd7bd53
 # ╟─d1b9aa30-ac64-4653-95b9-ab8695fbf34b
@@ -2150,6 +2209,9 @@ version = "3.5.0+0"
 # ╠═52c27043-31c2-4e90-b6a5-d858aa7056d4
 # ╠═012b69d8-6304-4e91-9c0f-07fe3ad9980f
 # ╠═782a555d-caff-4096-a6e6-24e77565a2cf
+# ╠═38340e67-5418-4570-a9af-d466c972ef9c
+# ╠═920ca137-4474-4c4d-96f7-2164b5386be3
+# ╠═904364df-125e-4ea5-a7a3-cb5221022927
 # ╠═88a8c21d-e5d3-4b88-a818-58f614d6f64e
 # ╠═d4a6f68e-b7da-4ca1-b43c-c2da7929cd3d
 # ╠═e4bae9e0-c949-4f1f-8b69-14491246d2a3
@@ -2164,5 +2226,6 @@ version = "3.5.0+0"
 # ╠═27310322-9276-49d4-bc28-d503b6354ce1
 # ╠═1cc46cad-91c8-4812-95b3-02c9979adbbc
 # ╠═21341609-92c4-4a73-a066-99ebb3b72010
+# ╠═c6a89ef4-4f9b-4f43-bade-e6d22d5aa493
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

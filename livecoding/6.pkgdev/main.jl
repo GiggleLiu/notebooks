@@ -1,3 +1,4 @@
+#s delay=1
 using Pkg
 
 # check existing registry (a Github repo for indexing packages)
@@ -72,3 +73,6 @@ Pkg.status()
 Pkg.add("Primes")
 # it is recommended to edit the [compat] section in the Project.toml too.
 # check https://pkgdocs.julialang.org/v1/compatibility/ to learn more abount version number specification.
+#
+# check the version of packages
+Pkg.status()
