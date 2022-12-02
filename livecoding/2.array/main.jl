@@ -70,8 +70,19 @@ v[end]
 # NOTE: `!` is a part of function name, it is a Julian convention to use `!` to warn users that a function can change inputs directly.
 push!(v, 4)
 
+# pop! is the inverse of push!
+pop!(v)
+
+# append another vector
+append!(v, [5, 6])
+
 # insert an element at location 1, with value 0
 insert!(v, 1, 0)
+
+# pop out the first element
+popfirst!(v)
+
+v
 
 # collect elements at location 2, 3 and 4 into a new vector (allocates!)
 v_allocate = v[2:4]
@@ -91,6 +102,8 @@ v
 
 # column vector with content type Any
 v_any = Any[1, 2, 3]
+eltype(v)
+eltype(v_any)
 
 # operating a generic typed vector can be much slower.
 using BenchmarkTools
@@ -103,6 +116,27 @@ push!(v, "muscle")
 
 # but it is totally fine for a vector with generic type
 push!(v_any, "muscle")
+
+# concatenate
+a = [1, 2, 3]
+b = [1, 2, 3]
+# concatenate using splatting
+[a..., b...]
+# vertical concatenate using cat
+cat(a, b; dims=1)
+# or
+vcat(a, b)
+
+# horizontal concatenate using cat
+cat(a, b; dims=2)
+hcat(a, b)
+
+# concatenate using list comprehension
+[a; b]
+[a b]
+
+# or create a block matrix
+[a b; a b]
 
 ####### Part 2: Matrices and Tensors ######
 # an tensor of size (2, 2, 2) wtih uninitialized content
@@ -158,3 +192,6 @@ m'
 
 # for transposing a complex number, one just type
 transpose(m)
+
+# reshaping an array
+reshape(randn(9), 3, 3)

@@ -36,7 +36,9 @@ subtypes(AbstractFloat)
 isconcretetype(AbstractFloat)
 
 # an abstract type does not have definite size
+#s output_delay = 3
 sizeof(AbstractFloat)
+#s output_delay = 0.5
 
 # AbstractFloat is a subtype of Real
 supertype(AbstractFloat)
@@ -60,7 +62,7 @@ isprimitivetype(ComplexF64)
 fieldnames(ComplexF64)
 
 # It is a composite type with "TYPE PARAMETERS"
-ComplexF64 === Complex{Float64}
+ComplexF64 === Complex{Float64}   # `===` more strict version of `==`, it also checks type.
 
 # ComplexF64 is a subtype of Complex
 ComplexF64 <: Complex
@@ -85,7 +87,7 @@ isconcretetype(Union{ComplexF64, Float64})
 
 ############ Define you own types ############
 # Let us create a abstract type for finite field algebra that subtypes Number.
-# An abtract type should not contain any field.
+# An abtract type should not contain any field. It can be defined with the `abstract type` keyword
 abstract type AbstractMod{N} <: Number end  # GF(N)
 
 # Then we define a concrete type with single field `val`
@@ -159,7 +161,7 @@ end
 end
 
 # The allocation is optimized away if the field type is specified.
-# For runtime performance, we should try our best to avoid using type unspecified field.
+# For runtime performance, we should try our best to avoid t using type unspecified field.
 # 
 # another reason is a type with unspecified field can not be tiled into an array (causing performance issue) or used on GPU.
 # To check whether your type can be tiled into an array or used on GPU, just type

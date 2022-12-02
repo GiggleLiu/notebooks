@@ -75,18 +75,32 @@ length(1:10)
 1:2:10 isa StepRange
 
 # dict
-Dict(3.0=>"3.0") isa Dict
+d = Dict(3.0=>"three", 4.0=>"four")
+d isa Dict
+# keys, and values of a dict
+keys(d)
+values(d)
+
+# get dict element
+d[3.0]
+# using `get`, you can set the default value
+get(d, 3.0, "not exist")
+
+get(d, 5.0, "not exist")
+# use `haskey` to check whether a key exists
+haskey(d, 3.0)
 
 # types can be used for conversion
 UInt64(3) isa UInt64
 Float32(3) isa Float32
-# vectors and tuples can be converted using splatting `some_iterable...`
+# vectors and tuples can be created using splatting: `some_iterable...`
 # splatting means unpacking an iterable.
 [(1, "3.0")...]
 ([1, 3.0]...,)
 ((3.0=>"3.0")...,)
 (1:2:10...,)
 [1:2:10...]
+[Dict(3.0=>"three", 4.0=>"four")...]
 # equivalently
 collect(1:2:10)
 

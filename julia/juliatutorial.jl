@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.15
 
 using Markdown
 using InteractiveUtils
@@ -220,6 +220,23 @@ md"🤔"
 # ╔═╡ e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
 md"但由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
 
+# ╔═╡ 06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
+@drawsvg begin
+	x0 = -50
+	for i=1:4
+		y0 = 40 * i - 100
+		box(Point(x0, y0), 50, 40; action=:stroke)
+		box(Point(x0+50, y0), 50, 40; action=:stroke)
+		setcolor("#88CC66")
+		circle(Point(x0+120, y0), 15; action=:fill)
+		setcolor("black")
+		text("type", Point(x0, y0); halign=:center, valign=:center)
+		text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
+		text("data", Point(x0+120, y0); halign=:center, valign=:middle)
+		arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
+	end
+end 200 200
+
 # ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
 @benchmark $(py"factorial")(1000)
 
@@ -415,23 +432,6 @@ Base.:(+)(a::Z, b::Y) = Z(a.num + b.num)
 # ╔═╡ 30a44089-656a-4277-ab28-45610c329325
 Base.:(+)(a::Z, b::Z) = Z(a.num + b.num)
 
-# ╔═╡ 06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
-@drawsvg begin
-	x0 = -50
-	for i=1:4
-		y0 = 40 * i - 100
-		box(Point(x0, y0), 50, 40; action=:stroke)
-		box(Point(x0+50, y0), 50, 40; action=:stroke)
-		setcolor("#88CC66")
-		circle(Point(x0+120, y0), 15; action=:fill)
-		setcolor("black")
-		text("type", Point(x0, y0); halign=:center, valign=:center)
-		text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
-		text("data", Point(x0+120, y0); halign=:center, valign=:middle)
-		arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
-	end
-end 200 200
-
 # ╔═╡ 4e1b7044-ff2b-4eca-a549-a4cd736a93ee
 X(3) + Y(5)
 
@@ -494,6 +494,17 @@ md"""
 ### Numbers
 """
 
+# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	Luxor.text("Any", 100, -110)
+end 300 300
+
 # ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
 md"`<:`是subtype的意思， `A <: B`表示 A 是 B 的子集。"
 
@@ -546,6 +557,18 @@ Complex{Float64} <: Complex{<:AbstractFloat}
 # ╔═╡ 6970b63a-83f9-4215-9f7a-e8d91593a192
 Complex{Float64} <: Complex{AbstractFloat}
 
+# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
+end 300 300
+
 # ╔═╡ cefdbc63-367c-4af8-9bf1-e8999c37e677
 md"猜猜是true还是false？"
 
@@ -588,6 +611,15 @@ Union{AbstractFloat, Complex} <: Number
 # ╔═╡ cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
 Union{AbstractFloat, Complex} <: Real
 
+# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
+	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
+	Luxor.text("Any", 100, -110)
+end 300 300
+
 # ╔═╡ 4329a285-c184-4f03-b90d-c8f74c072cd7
 md"给类型起绰号"
 
@@ -627,8 +659,38 @@ md"最具体的获胜"
 # ╔═╡ 2ca96d5e-bc03-4c2a-aeaf-9d35c9ceb8c1
 roughly_equal(3, 3)    # case 2
 
+# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
+let
+	@drawsvg begin
+		doublering!(85, 85)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-70, y1+70))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
+end
+
 # ╔═╡ 5ea7d476-1217-4895-9064-b0327c7a3fdc
 roughly_equal(3.0, 3.0)
+
+# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
+let
+	@drawsvg begin
+		doublering!(0, 0)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-40, y1+55))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
+end
 
 # ╔═╡ 9b00810e-8dc8-4602-a185-28e60c027b99
 md"""有时候，难论输赢。解决方式就是定义更加具体的实现：
@@ -1087,38 +1149,6 @@ begin
 	end 300 300
 end;
 
-# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	Luxor.text("Any", 100, -110)
-end 300 300
-
-# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
-end 300 300
-
-# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
-	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
-	Luxor.text("Any", 100, -110)
-end 300 300
-
 # ╔═╡ a112da1a-1ffc-41ab-8387-d4340c653ba7
 begin
 	function doublering!(dx1, dx2)
@@ -1142,36 +1172,6 @@ begin
 			arrow(Point(30, -100), Point(x2-70, y1-70))
 		end 500 300
 	end
-end
-
-# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
-let
-	@drawsvg begin
-		doublering!(85, 85)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-70, y1+70))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
-end
-
-# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
-let
-	@drawsvg begin
-		doublering!(0, 0)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-40, y1+55))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
 end
 
 # ╔═╡ 007f4b4c-da06-4bbf-960f-60fa4166d38e
