@@ -10,11 +10,11 @@ using Pkg
 # ╔═╡ cf0eb0cd-bcb7-4f7c-b462-bef13d3c2a97
 using Libdl
 
-# ╔═╡ 9954c036-d4d3-42c9-acbf-22623f84f254
-using PyCall
-
 # ╔═╡ c73baba2-9ec7-461e-b4e7-fd162606e134
 using BenchmarkTools
+
+# ╔═╡ 9954c036-d4d3-42c9-acbf-22623f84f254
+using PyCall
 
 # ╔═╡ 832f83a0-94af-4649-80a0-21dd75d01da7
 using MethodAnalysis
@@ -82,7 +82,7 @@ md"""## 看教程之前
 """
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
-md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到 JuliaCN Github Org 下面 [MeetUpMaterials](https://github.com/JuliaCN/MeetUpMaterials) 仓库下面。
+md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到会议网站。
 """
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
@@ -795,7 +795,7 @@ SparseMatrixCSC(m.m, m.n, m.colptr, m.rowval, TropicalF64.(m.nzval))
 
 # ╔═╡ 0efc54a1-3dbb-45ab-bede-77ab4669721d
 md"""
-## 课后习题
+## 手指肌肉训练
 """
 
 # ╔═╡ ee8606f7-6f5d-430a-b111-84843de789d7
@@ -2148,6 +2148,7 @@ version = "3.5.0+0"
 # ╠═2a22f131-6a99-4744-8914-19c8776700e7
 # ╠═a9c2ff4c-a32b-4bb5-aef3-cf378453587a
 # ╠═25534efa-c0f1-4c7f-9575-f0c7c8dbf634
+# ╠═c73baba2-9ec7-461e-b4e7-fd162606e134
 # ╠═01972597-9d31-4972-a15d-51832f0f5910
 # ╟─917e187d-5eda-49d6-a72a-0ed3f60d82d6
 # ╟─ab045ed0-7cbb-4565-bd7f-239dd94ce99e
@@ -2173,7 +2174,6 @@ version = "3.5.0+0"
 # ╟─8e109ec4-6b21-454b-ad7b-e30cef6d14bd
 # ╠═7b8e9026-6dc1-4d28-a2a7-912399a4fd51
 # ╠═4253af25-41bd-47b6-a11e-c2902c677963
-# ╠═c73baba2-9ec7-461e-b4e7-fd162606e134
 # ╠═ec33aba5-28c9-4be9-9804-361f65de1f7a
 # ╟─0ef8831d-62c3-47b5-9f6e-3d9322da8e16
 # ╟─3e3a2f23-8098-4d06-b4d1-157c97e4c094
