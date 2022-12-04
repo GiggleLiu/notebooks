@@ -22,14 +22,11 @@ using MethodAnalysis
 # ╔═╡ 9cc6445c-cc12-4a75-8415-9591c5491e6e
 using Test
 
-# ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
-using Yao
-
-# ╔═╡ 182f39d4-361e-4324-b4a2-775488911606
+# ╔═╡ 49797f42-1477-47d6-8b35-3a742f2e64bd
 using TropicalNumbers
 
-# ╔═╡ 09d93415-99ba-4e54-b0c3-44883d7c5968
-using Graphs
+# ╔═╡ d5d44e77-934f-4f0c-af1b-d89f0778142d
+using Yao
 
 # ╔═╡ 7d242d2a-d190-4a11-b218-60650ba70533
 using PlutoUI
@@ -64,12 +61,6 @@ md"""
 $(html"<img src='https://discourse.juliacn.com/uploads/default/original/2X/1/1cf10a356b5bbb37bb20cc765ab72f27d5e1366d.png' style='margin-left:-300px;'/>")
 """
 
-# ╔═╡ d34ac2d6-bece-4643-b413-4053441af815
-html"""
-<h2>感谢赞助</h2>
-<table style="width:80%" class="table-sponsor"> <tbody><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/partner.png"> <div>长期合作伙伴</div> </td><td> <div style="display:inline-block; text-align:center; margin-right:20px;"> <a href="https://swarma.org/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/jizhi.png" style="max-width:150px"></a> </div> <div style="display:inline-block; text-align:center"> <a href="https://www.bytedance.com/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/bytedance.webp" style="max-width:200px"></a> </div> </td></tr><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/gold.jpg"> <div>黄金赞助商</div> </td><td> <div style="display:inline-block; text-align:center"> <a href="https://www.tongyuan.cc/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/tongyuan.png" style="max-width:150px"></a> </div> </td></tr></tbody></table>
-"""
-
 # ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
 md"""## 看教程之前
 以下内容不会在教程中涉及，但是非常重要。
@@ -83,6 +74,11 @@ md"""## 看教程之前
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
 md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到会议网站。
+"""
+
+# ╔═╡ b89ac84e-4d15-4c9c-b809-35465d2e0435
+md"""## 调查
+你用什么编程语言?
 """
 
 # ╔═╡ 8e7f15fd-ae65-4559-972a-2c9720ac1547
@@ -165,6 +161,9 @@ TropicalGEMM: A BLAS for tropical numbers.
 ![](https://github.com/TensorBFS/TropicalGEMM.jl/raw/master/benchmarks/benchmark-float64.png)
 """
 
+# ╔═╡ 0413afca-7b71-4e86-8f1a-f0b86703de12
+md"# Julia 为什么快？"
+
 # ╔═╡ ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
 md"## 编译语言快的秘诀"
 
@@ -220,23 +219,6 @@ md"🤔"
 # ╔═╡ e6fd7a35-e45e-4cc7-ae24-7c2f8fd7c73d
 md"但由于数据没有固定的类型，解释执行的语言必须用一个`Box(type, *data)`来表示一个数据。"
 
-# ╔═╡ 06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
-@drawsvg begin
-	x0 = -50
-	for i=1:4
-		y0 = 40 * i - 100
-		box(Point(x0, y0), 50, 40; action=:stroke)
-		box(Point(x0+50, y0), 50, 40; action=:stroke)
-		setcolor("#88CC66")
-		circle(Point(x0+120, y0), 15; action=:fill)
-		setcolor("black")
-		text("type", Point(x0, y0); halign=:center, valign=:center)
-		text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
-		text("data", Point(x0+120, y0); halign=:center, valign=:middle)
-		arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
-	end
-end 200 200
-
 # ╔═╡ 79e3c220-c281-4ab0-988a-39e1b0a39d64
 @benchmark $(py"factorial")(1000)
 
@@ -261,7 +243,7 @@ md"""
 """
 
 # ╔═╡ 13bcf3d6-2418-46e1-acde-050914064741
-function jlfactorial(n)
+function jlfactorial(n::Int)
 	x = 1
 	for i in 1:n
     	x = x * i
@@ -432,6 +414,23 @@ Base.:(+)(a::Z, b::Y) = Z(a.num + b.num)
 # ╔═╡ 30a44089-656a-4277-ab28-45610c329325
 Base.:(+)(a::Z, b::Z) = Z(a.num + b.num)
 
+# ╔═╡ 06c57cf8-e85c-4d4a-84fa-bd1b2cfd8301
+@drawsvg begin
+	x0 = -50
+	for i=1:4
+		y0 = 40 * i - 100
+		box(Point(x0, y0), 50, 40; action=:stroke)
+		box(Point(x0+50, y0), 50, 40; action=:stroke)
+		setcolor("#88CC66")
+		circle(Point(x0+120, y0), 15; action=:fill)
+		setcolor("black")
+		text("type", Point(x0, y0); halign=:center, valign=:center)
+		text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
+		text("data", Point(x0+120, y0); halign=:center, valign=:middle)
+		arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
+	end
+end 200 200
+
 # ╔═╡ 4e1b7044-ff2b-4eca-a549-a4cd736a93ee
 X(3) + Y(5)
 
@@ -494,17 +493,6 @@ md"""
 ### Numbers
 """
 
-# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	Luxor.text("Any", 100, -110)
-end 300 300
-
 # ╔═╡ d1b0b145-12e3-4a61-82d8-2a743ce02682
 md"`<:`是subtype的意思， `A <: B`表示 A 是 B 的子集。"
 
@@ -540,10 +528,10 @@ Base.isconcretetype(Complex{Float64})
 md"提问： Complex 是不是 concrete type?"
 
 # ╔═╡ 1e267a3f-e60d-49df-ba26-268423693c71
-Base.isconcretetype(Complex);
+Base.isconcretetype(Complex)
 
 # ╔═╡ ecccde43-c4f1-4a92-bda7-3940d5fd3afd
-Base.isconcretetype(Complex{Float64});
+Base.isconcretetype(Complex{Float64})
 
 # ╔═╡ c39dd2fb-dd37-40b3-b617-58e231325f9d
 md"那么如何表达一个复数，它的实部和虚部都是浮点数？"
@@ -557,23 +545,11 @@ Complex{Float64} <: Complex{<:AbstractFloat}
 # ╔═╡ 6970b63a-83f9-4215-9f7a-e8d91593a192
 Complex{Float64} <: Complex{AbstractFloat}
 
-# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
-	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
-	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
-	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
-	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
-	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
-end 300 300
-
 # ╔═╡ cefdbc63-367c-4af8-9bf1-e8999c37e677
 md"猜猜是true还是false？"
 
 # ╔═╡ 3309100b-a8f1-44e5-95d3-53660ea171ec
-isconcretetype(Complex{AbstractFloat});
+isconcretetype(Complex{AbstractFloat})
 
 # ╔═╡ e2be9ff8-3f7f-4497-b8ae-3e5109ea0457
 md"它们的区别很大！"
@@ -610,15 +586,6 @@ Union{AbstractFloat, Complex} <: Number
 
 # ╔═╡ cd701b2f-8dcf-4d4d-a8e4-5cc7b612dc77
 Union{AbstractFloat, Complex} <: Real
-
-# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
-@drawsvg begin
-	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
-	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
-	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
-	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
-	Luxor.text("Any", 100, -110)
-end 300 300
 
 # ╔═╡ 4329a285-c184-4f03-b90d-c8f74c072cd7
 md"给类型起绰号"
@@ -659,38 +626,8 @@ md"最具体的获胜"
 # ╔═╡ 2ca96d5e-bc03-4c2a-aeaf-9d35c9ceb8c1
 roughly_equal(3, 3)    # case 2
 
-# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
-let
-	@drawsvg begin
-		doublering!(85, 85)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-70, y1+70))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
-end
-
 # ╔═╡ 5ea7d476-1217-4895-9064-b0327c7a3fdc
 roughly_equal(3.0, 3.0)
-
-# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
-let
-	@drawsvg begin
-		doublering!(0, 0)
-		x1, y1, x2 = -120, 0, 120
-		setcolor("black")
-		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
-		arrow(Point(-30, 100), Point(x1+70, y1+70))
-		arrow(Point(30, 100), Point(x2-40, y1+55))
-		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
-		arrow(Point(-30, -100), Point(x1+20, y1-15))
-		arrow(Point(30, -100), Point(x2-70, y1-70))
-	end 500 300
-end
 
 # ╔═╡ 9b00810e-8dc8-4602-a185-28e60c027b99
 md"""有时候，难论输赢。解决方式就是定义更加具体的实现：
@@ -705,7 +642,7 @@ end
 md"猜，现在 `f` 有多少个函数实例？"
 
 # ╔═╡ 7bce1278-ac0d-4918-aaea-fa69d8cdcf24
-methodinstances(roughly_equal);
+methodinstances(roughly_equal)
 
 # ╔═╡ a94c8b67-94c8-4ba1-99fd-db891a805006
 md"让类型参数保持一致。"
@@ -773,7 +710,7 @@ end
 @test Tropical(3.0) + Tropical(2.0) == Tropical(3.0)
 
 # ╔═╡ bfc1690a-f5ec-4173-a9eb-ab0b1905b59c
-@test_throws BoundsError [1][2]
+@test_throws BoundsError [1,2][3]
 
 # ╔═╡ c42d7cae-2d09-46cf-bb22-a09d17dd7bca
 @test_broken 3 == 2
@@ -805,55 +742,27 @@ md"以量子计算软件包 Yao 为例， 它的依赖关系可以非常复杂�
 md"## PkgTemplates
 "
 
-# ╔═╡ 34ffecd6-202d-46af-862c-0bf34524aa63
-md"""# 资源
-"""
-
-# ╔═╡ e384ee43-dbeb-401d-a113-e4218d0b9176
-md"## 案例分析： 依然是 Tropical 代数"
-
-# ╔═╡ 289c723b-99e5-440b-b1ae-a8bf69a34c1b
+# ╔═╡ 0a51a90b-72c8-4a69-a2d0-5b8d80137b92
 md"""
-[Tropical number](https://en.wikipedia.org/wiki/Tropical_geometry) is a semiring algebra that maps
-
-* `+` to `max` in regular algebra,
-* `*` to `+` in regular algebra,
-* `1` to `0` in regular algebra,
-* `0` to `-Inf` in regular algebra (for integer content types, this is chosen as a mall integer).
+## 案例分析: 快乐的分子
+[https://github.com/CodingThrust/HappyMolecules.jl](https://github.com/CodingThrust/HappyMolecules.jl)
 """
 
-# ╔═╡ 969ddd66-7de9-4c5e-8c2c-421385660a6a
-@which Tropical(3.0)
+# ╔═╡ 6b802c31-f0cd-4b92-9bb3-09aa15f01f8b
+md"""
+## 感谢
+### 会议组织
+* **刘贵欣**： 海报制作，报告人征募，活动宣传，直播
+* 赵昱圣： 衣服，徽章，贴纸，证书
+* 田俊，陈久宁和干则成： 会议赞助，报告人邀请和组织
+* 集智小伙伴对直播与赞助的鼎力支持。
+"""
 
-# ╔═╡ 022558d8-a455-4a19-bd32-debf3d1c45ba
-with_terminal() do
-	filename = joinpath(dirname(pathof(TropicalNumbers)), "tropical.jl")
-	println(read(filename, String))
-end
-
-# ╔═╡ 548f68e9-190d-4926-ad98-0ef8baddac44
-filename = joinpath(dirname(pathof(TropicalNumbers)), "tropical.jl")
-
-# ╔═╡ 1f92c679-ad25-48fa-ab2a-3b920d900595
-Tropical(3.0)
-
-# ╔═╡ 93906bbc-fcad-45c2-b789-b968f0bd59e2
-tmat = Tropical.(rand(3, 3))
-
-# ╔═╡ 9d8056e5-50e7-49de-9a3f-8bfb1c442880
-tmat * tmat
-
-# ╔═╡ 4033d23b-dda6-46d3-8f29-0a34343f46dd
-@which tmat * tmat
-
-# ╔═╡ a91be952-7ba2-47d6-8aac-4a4e8a3c241d
-g = smallgraph(:petersen)
-
-# ╔═╡ 54b050c9-6ead-43d3-adc3-74ba62aaa93a
-m = adjacency_matrix(g)
-
-# ╔═╡ 14676602-bf80-4a16-a9ec-62bad6d5a10d
-SparseMatrixCSC(m.m, m.n, m.colptr, m.rowval, TropicalF64.(m.nzval))
+# ╔═╡ d34ac2d6-bece-4643-b413-4053441af815
+html"""
+<h3>赞助商</h3>
+<table style="width:80%" class="table-sponsor"> <tbody><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/partner.png"> <div>长期合作伙伴</div> </td><td> <div style="display:inline-block; text-align:center; margin-right:20px;"> <a href="https://swarma.org/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/jizhi.png" style="max-width:150px"></a> </div> <div style="display:inline-block; text-align:center"> <a href="https://www.bytedance.com/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/bytedance.webp" style="max-width:200px"></a> </div> </td></tr><tr> <td style="padding-right: 20px;"> <img src="https://cn.julialang.org/meetup-website/assets/gold.jpg"> <div>黄金赞助商</div> </td><td> <div style="display:inline-block; text-align:center"> <a href="https://www.tongyuan.cc/" class="nounderline"><img src="https://cn.julialang.org/meetup-website/assets/tongyuan.png" style="max-width:150px"></a> </div> </td></tr></tbody></table>
+"""
 
 # ╔═╡ 0efc54a1-3dbb-45ab-bede-77ab4669721d
 md"""
@@ -1149,6 +1058,38 @@ begin
 	end 300 300
 end;
 
+# ╔═╡ 8a2b6551-17a1-4566-9a22-e2bcf525c191
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=35, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	Luxor.text("Any", 100, -110)
+end 300 300
+
+# ╔═╡ 764b68fa-5891-4e0b-a4c9-474cf1fd9861
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=35, bgcolor="#AACC66", r=50, text="AbstractFloat")
+	drawset!(-55, 0; textoffset=40, bgcolor="#66FF88", r=50, text="Complex")
+	drawset!(-55, 0; textoffset=20, bgcolor="#99DD88", r=30, dash=true, text="Complex{<:AbstractFloat}")
+	drawset!(55, 0; textoffset=-10, bgcolor="red", r=5, text="Float64")
+	drawset!(-55, 0; textoffset=-10, bgcolor="blue", r=5, text="Complex{Float64}")
+	drawset!(-55, -25; textoffset=-10, bgcolor="black", r=5, text="Complex{AbstractFloat}")
+end 300 300
+
+# ╔═╡ 8c66252c-9639-4002-9e5b-fdf9dba8c768
+@drawsvg begin
+	drawset!(0, 0; textoffset=-85, bgcolor="#6688CC", r=120, text="Number")
+	drawset!(55, 0; textoffset=65, bgcolor="#88AAAA", r=58, text="Real")
+	drawset!(55, 0; textoffset=0, bgcolor="#AACC66", r=50, text="AbstractFloat", dash=true)
+	drawset!(-55, 0; textoffset=0, bgcolor="#66FF88", r=50, text="Complex", dash=true)
+	Luxor.text("Any", 100, -110)
+end 300 300
+
 # ╔═╡ a112da1a-1ffc-41ab-8387-d4340c653ba7
 begin
 	function doublering!(dx1, dx2)
@@ -1172,6 +1113,36 @@ begin
 			arrow(Point(30, -100), Point(x2-70, y1-70))
 		end 500 300
 	end
+end
+
+# ╔═╡ b3d24b7c-44f5-4ca1-9024-a9af75637d30
+let
+	@drawsvg begin
+		doublering!(85, 85)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::Number)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-70, y1+70))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
+end
+
+# ╔═╡ 10b1aa40-fd50-41d0-bc9c-8c32a74ea79c
+let
+	@drawsvg begin
+		doublering!(0, 0)
+		x1, y1, x2 = -120, 0, 120
+		setcolor("black")
+		text("(::Number, ::AbstractFloat)", 0, 115; valign=:center, halign=:center)
+		arrow(Point(-30, 100), Point(x1+70, y1+70))
+		arrow(Point(30, 100), Point(x2-40, y1+55))
+		text("(::AbstractFloat, ::Number)", 0, -115; valign=:center, halign=:center)
+		arrow(Point(-30, -100), Point(x1+20, y1-15))
+		arrow(Point(30, -100), Point(x2-70, y1-70))
+	end 500 300
 end
 
 # ╔═╡ 007f4b4c-da06-4bbf-960f-60fa4166d38e
@@ -1198,7 +1169,6 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 MethodAnalysis = "85b6ec6f-f7df-4429-9514-a64bcd9ee824"
@@ -1212,7 +1182,6 @@ Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 [compat]
 AbstractTrees = "~0.4.3"
 BenchmarkTools = "~1.3.2"
-Graphs = "~1.7.4"
 Luxor = "~3.5.0"
 MethodAnalysis = "~0.4.11"
 PlutoUI = "~0.7.48"
@@ -1227,7 +1196,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "81b8a980392914b5a86492a856d6caa637fd1d59"
+project_hash = "95e64af6ccad9d2c72f3c6f2a5498b3270d9638b"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1249,12 +1218,6 @@ version = "3.4.0"
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
-
-[[deps.ArnoldiMethod]]
-deps = ["LinearAlgebra", "Random", "StaticArrays"]
-git-tree-sha1 = "62e51b39331de8911e4a7ff6f5aaf38a5f4cc0ae"
-uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
-version = "0.2.0"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
@@ -1474,12 +1437,6 @@ git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
 uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
 version = "1.3.14+0"
 
-[[deps.Graphs]]
-deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "ba2d094a88b6b287bd25cfa86f301e7693ffae2f"
-uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.7.4"
-
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
 git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
@@ -1503,11 +1460,6 @@ deps = ["Logging", "Random"]
 git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.2"
-
-[[deps.Inflate]]
-git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
-uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
-version = "0.1.3"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -1851,16 +1803,6 @@ version = "0.7.0"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
-[[deps.SharedArrays]]
-deps = ["Distributed", "Mmap", "Random", "Serialization"]
-uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
-
-[[deps.SimpleTraits]]
-deps = ["InteractiveUtils", "MacroTools"]
-git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
-uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
-version = "0.9.4"
-
 [[deps.SnoopPrecompile]]
 git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
@@ -2123,9 +2065,9 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─713939c6-4fe6-11ed-3e49-6bcc498b82f2
 # ╟─8225e1a9-ee2f-454d-b4c1-84568b10bb1b
-# ╟─d34ac2d6-bece-4643-b413-4053441af815
 # ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
 # ╟─b92957bf-eeb2-4d2a-933d-77baad5c6eef
+# ╟─b89ac84e-4d15-4c9c-b809-35465d2e0435
 # ╟─8e7f15fd-ae65-4559-972a-2c9720ac1547
 # ╟─73ce1dff-a3ff-431b-9acb-7af6c00b35f6
 # ╟─a72f4263-b034-4aa8-8611-d53166cbb718
@@ -2139,6 +2081,7 @@ version = "3.5.0+0"
 # ╟─2b1c00b1-eb58-4b99-829f-5b98689132ad
 # ╟─931bb099-60b9-4542-ac53-3757fb269fff
 # ╟─26348f56-c4bf-4ec8-a429-773d60525364
+# ╟─0413afca-7b71-4e86-8f1a-f0b86703de12
 # ╟─ff0a8030-9a18-4d27-9a87-bed9aed0d2a8
 # ╟─fe174dbe-5c4b-4445-b485-5c21cc1e8917
 # ╟─000b93e6-8a1d-4c67-b5da-5013c6421e2c
@@ -2270,6 +2213,7 @@ version = "3.5.0+0"
 # ╟─9447d362-04a4-4dc0-b215-4cbdbdaec9b3
 # ╟─0223205c-2e44-4787-bf84-90abecd11542
 # ╠═9cc6445c-cc12-4a75-8415-9591c5491e6e
+# ╠═49797f42-1477-47d6-8b35-3a742f2e64bd
 # ╠═39c3a673-787e-4f00-ac71-f0279e0c9be7
 # ╠═bfc1690a-f5ec-4173-a9eb-ab0b1905b59c
 # ╠═c42d7cae-2d09-46cf-bb22-a09d17dd7bca
@@ -2285,21 +2229,9 @@ version = "3.5.0+0"
 # ╠═e61c0433-58b0-46bf-956d-41caecd70316
 # ╟─5dbe18d9-e3a2-4997-a984-e13c70f34746
 # ╟─2a5e9979-76d4-4a14-8242-ac7bd1f66d51
-# ╟─34ffecd6-202d-46af-862c-0bf34524aa63
-# ╟─e384ee43-dbeb-401d-a113-e4218d0b9176
-# ╟─289c723b-99e5-440b-b1ae-a8bf69a34c1b
-# ╠═182f39d4-361e-4324-b4a2-775488911606
-# ╠═969ddd66-7de9-4c5e-8c2c-421385660a6a
-# ╠═022558d8-a455-4a19-bd32-debf3d1c45ba
-# ╠═548f68e9-190d-4926-ad98-0ef8baddac44
-# ╠═1f92c679-ad25-48fa-ab2a-3b920d900595
-# ╠═93906bbc-fcad-45c2-b789-b968f0bd59e2
-# ╠═9d8056e5-50e7-49de-9a3f-8bfb1c442880
-# ╠═4033d23b-dda6-46d3-8f29-0a34343f46dd
-# ╠═09d93415-99ba-4e54-b0c3-44883d7c5968
-# ╠═a91be952-7ba2-47d6-8aac-4a4e8a3c241d
-# ╠═54b050c9-6ead-43d3-adc3-74ba62aaa93a
-# ╠═14676602-bf80-4a16-a9ec-62bad6d5a10d
+# ╟─0a51a90b-72c8-4a69-a2d0-5b8d80137b92
+# ╟─6b802c31-f0cd-4b92-9bb3-09aa15f01f8b
+# ╟─d34ac2d6-bece-4643-b413-4053441af815
 # ╟─0efc54a1-3dbb-45ab-bede-77ab4669721d
 # ╟─ee8606f7-6f5d-430a-b111-84843de789d7
 # ╟─4704dbf6-e2e1-4b6b-8ed0-a9bdbbed5474
