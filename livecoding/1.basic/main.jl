@@ -19,6 +19,8 @@ true && false
 # or
 true || false
 # xor: type \xor<TAB>
+# If the xor operator does not display in your terminal, try typing: xor(true, false), check https://docs.julialang.org/en/v1/manual/unicode-input/ for other unicode inputs.
+# `a ⊻ b` returns true if and only if `a` and `b`.
 true ⊻ false
 #+ 10
 
@@ -35,13 +37,14 @@ sizeof(0x3)
 7 % 3   # modulus
 7 / 3   # / returns a floating point number
 7 ÷ 3   # ÷ (by typing: \div<TAB>) returns an integer
-7 << 1  # bit shift left
+7 << 1  # bit shift left, learn more about bitwise shift: https://en.wikipedia.org/wiki/Arithmetic_shift
 7 >> 1  # bit shift right
-7 | 1  # bit-wise or
+7 | 1  # bit-wise or: learn more about bitwise operators: https://en.wikipedia.org/wiki/Bitwise_operation#Bitwise_operators
 7 & 1  # bit-wise and
 7 ⊻ 1  # bit-wise xor: type \xor<TAB>
 
 # floating point numbers and complex numbers
+# operator isa means "is a"
 3.2 isa Float64
 3.2e2 isa Float64
 3.2f2 isa Float32
@@ -59,6 +62,7 @@ typeof(ℯ)
 # tuple can be indexed
 (1, "3.0")[1]   # the first element
 
+# pair can be regarded as a length-2 tuple.
 (3.0=>"3.0") isa Pair
 #+ 3
 # pair has two fields, `first` and `second`
@@ -96,6 +100,7 @@ Float32(3) isa Float32
 # vectors and tuples can be created using splatting: `some_iterable...`
 # splatting means unpacking an iterable.
 [(1, "3.0")...]
+# for tuple, you must add a "," after the splitting to avoid confusing with splatting in a function call f(args...).
 ([1, 3.0]...,)
 ((3.0=>"3.0")...,)
 (1:2:10...,)
@@ -132,7 +137,7 @@ eps(Float32)
 eps(Float64)
 
 # rounding error is unbiquitus in floating point numbers
-1.0 == nextfloat(1.0)
+1.0 == nextfloat(1.0)  # nextfloat returns the minimum floating point number greater than the input value.
 
 # we prefer using `≈` (typed with \approx<TAB>) in many practical using cases
 1.0 ≈ nextfloat(1.0)
@@ -185,6 +190,7 @@ end
 let   # the `let` statement creates a local scope
     for i = 1:3  # the `for` statement creates a local scope
         j = i==1 ? 1 : j + 1   # j is not in the outer scope
+        # `i==1 ? 1 : j + 1` means, if i==1, return 1, else return j+1
     end
     j  # can not access variables in a local scope
 end
