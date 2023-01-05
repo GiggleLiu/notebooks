@@ -16,8 +16,16 @@ sizeof(Bool)
 !true
 # and
 true && false
+# if the left side of `&&` is false, then the right side will not be executed
+3 > 2 && println("`3 > 2` is true")
+3 < 2 && println("`3 < 2` is true")
+
 # or
 true || false
+# if the left side of `||` is true, then the right side will not be executed
+3 > 2 || println("`3 > 2` is false")
+3 < 2 || println("`3 < 2` is false")
+
 # xor: type \xor<TAB>
 # If the xor operator does not display in your terminal, try typing: xor(true, false), check https://docs.julialang.org/en/v1/manual/unicode-input/ for other unicode inputs.
 # `a ⊻ b` returns true if and only if `a` and `b`.

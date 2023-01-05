@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.15
+# v0.19.16
 
 using Markdown
 using InteractiveUtils
@@ -42,25 +42,6 @@ md"""
 # 给 Julia 开发者的入门教程
 """
 
-# ╔═╡ 8225e1a9-ee2f-454d-b4c1-84568b10bb1b
-md"""
-# 元信息
-* 12 月 3 日 - 新手教程
-* 12 月 4 日 - **黑客松 （hackathon）, 香港科技大学广州**
-![](https://cn.julialang.org/meetup-website/assets/hackathon.png)
-* 12 月 5-9 日晚 - 主题报告
-
-    * 国际之夜（英语）
-    * 语言与编译器之夜
-    * 科学之夜
-    * 量子之夜
-    * 新人之夜
-
-会议网址是： [https://cn.julialang.org/meetup-website/2022/](https://cn.julialang.org/meetup-website/2022/)
-
-$(html"<img src='https://discourse.juliacn.com/uploads/default/original/2X/1/1cf10a356b5bbb37bb20cc765ab72f27d5e1366d.png' style='margin-left:-300px;'/>")
-"""
-
 # ╔═╡ 915a6f21-1d94-4aed-aaa3-3a58a34264d3
 md"""## 看教程之前
 以下内容不会在教程中涉及，但是非常重要。
@@ -74,6 +55,11 @@ md"""## 看教程之前
 
 # ╔═╡ b92957bf-eeb2-4d2a-933d-77baad5c6eef
 md"""离线使用此教程的小贴士：你需要配置 [Pluto notebook](https://github.com/fonsp/Pluto.jl) 以在便本地打开该教程， 该教程将会上传到会议网站。
+
+
+会议网址是： [https://cn.julialang.org/meetup-website/2022/](https://cn.julialang.org/meetup-website/2022/)
+
+$(html"<img src='https://discourse.juliacn.com/uploads/default/original/2X/1/1cf10a356b5bbb37bb20cc765ab72f27d5e1366d.png' style='margin-left:-300px;'/>")
 """
 
 # ╔═╡ b89ac84e-4d15-4c9c-b809-35465d2e0435
@@ -1196,7 +1182,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "95e64af6ccad9d2c72f3c6f2a5498b3270d9638b"
+project_hash = "4d9d7dcd43ed6139c2871eec819edc9801a3e59e"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -2064,7 +2050,6 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─713939c6-4fe6-11ed-3e49-6bcc498b82f2
-# ╟─8225e1a9-ee2f-454d-b4c1-84568b10bb1b
 # ╟─915a6f21-1d94-4aed-aaa3-3a58a34264d3
 # ╟─b92957bf-eeb2-4d2a-933d-77baad5c6eef
 # ╟─b89ac84e-4d15-4c9c-b809-35465d2e0435
