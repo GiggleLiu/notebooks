@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rydberg Atom Gate Compilation Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a12;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+        }
+
+        .poster {
+            width: 1200px;
+            height: 630px;
+            position: relative;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #0a0a12 0%, #0d1a2d 30%, #0a1628 60%, #0a0a12 100%);
+            overflow: hidden;
+        }
+
+        /* Animated grid background */
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 200, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 200, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Atom visualization */
+        .atom-container {
+            position: absolute;
+            top: 50%;
+            left: 15%;
+            transform: translate(-50%, -50%);
+        }
+
+        .atom-core {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #ff6b4a, #ff3d00);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px rgba(255, 61, 0, 0.6),
+                0 0 120px rgba(255, 61, 0, 0.3),
+                inset 0 0 30px rgba(255, 200, 150, 0.5);
+            animation: corePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes corePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .orbit {
+            position: absolute;
+            border: 2px solid rgba(0, 255, 200, 0.3);
+            border-radius: 50%;
+            animation: orbitRotate 8s linear infinite;
+        }
+
+        .orbit-1 {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-2 {
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(60deg);
+            animation-duration: 12s;
+            animation-direction: reverse;
+        }
+
+        .orbit-3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateY(70deg);
+            animation-duration: 15s;
+            border-color: rgba(138, 43, 226, 0.2);
+        }
+
+        @keyframes orbitRotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .electron {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle at 30% 30%, #00ffc8, #00d4aa);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.8), 0 0 40px rgba(0, 255, 200, 0.4);
+        }
+
+        .electron-1 {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: electronMove1 8s linear infinite;
+        }
+
+        .electron-2 {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            animation: electronMove2 12s linear infinite;
+        }
+
+        @keyframes electronMove1 {
+            from { transform: translateX(-50%) rotate(0deg) translateX(100px) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+
+        /* Quantum gate pulses visualization */
+        .pulse-container {
+            position: absolute;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pulse-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .qubit-line {
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 200, 0.6), transparent);
+            position: relative;
+        }
+
+        .gate {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #8a2be2, #4a0080);
+            border: 2px solid #bf7fff;
+            border-radius: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
+        }
+
+        .gate-zz {
+            width: 24px;
+            height: 50px;
+            background: linear-gradient(180deg, #ff6b4a, #ff3d00);
+            border: 2px solid #ff9a7a;
+            border-radius: 4px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 20px rgba(255, 61, 0, 0.6);
+        }
+
+        .gate-zz::before {
+            content: 'ZZ';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .qubit-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #00ffc8;
+            width: 30px;
+        }
+
+        /* Connection lines for ZZ gates */
+        .zz-connection {
+            position: absolute;
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(180deg, #ff6b4a, #ff3d00);
+            box-shadow: 0 0 10px rgba(255, 61, 0, 0.5);
+        }
+
+        /* Main content */
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 20px;
+            background: linear-gradient(90deg, rgba(138, 43, 226, 0.3), rgba(255, 61, 0, 0.3));
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #bf7fff;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #00ffc8 50%, #ff6b4a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(0, 255, 200, 0.3);
+        }
+
+        .subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 22px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .highlight {
+            color: #00ffc8;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 25px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #ff6b4a;
+            text-shadow: 0 0 30px rgba(255, 61, 0, 0.5);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ffc8;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+            50% { transform: translateY(-20px) translateX(10px); opacity: 1; }
+        }
+
+        /* Decorative elements */
+        .corner-accent {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(0, 255, 200, 0.2);
+        }
+
+        .corner-accent.top-left {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner-accent.top-right {
+            top: 20px;
+            right: 20px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .corner-accent.bottom-left {
+            bottom: 20px;
+            left: 20px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .corner-accent.bottom-right {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* Formula decoration */
+        .formula {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            color: rgba(138, 43, 226, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .formula span {
+            color: rgba(0, 255, 200, 0.8);
+        }
+
+        /* Glowing line decorations */
+        .glow-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffc8, transparent);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        .glow-line-1 {
+            width: 200px;
+            top: 100px;
+            left: 5%;
+            transform: rotate(-15deg);
+        }
+
+        .glow-line-2 {
+            width: 150px;
+            bottom: 120px;
+            right: 8%;
+            transform: rotate(20deg);
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Hexagon pattern overlay */
+        .hex-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300ffc8' fill-opacity='0.02'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="poster">
+        <!-- Background elements -->
+        <div class="grid-bg"></div>
+        <div class="hex-pattern"></div>
+        
+        <!-- Corner accents -->
+        <div class="corner-accent top-left"></div>
+        <div class="corner-accent top-right"></div>
+        <div class="corner-accent bottom-left"></div>
+        <div class="corner-accent bottom-right"></div>
+        
+        <!-- Glowing lines -->
+        <div class="glow-line glow-line-1"></div>
+        <div class="glow-line glow-line-2"></div>
+        
+        <!-- Atom visualization (left side) -->
+        <div class="atom-container">
+            <div class="atom-core"></div>
+            <div class="orbit orbit-1">
+                <div class="electron electron-1"></div>
+            </div>
+            <div class="orbit orbit-2">
+                <div class="electron electron-2"></div>
+            </div>
+            <div class="orbit orbit-3"></div>
+        </div>
+        
+        <!-- Quantum circuit visualization (right side) -->
+        <div class="pulse-container">
+            <div class="pulse-row">
+                <span class="qubit-label">q₀</span>
+                <div class="qubit-line">
+                    <div class="gate" style="left: 20px;"></div>
+                    <div class="gate" style="left: 120px;"></div>
+                </div>
+            </div>
+            <div class="pulse-row">
+                <span class="qubit-label">q₁</span>
+                <div class="qubit-line" style="position: relative;">
+                    <div class="gate" style="left: 20px;"></div>
+                    <div class="gate-zz" style="left: 65px; height: 38px;"></div>
+                    <div class="gate" style="left: 120px;"></div>
+                </div>
+            </div>
+            <div class="pulse-row">
+                <span class="qubit-label">q₂</span>
+                <div class="qubit-line">
+                    <div class="gate" style="left: 20px;"></div>
+                    <div class="gate-zz" style="left: 65px; height: 38px;"></div>
+                    <div class="gate" style="left: 160px;"></div>
+                </div>
+            </div>
+            <div class="pulse-row">
+                <span class="qubit-label">q₃</span>
+                <div class="qubit-line">
+                    <div class="gate" style="left: 20px;"></div>
+                    <div class="gate" style="left: 160px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating particles -->
+        <div class="particle" style="top: 15%; left: 25%;"></div>
+        <div class="particle" style="top: 30%; left: 70%; animation-delay: 1s;"></div>
+        <div class="particle" style="top: 60%; left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="top: 75%; left: 75%; animation-delay: 0.5s;"></div>
+        <div class="particle" style="top: 20%; left: 85%; animation-delay: 3s;"></div>
+        <div class="particle" style="top: 85%; left: 30%; animation-delay: 1.5s;"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="badge">Quantum Computing Challenge</div>
+            <h1 class="title">RYDBERG ATOM<br>GATE COMPILATION</h1>
+            <p class="subtitle">Minimize pulses. Maximize <span class="highlight">precision</span>.</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">150</div>
+                    <div class="stat-label">Target Unitaries</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">10⁻⁸</div>
+                    <div class="stat-label">Precision Required</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Max Qubits</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formula decoration -->
+        <div class="formula">
+            R<sub>ZZ</sub>(θ) = exp(<span>-i θ/2 Z⊗Z</span>) &nbsp;|&nbsp; F = |Tr(U†V)|² / d²
+        </div>
+    </div>
+</body>
+</html>
