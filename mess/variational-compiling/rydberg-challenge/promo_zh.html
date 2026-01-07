@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>里德堡原子门编译挑战</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a12;
+            font-family: 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+        }
+
+        .poster {
+            width: 1200px;
+            height: 630px;
+            position: relative;
+            margin: 20px auto;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(255, 100, 50, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(0, 200, 255, 0.06) 0%, transparent 50%),
+                linear-gradient(160deg, #080810 0%, #0d1525 30%, #0a1220 60%, #080810 100%);
+            overflow: hidden;
+        }
+
+        /* Ink wash effect background */
+        .ink-wash {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 15% 80%, rgba(100, 60, 40, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 85% 20%, rgba(40, 60, 100, 0.08) 0%, transparent 25%);
+            filter: blur(40px);
+        }
+
+        /* Subtle wave pattern */
+        .wave-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2300d4ff' fill-opacity='0.02' d='M0,160L48,170.7C96,181,192,203,288,186.7C384,171,480,117,576,117.3C672,117,768,171,864,186.7C960,203,1056,181,1152,154.7C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            opacity: 0.5;
+        }
+
+        /* Animated energy lines */
+        .energy-field {
+            position: absolute;
+            inset: 0;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 100px,
+                    rgba(0, 212, 255, 0.02) 100px,
+                    rgba(0, 212, 255, 0.02) 101px
+                );
+        }
+
+        /* Quantum lattice on left */
+        .lattice {
+            position: absolute;
+            left: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            height: 280px;
+        }
+
+        .lattice-node {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #ff8866, #ff4422);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 30px rgba(255, 68, 34, 0.6),
+                0 0 60px rgba(255, 68, 34, 0.3);
+            animation: nodePulse 2s ease-in-out infinite;
+        }
+
+        .lattice-node:nth-child(2) { animation-delay: 0.3s; }
+        .lattice-node:nth-child(3) { animation-delay: 0.6s; }
+        .lattice-node:nth-child(4) { animation-delay: 0.9s; }
+        .lattice-node:nth-child(5) { animation-delay: 1.2s; }
+        .lattice-node:nth-child(6) { animation-delay: 1.5s; }
+
+        @keyframes nodePulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .lattice-connection {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.2));
+            height: 3px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            transform-origin: left center;
+        }
+
+        .lattice-connection.vertical {
+            width: 3px;
+            height: 80px;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.2));
+        }
+
+        /* Quantum circuit on right */
+        .circuit {
+            position: absolute;
+            right: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wire {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wire-label {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 14px;
+            color: #00d4ff;
+            width: 35px;
+            font-weight: 500;
+        }
+
+        .wire-line {
+            width: 220px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.1), rgba(0, 212, 255, 0.4), rgba(0, 212, 255, 0.1));
+            position: relative;
+        }
+
+        .gate-1q {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #6366f1, #4338ca);
+            border: 2px solid #818cf8;
+            border-radius: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .gate-2q {
+            position: absolute;
+            width: 28px;
+            height: 52px;
+            background: linear-gradient(180deg, #f97316, #ea580c);
+            border: 2px solid #fdba74;
+            border-radius: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: 700;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        /* Main content */
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            width: 600px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 24px;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), rgba(249, 115, 22, 0.2));
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 25px;
+            font-size: 14px;
+            letter-spacing: 4px;
+            color: #a5b4fc;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .title-main {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 72px;
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #00d4ff 40%, #ff6644 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 80px rgba(0, 212, 255, 0.4);
+            letter-spacing: 8px;
+        }
+
+        .title-sub {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tagline {
+            font-size: 20px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 3px;
+            margin-bottom: 35px;
+        }
+
+        .tagline .highlight {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .tagline .highlight-orange {
+            color: #ff8855;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            color: #ff6644;
+            text-shadow: 0 0 40px rgba(255, 102, 68, 0.5);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* Decorative seal */
+        .seal {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            width: 70px;
+            height: 70px;
+            border: 3px solid rgba(200, 50, 50, 0.6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 24px;
+            color: rgba(200, 50, 50, 0.8);
+            transform: rotate(-10deg);
+            box-shadow: 0 0 20px rgba(200, 50, 50, 0.3);
+        }
+
+        /* Formula at bottom */
+        .formula {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 14px;
+            color: rgba(99, 102, 241, 0.6);
+            letter-spacing: 1px;
+        }
+
+        .formula .cyan {
+            color: rgba(0, 212, 255, 0.7);
+        }
+
+        /* Corner decorations - Chinese style */
+        .corner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+        }
+
+        .corner.top-left {
+            top: 20px;
+            left: 20px;
+            border-top: 2px solid rgba(0, 212, 255, 0.3);
+            border-left: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .corner.top-right {
+            top: 20px;
+            right: 20px;
+            border-top: 2px solid rgba(0, 212, 255, 0.3);
+            border-right: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .corner.bottom-left {
+            bottom: 20px;
+            left: 20px;
+            border-bottom: 2px solid rgba(249, 115, 22, 0.3);
+            border-left: 2px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .corner.bottom-right {
+            bottom: 20px;
+            right: 20px;
+            border-bottom: 2px solid rgba(249, 115, 22, 0.3);
+            border-right: 2px solid rgba(249, 115, 22, 0.3);
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00d4ff;
+            border-radius: 50%;
+            animation: particleFloat 5s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-15px) scale(1.2); opacity: 1; }
+        }
+
+        /* Energy burst effect */
+        .burst {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: burstPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes burstPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .burst-1 {
+            top: -50px;
+            left: -50px;
+        }
+
+        .burst-2 {
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(255, 102, 68, 0.08) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="poster">
+        <!-- Background layers -->
+        <div class="ink-wash"></div>
+        <div class="wave-pattern"></div>
+        <div class="energy-field"></div>
+        
+        <!-- Energy bursts -->
+        <div class="burst burst-1"></div>
+        <div class="burst burst-2"></div>
+        
+        <!-- Corner decorations -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+        
+        <!-- Atom lattice (left) -->
+        <div class="lattice">
+            <!-- Nodes in a triangular/hexagonal pattern -->
+            <div class="lattice-node" style="left: 50%; top: 10%; transform: translate(-50%, 0);"></div>
+            <div class="lattice-node" style="left: 20%; top: 35%;"></div>
+            <div class="lattice-node" style="left: 80%; top: 35%;"></div>
+            <div class="lattice-node" style="left: 35%; top: 65%;"></div>
+            <div class="lattice-node" style="left: 65%; top: 65%;"></div>
+            <div class="lattice-node" style="left: 50%; top: 90%; transform: translate(-50%, 0);"></div>
+            
+            <!-- Connections -->
+            <svg style="position: absolute; inset: 0; width: 100%; height: 100%;" viewBox="0 0 280 280">
+                <defs>
+                    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.6" />
+                        <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0.2" />
+                    </linearGradient>
+                </defs>
+                <!-- Top to middle connections -->
+                <line x1="140" y1="38" x2="66" y2="108" stroke="url(#lineGrad)" stroke-width="2" opacity="0.6"/>
+                <line x1="140" y1="38" x2="214" y2="108" stroke="url(#lineGrad)" stroke-width="2" opacity="0.6"/>
+                <!-- Middle row connections -->
+                <line x1="66" y1="108" x2="108" y2="192" stroke="url(#lineGrad)" stroke-width="2" opacity="0.5"/>
+                <line x1="214" y1="108" x2="172" y2="192" stroke="url(#lineGrad)" stroke-width="2" opacity="0.5"/>
+                <line x1="66" y1="108" x2="214" y2="108" stroke="url(#lineGrad)" stroke-width="2" opacity="0.4"/>
+                <!-- Bottom connections -->
+                <line x1="108" y1="192" x2="172" y2="192" stroke="url(#lineGrad)" stroke-width="2" opacity="0.5"/>
+                <line x1="108" y1="192" x2="140" y2="262" stroke="url(#lineGrad)" stroke-width="2" opacity="0.4"/>
+                <line x1="172" y1="192" x2="140" y2="262" stroke="url(#lineGrad)" stroke-width="2" opacity="0.4"/>
+            </svg>
+        </div>
+        
+        <!-- Quantum circuit (right) -->
+        <div class="circuit">
+            <div class="wire">
+                <span class="wire-label">|0⟩</span>
+                <div class="wire-line">
+                    <div class="gate-1q" style="left: 15px;">Ry</div>
+                    <div class="gate-1q" style="left: 140px;">Rx</div>
+                </div>
+            </div>
+            <div class="wire">
+                <span class="wire-label">|1⟩</span>
+                <div class="wire-line">
+                    <div class="gate-1q" style="left: 15px;">Ry</div>
+                    <div class="gate-2q" style="left: 70px;">ZZ</div>
+                    <div class="gate-1q" style="left: 140px;">Rz</div>
+                </div>
+            </div>
+            <div class="wire">
+                <span class="wire-label">|2⟩</span>
+                <div class="wire-line">
+                    <div class="gate-1q" style="left: 15px;">Ry</div>
+                    <div class="gate-2q" style="left: 70px;">ZZ</div>
+                    <div class="gate-1q" style="left: 180px;">Rx</div>
+                </div>
+            </div>
+            <div class="wire">
+                <span class="wire-label">|3⟩</span>
+                <div class="wire-line">
+                    <div class="gate-1q" style="left: 15px;">Ry</div>
+                    <div class="gate-1q" style="left: 180px;">Rz</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating particles -->
+        <div class="particle" style="top: 12%; left: 35%;"></div>
+        <div class="particle" style="top: 25%; left: 72%; animation-delay: 1s;"></div>
+        <div class="particle" style="top: 70%; left: 28%; animation-delay: 2s;"></div>
+        <div class="particle" style="top: 80%; left: 68%; animation-delay: 0.5s;"></div>
+        <div class="particle" style="top: 18%; left: 88%; animation-delay: 3s;"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="badge">量子计算挑战赛</div>
+            <h1 class="title-main">里德堡原子</h1>
+            <h2 class="title-sub">门编译挑战</h2>
+            <p class="tagline">最少<span class="highlight-orange">脉冲</span> · 最高<span class="highlight">精度</span></p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">150</div>
+                    <div class="stat-label">目标酉算符</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">10⁻⁸</div>
+                    <div class="stat-label">精度要求</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">最大量子比特</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chinese seal -->
+        <div class="seal">量子</div>
+        
+        <!-- Formula -->
+        <div class="formula">
+            R<sub>ZZ</sub>(θ) = exp(<span class="cyan">-i θ/2 Z⊗Z</span>) &nbsp;|&nbsp; 保真度 F = |Tr(U†V)|² / d²
+        </div>
+    </div>
+</body>
+</html>
